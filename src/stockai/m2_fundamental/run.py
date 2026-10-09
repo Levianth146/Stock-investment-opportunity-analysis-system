@@ -67,15 +67,57 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
         cf_is["ocf_to_net_income"] = cf_is["operating_cash_flow"] / cf_is["net_profit"]
         cashflow_quality = cf_is[["year", "operating_cash_flow", "net_profit", "ocf_to_net_income"]].to_dict(orient="records")
 
-    # 5. Điểm F chuẩn hóa (Task N3-08)
+    # 5. Điểm F chuẩn hóa (Task N3-08 - Tính toán động theo dữ liệu năm gần nhất)
+    prof_score, growth_score, solvency_score, cashflow_score = 0.0, 0.0, 0.0, 0.0
+    
+    # Lấy dữ liệu năm gần nhất từ các bảng đã tính toán
+    latest_prof = profitability[-1] if profitability else {}
+    latest_growth = growth_metrics[-1] if growth_metrics else {}
+    latest_solv = solvency[-1] if solvency else {}
+    latest_cf = cashflow_quality[-1] if cashflow_quality else {}
+    
+    # Chấm điểm Khả năng sinh lời (Max 25 điểm) based on ROE
+    roe = latest_prof.get("roe", 0)
+    if not pd.isna(roe):
+        if roe > 15: prof_score = 25.0
+        elif roe > 10: prof_score = 20.0
+        elif roe > 5: prof_score = 10.0
+        else: prof_score = 5.0
+        
+    # Chấm điểm Tăng trưởng (Max 25 điểm) based on Net Profit Growth
+    np_growth = latest_growth.get("net_profit_growth", 0)
+    if not pd.isna(np_growth):
+        if np_growth > 20: growth_score = 25.0
+        elif np_growth > 10: growth_score = 20.0
+        elif np_growth > 0: growth_score = 10.0
+        else: growth_score = 5.0
+        
+    # Chấm điểm Đòn bẩy tài chính (Max 25 điểm) based on Debt to Equity (Thấp là tốt)
+    dte = latest_solv.get("debt_to_equity", 1.0)
+    if not pd.isna(dte):
+        if dte < 0.5: solvency_score = 25.0
+        elif dte < 1.0: solvency_score = 18.0
+        elif dte < 1.5: solvency_score = 10.0
+        else: solvency_score = 5.0
+        
+    # Chấm điểm Chất lượng dòng tiền (Max 25 điểm) based on OCF / Net Income
+    ocf_ni = latest_cf.get("ocf_to_net_income", 0)
+    if not pd.isna(ocf_ni):
+        if ocf_ni >= 1.0: cashflow_score = 25.0
+        elif ocf_ni > 0.5: cashflow_score = 15.0
+        else: cashflow_score = 5.0
+
+    total_score = prof_score + growth_score + solvency_score + cashflow_score
+    # Quy đổi về thang điểm 25 tổng của module M2
+    weighted_score = round((total_score / 100.0) * 25.0, 2)
+
     score_breakdown = {
-        "profitability_score": 20.0,
-        "growth_score": 18.0,
-        "solvency_score": 15.0,
-        "cashflow_score": 12.0,
-        "total_fundamental_score": 65.0
+        "profitability_score": prof_score,
+        "growth_score": growth_score,
+        "solvency_score": solvency_score,
+        "cashflow_score": cashflow_score,
+        "total_fundamental_score": total_score
     }
-    weighted_score = round((score_breakdown["total_fundamental_score"] / 100.0) * 25.0, 2)
 
     # Đưa kết quả tính toán vào cấu trúc đầu ra của module M2
     out["data"] = {
