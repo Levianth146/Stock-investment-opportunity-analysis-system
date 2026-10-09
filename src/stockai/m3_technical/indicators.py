@@ -47,16 +47,17 @@ def ema(values: Sequence[MaybeNumber], period: int) -> list[MaybeNumber]:
         raise ValueError("period must be positive")
 
     result: list[MaybeNumber] = [None] * len(values)
-    valid: list[tuple[int, float]] = []
+    valid: list[float] = []
     for index, value in enumerate(values):
         number = _number(value)
         if number is None:
+            valid.clear()
             continue
-        valid.append((index, number))
+        valid.append(number)
         if len(valid) < period:
             continue
         if len(valid) == period:
-            previous = sum(number for _, number in valid) / period
+            previous = sum(valid) / period
         else:
             alpha = 2 / (period + 1)
             previous = alpha * number + (1 - alpha) * previous
