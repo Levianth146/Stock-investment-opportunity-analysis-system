@@ -1,165 +1,128 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../src')))
-"""m2 - điểm F. Người làm chỉ sửa trong thư mục này (m2_fundamental/).
+"""M2 - điểm F (cơ bản), thang 0-100. Chỉ N3 sửa trong thư mục này.
 
-Giữ nguyên chữ ký run(snapshot, upstream, cfg) -> dict. Đầu ra phải qua validate(out, "module_out").
-Chưa làm thật thì để status="stub"; khi xong đổi thành "ok" hoặc "partial" (thiếu dữ liệu, kèm flags).
+Đọc đúng schema snapshot (docs/CONTRACTS.md): snapshot["financials"]["annual"|"quarterly"][i]["items"], company.is_bank.
+Kỳ trong danh sách xếp mới nhất trước. Mọi số tính bằng code; thiếu chỉ tiêu -> bỏ qua tiêu chí đó, gắn cờ, điểm tính trên các tiêu chí còn lại.
+Doanh nghiệp thường và ngân hàng dùng bộ tiêu chí khác nhau (ngân hàng không có gross_profit, nợ vay, current ratio...).
 """
-import pandas as pd
-import numpy as np
-from stockai.contracts.helpers import stub_out
+from __future__ import annotations
 
-# Tự định nghĩa hàm validate an toàn nếu helpers.py của nhóm không có sẵn hàm validate
-def validate(out: dict, schema_name: str) -> dict:
-    return out
+import math
+
+
+def _g(items: dict, k: str):
+    v = items.get(k)
+    return v if isinstance(v, (int, float)) and math.isfinite(v) else None
+
+
+def _div(a, b):
+    return a / b if a is not None and b not in (None, 0) else None
+
+
+def _growth(cur, prev):
+    return (cur - prev) / abs(prev) if cur is not None and prev not in (None, 0) else None
+
+
+def _band(x, bands, higher_better=True):
+    """bands = [(ngưỡng, điểm), ...] theo thứ tự ưu tiên; trả điểm của ngưỡng đầu tiên thỏa; cuối cùng là điểm mặc định."""
+    if x is None:
+        return None
+    for thr, pts in bands[:-1]:
+        if (x >= thr) if higher_better else (x <= thr):
+            return pts
+    return bands[-1][1]
+
+
+def _metrics_and_scores(cur: dict, prev: dict | None, is_bank: bool) -> tuple[dict, dict]:
+    ni = _g(cur, "net_income_parent") if _g(cur, "net_income_parent") is not None else _g(cur, "net_income")
+    ni_prev = None
+    if prev:
+        ni_prev = _g(prev, "net_income_parent") if _g(prev, "net_income_parent") is not None else _g(prev, "net_income")
+    eq, ta, rev = _g(cur, "total_equity"), _g(cur, "total_assets"), _g(cur, "revenue")
+    m: dict[str, tuple[float | None, str]] = {
+        "roe": (_div(ni, eq), "ratio"),
+        "roa": (_div(ni, ta), "ratio"),
+        "net_income_growth": (_growth(ni, ni_prev), "ratio"),
+        "revenue_growth": (_growth(rev, _g(prev, "revenue") if prev else None), "ratio"),
+        "equity_to_assets": (_div(eq, ta), "ratio"),
+        "cfo_to_net_income": (_div(_g(cur, "cfo"), ni), "ratio"),
+    }
+    if is_bank:
+        m.update({
+            "cir": (_g(cur, "cir"), "ratio"), "nim": (_g(cur, "nim"), "ratio"),
+            "npl_ratio": (_g(cur, "npl_ratio"), "ratio"), "car": (_g(cur, "car"), "ratio"),
+            "loan_to_deposit": (_div(_g(cur, "customer_loans"), _g(cur, "customer_deposits")), "ratio"),
+            "provision_to_toi": (_div(abs(_g(cur, "provision_expense")) if _g(cur, "provision_expense") is not None else None,
+                                      _g(cur, "total_operating_income")), "ratio"),
+        })
+        s = {
+            "profitability": _band(m["roe"][0], [(0.18, 100), (0.14, 80), (0.10, 60), (0.05, 35), (0, 15)]),
+            "growth": _band(m["net_income_growth"][0], [(0.25, 100), (0.15, 80), (0.05, 60), (0.0, 40), (0, 15)]),
+            "efficiency": _band(m["cir"][0], [(0.35, 100), (0.40, 85), (0.45, 70), (0.55, 45), (0, 20)], higher_better=False),
+            "margin": _band(m["nim"][0], [(0.035, 100), (0.030, 80), (0.025, 60), (0.020, 40), (0, 20)]),
+            "asset_quality": _band(m["npl_ratio"][0], [(0.012, 100), (0.02, 80), (0.03, 55), (0.05, 30), (0, 10)], higher_better=False),
+            "capital": _band(m["car"][0], [(0.14, 100), (0.12, 75), (0.10, 50), (0, 20)]),
+        }
+        return m, s
+    ebit, intr = _g(cur, "ebit"), _g(cur, "interest_expense")
+    debt = None
+    if _g(cur, "short_term_debt") is not None or _g(cur, "long_term_debt") is not None:
+        debt = (_g(cur, "short_term_debt") or 0) + (_g(cur, "long_term_debt") or 0)
+    m.update({
+        "gross_margin": (_div(_g(cur, "gross_profit"), rev), "ratio"),
+        "net_margin": (_div(ni, rev), "ratio"),
+        "debt_to_equity": (_div(debt, eq), "ratio"),
+        "current_ratio": (_div(_g(cur, "current_assets"), _g(cur, "current_liabilities")), "ratio"),
+        "interest_coverage": (_div(ebit, abs(intr) if intr is not None else None), "x"),
+    })
+    s = {
+        "profitability": _band(m["roe"][0], [(0.20, 100), (0.15, 80), (0.10, 60), (0.05, 35), (0, 15)]),
+        "growth": _band(m["net_income_growth"][0], [(0.25, 100), (0.15, 80), (0.05, 60), (0.0, 40), (0, 15)]),
+        "leverage": _band(m["debt_to_equity"][0], [(0.3, 100), (0.6, 80), (1.0, 60), (1.5, 35), (0, 15)], higher_better=False),
+        "liquidity": _band(m["current_ratio"][0], [(1.5, 100), (1.2, 80), (1.0, 60), (0.8, 35), (0, 15)]),
+        "coverage": _band(m["interest_coverage"][0], [(8, 100), (4, 80), (2, 55), (1, 30), (0, 10)]),
+        "cash_quality": _band(m["cfo_to_net_income"][0], [(1.0, 100), (0.7, 75), (0.3, 50), (0, 30), (0, 10)]),
+    }
+    return m, s
+
 
 def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
-    # Khởi tạo khung stub chuẩn từ hệ thống
-    out = stub_out("m2")
-    
-    # Lấy dữ liệu từ snapshot (do M1 cung cấp)
-    ticker = snapshot.get("ticker", "UNKNOWN")
-    sector_type = snapshot.get("sector_type", "non_financial")
-    financials = snapshot.get("financial_statements", {})
-    
-    is_df = pd.DataFrame(financials.get("income_statement", []))
-    bs_df = pd.DataFrame(financials.get("balance_sheet", []))
-    cf_df = pd.DataFrame(financials.get("cash_flow", []))
-    
-    # Kiểm tra xem dữ liệu thô có trống hay không để điều chỉnh status
-    if is_df.empty or bs_df.empty:
-        out["status"] = "partial"
-        out["flags"] = ["Missing Income Statement or Balance Sheet data"]
-        return validate(out, "module_out")
+    out = {"module": "m2", "status": "error", "score": None, "metrics": {}, "evidence": [], "flags": []}
+    fin = snapshot.get("financials") or {}
+    annual = fin.get("annual") or []
+    if not annual:
+        out["flags"].append("m2_no_annual_financials")
+        return out
+    is_bank = bool((snapshot.get("company") or {}).get("is_bank"))
+    cur, prev = annual[0], (annual[1] if len(annual) > 1 else None)
+    m, s = _metrics_and_scores(cur["items"], prev["items"] if prev else None, is_bank)
 
-    # --- THỰC HIỆN TÍNH TOÁN CÁC CHỈ TIÊU M2 (Task N3-01 đến N3-08) ---
-    
-    # 1. Tăng trưởng (Task N3-03)
-    is_df = is_df.sort_values("year")
-    is_df["revenue_growth"] = is_df["revenue"].pct_change() * 100
-    is_df["net_profit_growth"] = is_df["net_profit"].pct_change() * 100
-    is_df["eps_growth"] = is_df["eps"].pct_change() * 100
-    growth_metrics = is_df[["year", "revenue", "revenue_growth", "net_profit", "net_profit_growth", "eps", "eps_growth"]].to_dict(orient="records")
+    out["metrics"] = {k: {"value": v, "unit": u} for k, (v, u) in m.items() if v is not None}
+    for k, v in m.items():
+        if v[0] is None:
+            out["flags"].append(f"m2_missing_{k}")
+    valid = {k: v for k, v in s.items() if v is not None}
+    for k, v in s.items():
+        if v is None:
+            out["flags"].append(f"m2_criterion_skipped_{k}")
+    if not valid:
+        out["flags"].append("m2_no_usable_criteria")
+        return out
+    out["score"] = round(sum(valid.values()) / len(valid), 1)
+    out["status"] = "ok" if len(valid) == len(s) else "partial"
+    if prev is None:
+        out["flags"].append("m2_single_year_no_growth")
 
-    # 2. Khả năng sinh lời (Task N3-04)
-    merged_prof = pd.merge(is_df, bs_df, on="year", suffixes=("_is", "_bs"))
-    if sector_type == "non_financial":
-        merged_prof["gross_margin"] = (merged_prof["gross_profit"] / merged_prof["revenue"]) * 100
-        merged_prof["net_margin"] = (merged_prof["net_profit"] / merged_prof["revenue"]) * 100
-        merged_prof["roe"] = (merged_prof["net_profit"] / merged_prof["equity"]) * 100
-        merged_prof["roa"] = (merged_prof["net_profit"] / merged_prof["total_assets"]) * 100
-    else: # Ngân hàng / Chứng khoán
-        merged_prof["net_margin"] = (merged_prof["net_profit"] / merged_prof["total_revenue"]) * 100
-        merged_prof["roe"] = (merged_prof["net_profit"] / merged_prof["equity"]) * 100
-        merged_prof["roa"] = (merged_prof["net_profit"] / merged_prof["total_assets"]) * 100
-    profitability = merged_prof.to_dict(orient="records")
-
-    # 3. Đòn bẩy và Thanh khoản (Task N3-05)
-    bs_df["debt_to_equity"] = bs_df["total_debt"] / bs_df["equity"]
-    bs_df["debt_to_assets"] = bs_df["total_debt"] / bs_df["total_assets"]
-    solvency = bs_df.to_dict(orient="records")
-
-    # 4. Chất lượng dòng tiền (Task N3-06)
-    cashflow_quality = []
-    if not cf_df.empty:
-        cf_is = pd.merge(cf_df, is_df, on="year")
-        cf_is["ocf_to_net_income"] = cf_is["operating_cash_flow"] / cf_is["net_profit"]
-        cashflow_quality = cf_is[["year", "operating_cash_flow", "net_profit", "ocf_to_net_income"]].to_dict(orient="records")
-
-    # 5. Điểm F chuẩn hóa (Task N3-08 - Tính toán động theo dữ liệu năm gần nhất)
-    prof_score, growth_score, solvency_score, cashflow_score = 0.0, 0.0, 0.0, 0.0
-    
-    # Lấy dữ liệu năm gần nhất từ các bảng đã tính toán
-    latest_prof = profitability[-1] if profitability else {}
-    latest_growth = growth_metrics[-1] if growth_metrics else {}
-    latest_solv = solvency[-1] if solvency else {}
-    latest_cf = cashflow_quality[-1] if cashflow_quality else {}
-    
-    # Chấm điểm Khả năng sinh lời (Max 25 điểm) based on ROE
-    roe = latest_prof.get("roe", 0)
-    if not pd.isna(roe):
-        if roe > 15: prof_score = 25.0
-        elif roe > 10: prof_score = 20.0
-        elif roe > 5: prof_score = 10.0
-        else: prof_score = 5.0
-        
-    # Chấm điểm Tăng trưởng (Max 25 điểm) based on Net Profit Growth
-    np_growth = latest_growth.get("net_profit_growth", 0)
-    if not pd.isna(np_growth):
-        if np_growth > 20: growth_score = 25.0
-        elif np_growth > 10: growth_score = 20.0
-        elif np_growth > 0: growth_score = 10.0
-        else: growth_score = 5.0
-        
-    # Chấm điểm Đòn bẩy tài chính (Max 25 điểm) based on Debt to Equity (Thấp là tốt)
-    dte = latest_solv.get("debt_to_equity", 1.0)
-    if not pd.isna(dte):
-        if dte < 0.5: solvency_score = 25.0
-        elif dte < 1.0: solvency_score = 18.0
-        elif dte < 1.5: solvency_score = 10.0
-        else: solvency_score = 5.0
-        
-    # Chấm điểm Chất lượng dòng tiền (Max 25 điểm) based on OCF / Net Income
-    ocf_ni = latest_cf.get("ocf_to_net_income", 0)
-    if not pd.isna(ocf_ni):
-        if ocf_ni >= 1.0: cashflow_score = 25.0
-        elif ocf_ni > 0.5: cashflow_score = 15.0
-        else: cashflow_score = 5.0
-
-    total_score = prof_score + growth_score + solvency_score + cashflow_score
-    # Quy đổi về thang điểm 25 tổng của module M2
-    weighted_score = round((total_score / 100.0) * 25.0, 2)
-
-    score_breakdown = {
-        "profitability_score": prof_score,
-        "growth_score": growth_score,
-        "solvency_score": solvency_score,
-        "cashflow_score": cashflow_score,
-        "total_fundamental_score": total_score
-    }
-
-    # Đưa kết quả tính toán vào cấu trúc đầu ra của module M2
-    out["data"] = {
-        "ticker": ticker,
-        "growth_metrics": growth_metrics,
-        "profitability": profitability,
-        "solvency": solvency,
-        "cashflow_quality": cashflow_quality,
-        "fundamental_score": {
-            "score_breakdown": score_breakdown,
-            "final_weighted_score": weighted_score,
-            "max_possible_score": 25.0
-        }
-    }
-    
-    # Đổi status thành "ok" khi đã chạy thuật toán phân tích thực tế thành công
-    out["status"] = "ok"
-    out["flags"] = []
-
-    # Bắt buộc qua hàm validate trước khi trả về theo yêu cầu của hệ thống
-    return validate(out, "module_out")
-
-# Phần test chạy thử trực tiếp
-if __name__ == "__main__":
-    sample_snapshot = {
-        "ticker": "HPG",
-        "sector_type": "non_financial",
-        "financial_statements": {
-            "income_statement": [
-                {"year": 2023, "revenue": 118000, "net_profit": 6800, "eps": 1170, "gross_profit": 16000},
-                {"year": 2024, "revenue": 135000, "net_profit": 12000, "eps": 2060, "gross_profit": 22000}
-            ],
-            "balance_sheet": [
-                {"year": 2023, "equity": 85000, "total_assets": 178000, "total_debt": 62000},
-                {"year": 2024, "equity": 95000, "total_assets": 190000, "total_debt": 65000}
-            ],
-            "cash_flow": [
-                {"year": 2023, "operating_cash_flow": 12000},
-                {"year": 2024, "operating_cash_flow": 15000}
-            ]
-        }
-    }
-    res = run(sample_snapshot, {}, {})
-    import json
-    print(json.dumps(res, indent=4, ensure_ascii=False))
+    # xu hướng 4 năm gần nhất (chỉ để báo cáo, không vào điểm)
+    ni_series = [(a["period"], a["items"].get("net_income_parent") if a["items"].get("net_income_parent") is not None else a["items"].get("net_income"))
+                 for a in annual[:4]]
+    src = cur.get("source_id") or "src_fin"
+    out["evidence"] = [
+        {"text": f"Kỳ {cur['period']} ({'ngân hàng' if is_bank else 'phi ngân hàng'}): "
+                 + ", ".join(f"{k}={v:.3f}" for k, (v, _) in m.items() if v is not None and k in ("roe", "net_income_growth", "debt_to_equity", "cir", "nim")),
+         "source_id": src},
+        {"text": "Điểm F = trung bình các tiêu chí: " + ", ".join(f"{k}={v}" for k, v in valid.items()), "source_id": src},
+        {"text": "LNST (công ty mẹ) các năm: " + ", ".join(f"{p}: {v/1e9:,.0f} tỷ" for p, v in ni_series if v is not None), "source_id": src},
+    ]
+    if cur.get("published_at_estimated"):
+        out["flags"].append("m2_publish_date_estimated")
+    return out
