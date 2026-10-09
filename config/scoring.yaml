@@ -1,0 +1,26 @@
+# Sở hữu: N5 (M7). Giá trị lấy từ sheet 08_QUY_UOC_SCORE của nhóm - minh họa, CHƯA hiệu chỉnh/kiểm định.
+# Score = clamp( w_F*F + w_T*T + w_V*V + w_S*S - lambda*R , 0, 100 )
+profiles:
+  long_term:
+    weights: {F: 0.30, T: 0.10, V: 0.35, S: 0.25}
+    lambda_R: 0.20
+  swing:
+    weights: {F: 0.15, T: 0.45, V: 0.20, S: 0.20}
+    lambda_R: 0.30
+
+# 5 mức: lấy mức đầu tiên có score >= min
+ratings:
+  - {min: 75, label: "Mua mạnh"}
+  - {min: 60, label: "Mua"}
+  - {min: 45, label: "Nắm giữ"}
+  - {min: 30, label: "Giảm tỷ trọng"}
+  - {min: 0,  label: "Bán"}
+
+# Risk gate: R cao thì khóa trần khuyến nghị (QA10)
+risk_gate:
+  R_threshold: 70
+  max_rating: "Nắm giữ"
+
+# Module lỗi/thiếu thì dùng điểm trung tính và gắn cờ (không làm sập pipeline)
+neutral_score_when_missing: 50
+neutral_R_when_missing: 50

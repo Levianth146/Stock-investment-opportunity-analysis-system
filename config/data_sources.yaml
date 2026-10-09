@@ -1,0 +1,7 @@
+# Sở hữu: N2 (M1)
+window_years: 5            # cửa sổ lùi từ as_of
+index_symbol: VNINDEX
+price_source: vnstock      # đổi nguồn tại đây, không sửa code module khác
+financial_unit: VND
+cache_dir: data/raw        # cache thô, không commit
+snapshot_dir: data/snapshots   # snapshot demo CÓ commit để chạy lại cho kết quả giống nhau

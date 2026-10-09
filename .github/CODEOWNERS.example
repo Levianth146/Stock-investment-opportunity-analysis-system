@@ -1,0 +1,19 @@
+# Đổi tên file thành CODEOWNERS và thay @handle bằng GitHub username thật của từng người.
+# Dùng khi bật "Require review from Code Owners" ở branch protection (tùy chọn).
+/src/stockai/contracts/        @N1
+/src/stockai/pipeline.py       @N1
+/main.py                       @N1
+/requirements.txt              @N1
+/src/stockai/m1_data/          @N2
+/config/data_sources.yaml      @N2
+/data/snapshots/               @N2
+/src/stockai/m2_fundamental/   @N3
+/src/stockai/m4_valuation/     @N3
+/src/stockai/m3_technical/     @N4
+/src/stockai/m6_risk/          @N4
+/src/stockai/m5_sentiment/     @N5
+/src/stockai/m7_scoring/       @N5
+/config/scoring.yaml           @N5
+/config/llm.yaml               @N5
+/src/stockai/m8_validate/      @N6
+/src/stockai/m9_report/        @N6

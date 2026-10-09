@@ -1,0 +1,15 @@
+# N1 sở hữu file này. Cần thêm thư viện -> nhắn N1, đừng tự sửa (tránh conflict).
+pandas
+numpy
+pyyaml
+jsonschema
+requests
+beautifulsoup4
+feedparser
+vnstock
+reportlab
+matplotlib
+pytest
+# LLM (chọn 1 provider ở config/llm.yaml)
+anthropic
+openai

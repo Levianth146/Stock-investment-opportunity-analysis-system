@@ -1,0 +1,5 @@
+# Sở hữu: N5 (M5, M7 debate)
+provider: anthropic        # anthropic | openai
+model: ""                  # điền tên model nhóm có key
+temperature: 0
+max_news_items: 30
