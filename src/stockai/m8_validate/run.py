@@ -1,202 +1,123 @@
-import json
-import pandas as pd
+"""M8 - kiểm chứng (N6). Giữ nguyên chữ ký run(snapshot, upstream, cfg) -> dict (VALIDATION_SCHEMA).
 
-# ==========================================
-# 1. MODULE M5 & M7 (Tin tức & Chấm điểm)
-# ==========================================
+Kiểm tra bằng code (không dùng LLM): dữ liệu (look-ahead, synthetic, trạng thái nguồn), module (stub/error, điểm trong 0-100,
+số liệu hữu hạn, nguồn trích dẫn tồn tại), kết quả M7 (tính lại điểm + khuyến nghị, target chỉ đến từ M4).
+Lỗi nặng -> status="fail" nhưng pipeline VẪN xuất PDF kèm khung cảnh báo.
+Không đặt hàm chạy thử có input()/dữ liệu mô phỏng trong file này.
+"""
+from __future__ import annotations
 
-def analyze_news_impact(ticker, title, content, llm_client=None):
-    """
-    Module M5: Phân tích tin tức bằng AI.
-    Trong thực tế, bạn sẽ dùng llm_client ở đây.
-    """
-    response_text = """{
-      "su_kien_cot_loi": "Chậm tiến độ dự án điện gió 6 tháng",
-      "gia_dinh_tai_chinh": "Doanh thu, Dòng tiền tự do, Chi phí lãi vay",
-      "muc_do_trong_yeu": "Cao",
-      "trang_thai_luan_diem": "Cần đánh giá lại",
-      "giai_thich_ngan_gon": "Việc chậm tiến độ làm lùi thời điểm ghi nhận doanh thu và tăng gánh nặng lãi vay, ảnh hưởng trực tiếp đến mô hình định giá DCF."
-    }"""
-    try:
-        clean_json = response_text.replace("```json", "").replace("```", "").strip()
-        data = json.loads(clean_json)
-        data['ticker'] = ticker
-        
-        # Thêm flag status để báo cho M8 biết module này chạy ổn
-        data['status'] = 'ok' 
-        return data
-    except json.JSONDecodeError:
-        return {
-            "ticker": ticker, 
-            "status": "warn",
-            "su_kien_cot_loi": "Lỗi phân tích JSON", 
-            "trang_thai_luan_diem": "Giữ nguyên"
-        }
+import math
 
-def calculate_explainable_score(ticker, module_data, weights):
-    """
-    Module M7: Tính tổng điểm và giải thích.
-    """
-    module_names = {
-        'M2_Fundamental': 'Sức khỏe tài chính',
-        'M4_Valuation': 'Định giá',
-        'M3_Technical': 'Tín hiệu kỹ thuật',
-        'M5_News': 'Tin tức và triển vọng',
-        'M6_Risk': 'Kiểm soát rủi ro'
-    }
+from stockai.contracts.helpers import check_no_lookahead
 
-    total_score = 0
-    score_details = {}
+RATING_ORDER = ["Bán", "Giảm tỷ trọng", "Nắm giữ", "Mua", "Mua mạnh"]
 
-    for key, weight in weights.items():
-        score = module_data.get(key, 0)
-        total_score += score * weight
-        score_details[key] = score
 
-    total_score = round(total_score, 1)
-    valid_scores = {k: v for k, v in score_details.items() if v > 0}
+def _issue(sev: str, msg: str, where: str | None = None) -> dict:
+    d = {"severity": sev, "message": msg}
+    if where:
+        d["where"] = where
+    return d
 
-    if valid_scores:
-        best_module = max(valid_scores, key=valid_scores.get)
-        worst_module = min(valid_scores, key=valid_scores.get)
 
-        explain_text = (
-            f"Động lực chính đến từ {module_names[best_module]} đạt {valid_scores[best_module]} điểm. "
-            f"Tuy nhiên, điểm số bị kéo lùi đáng kể do {module_names[worst_module]} chỉ đạt {valid_scores[worst_module]} điểm."
-        )
-    else:
-        explain_text = f"Không đủ dữ liệu để đánh giá chi tiết cho cổ phiếu {ticker}."
-
-    if total_score >= 80:
-        rating = "Hấp dẫn (MUA)"
-    elif total_score >= 65:
-        rating = "Đáng theo dõi (TÍCH LŨY)"
-    elif total_score >= 50:
-        rating = "Trung lập (NẮM GIỮ)"
-    else:
-        rating = "Kém hấp dẫn (BÁN/BỎ QUA)"
-
-    warning = ""
-    if module_data.get("News_Flag") == "Cần đánh giá lại":
-        warning = "⚠️ CẢNH BÁO: Có tin tức trọng yếu mới. Cần đánh giá lại mô hình định giá."
-
-    return {
-        "Ticker": ticker,
-        "Total_Score": total_score,
-        "Rating": rating,
-        "Explaination": explain_text,
-        "Warning": warning,
-        "status": "ok" # Báo cho M8 biết module này chạy ổn
-    }
-
-# ==========================================
-# 2. MODULE M8 (Kiểm chứng - N6 phụ trách)
-# ==========================================
-
-def run_m8_validation(snapshot: dict, upstream: dict, cfg: dict) -> dict:
-    """
-    Đoạn code gốc của M8. Quét lỗi trước khi ra báo cáo PDF.
-    """
-    issues = []
-    
+def _check_data(snapshot: dict, issues: list, counter: list) -> None:
+    counter[0] += 1
     if snapshot["meta"].get("synthetic"):
-        issues.append({"severity": "warn", "message": "Snapshot là dữ liệu GIẢ (synthetic) - không dùng cho báo cáo thật"})
-        
-    # Duyệt qua các dictionary output của các module trước đó (nằm trong biến upstream)
-    stubs = [m for m, o in upstream.items() if isinstance(o, dict) and o.get("status") == "stub"]
+        issues.append(_issue("warn", "Snapshot là dữ liệu GIẢ (synthetic) - không dùng cho báo cáo thật", "meta.synthetic"))
+    counter[0] += 1
+    for v in check_no_lookahead(snapshot):
+        issues.append(_issue("fatal", f"Look-ahead: {v}", "snapshot"))
+    for k, v in snapshot["meta"].get("data_status", {}).items():
+        counter[0] += 1
+        if v == "missing":
+            issues.append(_issue("warn", f"Dữ liệu '{k}' bị thiếu", f"meta.data_status.{k}"))
+        elif v == "partial":
+            issues.append(_issue("info", f"Dữ liệu '{k}' chưa đầy đủ", f"meta.data_status.{k}"))
+    fl = snapshot["meta"].get("flags", [])
+    if any(p.get("published_at_estimated") for p in snapshot["financials"]["annual"][:1]):
+        issues.append(_issue("info", "Ngày công bố BCTC là ước lượng (nguồn không cung cấp)", "financials"))
+    if "universe_membership_current_not_point_in_time" in fl:
+        issues.append(_issue("info", "Peers lấy theo thành viên VN30 hiện hành, không phải thời điểm as_of", "peers"))
+    if "peers_cross_sector_vn30_nonbank_fallback" in fl:
+        issues.append(_issue("warn", "Peers khác ngành (ngành chỉ có 1 mã trong VN30) - so sánh định giá chỉ mang tính tham khảo", "peers"))
+
+
+def _check_modules(snapshot: dict, upstream: dict, issues: list, counter: list) -> None:
+    src_ids = {s["id"] for s in snapshot.get("sources", [])}
+    news_ids = {n["id"] for n in snapshot.get("news", [])}
+    stubs, errors = [], []
+    for name in ("m2", "m3", "m4", "m5", "m6"):
+        o = upstream.get(name)
+        counter[0] += 1
+        if o is None:
+            errors.append(name)
+            continue
+        if o.get("status") == "stub":
+            stubs.append(name)
+        elif o.get("status") == "error":
+            errors.append(name)
+            issues.append(_issue("warn", f"Module {name} lỗi: {str(o.get('error', ''))[:120]}", name))
+        sc = o.get("score")
+        if sc is not None and not (isinstance(sc, (int, float)) and 0 <= sc <= 100):
+            issues.append(_issue("fatal", f"Điểm {name} ngoài thang 0-100: {sc}", f"{name}.score"))
+        for k, m in (o.get("metrics") or {}).items():
+            v = m.get("value") if isinstance(m, dict) else None
+            if v is not None and not (isinstance(v, (int, float)) and math.isfinite(v)):
+                issues.append(_issue("fatal", f"Chỉ số {k} không phải số hữu hạn", f"{name}.metrics.{k}"))
+        for ev in o.get("evidence") or []:
+            counter[0] += 1
+            sid, nid = ev.get("source_id"), ev.get("news_id")
+            if sid and sid not in src_ids:
+                issues.append(_issue("warn", f"Trích dẫn nguồn không tồn tại trong snapshot: {sid}", f"{name}.evidence"))
+            if nid and nid not in news_ids:
+                issues.append(_issue("warn", f"Trích dẫn tin không tồn tại trong snapshot: {nid}", f"{name}.evidence"))
     if stubs:
-        issues.append({"severity": "warn", "message": f"Module chưa triển khai: {', '.join(stubs).upper()}"})
-        
-    return {"status": "warn" if issues else "pass", "checked": 0, "issues": issues}
+        issues.append(_issue("warn", f"Module chưa triển khai (dùng điểm trung tính): {', '.join(m.upper() for m in stubs)}"))
+    if errors:
+        issues.append(_issue("warn", f"Module lỗi/thiếu: {', '.join(m.upper() for m in errors)}"))
 
-# ==========================================
-# 3. PIPELINE ĐIỀU PHỐI (KẾT NỐI M1 -> M8)
-# ==========================================
 
-# Trọng số
-weights = {
-    "M2_Fundamental": 0.25, "M4_Valuation": 0.25, 
-    "M3_Technical": 0.20, "M5_News": 0.15, "M6_Risk": 0.15
-}
+def _check_m7(upstream: dict, cfg: dict, issues: list, counter: list) -> None:
+    r = upstream.get("m7")
+    counter[0] += 1
+    if not isinstance(r, dict) or "score" not in r:
+        issues.append(_issue("fatal", "Thiếu kết quả M7", "m7"))
+        return
+    try:
+        prof = cfg["profiles"][r["profile"]]
+        sc = r["scores"]
+        expect = sum(prof["weights"][k] * sc[k] for k in ("F", "T", "V", "S")) - prof["lambda_R"] * sc["R"]
+        expect = max(0.0, min(100.0, expect))
+        counter[0] += 1
+        if abs(expect - r["score"]) > 0.05:
+            issues.append(_issue("fatal", f"Điểm M7 {r['score']:.2f} không khớp công thức ({expect:.2f})", "m7.score"))
+        counter[0] += 1
+        label = next(x["label"] for x in cfg["ratings"] if expect >= x["min"])
+        gate = cfg["risk_gate"]
+        if sc["R"] >= gate["R_threshold"] and RATING_ORDER.index(label) > RATING_ORDER.index(gate["max_rating"]):
+            label = gate["max_rating"]
+        if label != r["rating"]:
+            issues.append(_issue("fatal", f"Khuyến nghị '{r['rating']}' không khớp ngưỡng điểm (kỳ vọng '{label}')", "m7.rating"))
+    except (KeyError, StopIteration, TypeError, ValueError) as e:
+        issues.append(_issue("fatal", f"Không kiểm tra lại được M7: {e}", "m7"))
+    counter[0] += 1
+    if r.get("target") != (upstream.get("m4") or {}).get("target"):
+        issues.append(_issue("fatal", "Giá mục tiêu trong kết quả khác M4 (chỉ M4 được tạo giá mục tiêu)", "m7.target"))
+    if not (upstream.get("m4") or {}).get("target") and (upstream.get("m4") or {}).get("status") in ("stub", "error", None):
+        issues.append(_issue("info", "Chưa có giá mục tiêu (M4 chưa chạy thật)", "m4"))
 
-# Dữ liệu mô phỏng từ các module khác
-mock_data = {
-    "HPG": {
-        "M2_Fundamental": 65, "M4_Valuation": 90, "M3_Technical": 85, 
-        "M5_News": 60, "M6_Risk": 55, "News_Flag": "Cần đánh giá lại"
-    },
-    "FPT": {
-        "M2_Fundamental": 85, "M4_Valuation": 70, "M3_Technical": 45, 
-        "M5_News": 80, "M6_Risk": 75, "News_Flag": "Giữ nguyên"
-    }
-}
 
-news_data = [
-    {"ticker": "HPG", "title": "Dự án chậm tiến độ", "content": "Tiến độ xây nhà máy chậm 6 tháng..."},
-    {"ticker": "FPT", "title": "Bổ nhiệm Phó TGĐ mới", "content": "Ông A vừa được bổ nhiệm làm Phó TGĐ..."}
-]
-
-def main():
-    print("="*60)
-    print("HỆ THỐNG PHÂN TÍCH CƠ HỘI ĐẦU TƯ CỔ PHIẾU")
-    print("="*60)
-    
-    ticker_input = input("\nNhập mã cổ phiếu cần phân tích (VD: FPT, HPG): ").strip().upper()
-    
-    if ticker_input in mock_data:
-        # BƯỚC 1: Cấu hình dữ liệu đầu vào (M1)
-        # Báo cáo với hệ thống đây là dữ liệu giả (để trigger cảnh báo của M8)
-        snapshot = {"meta": {"synthetic": True}, "ticker": ticker_input}
-        
-        # Mô phỏng trạng thái các module đã chạy trước đó. 
-        # Ví dụ M3 và M4 đang code dở, để status = stub
-        upstream_status = {
-            "m2": {"status": "ok"},
-            "m3": {"status": "stub"},
-            "m4": {"status": "stub"},
-            "m6": {"status": "ok"}
-        }
-
-        # BƯỚC 2: Chạy M5
-        news_item = next((item for item in news_data if item["ticker"] == ticker_input), None)
-        if news_item:
-            m5_out = analyze_news_impact(ticker_input, news_item['title'], news_item['content'])
-            # Bơm trạng thái của M5 vào biến upstream để M8 kiểm tra
-            upstream_status["m5"] = {"status": m5_out["status"]} 
-            
-        # BƯỚC 3: Chạy M7
-        data = mock_data[ticker_input]
-        m7_out = calculate_explainable_score(ticker_input, data, weights)
-        # Bơm trạng thái của M7 vào biến upstream để M8 kiểm tra
-        upstream_status["m7"] = {"status": m7_out["status"]} 
-
-        # BƯỚC 4: Chạy M8 Kiểm duyệt
-        # Hàm M8 sẽ quét cái `upstream_status` ở trên để tìm ra m3 và m4 đang bị stub
-        m8_out = run_m8_validation(snapshot, upstream_status, {})
-        
-        # BƯỚC 5: Hiển thị kết quả
-        print("\n" + "═"*50)
-        print(f"BÁO CÁO NHANH CỔ PHIẾU: {ticker_input}")
-        print("═"*50)
-        
-        # Nếu M8 tìm thấy lỗi, in ra đầu tiên
-        if m8_out["status"] == "warn":
-            print("⚠️ CẢNH BÁO TỪ HỆ THỐNG KIỂM DUYỆT (M8):")
-            for issue in m8_out["issues"]:
-                print(f"   - {issue['message']}")
-            print("-" * 50)
-            
-        # In kết quả điểm số
-        print(f"📌 Tổng điểm   : {m7_out['Total_Score']}/100")
-        print(f"🎯 Khuyến nghị : {m7_out['Rating']}")
-        print(f"💡 Phân tích   : {m7_out['Explaination']}")
-        
-        if m7_out['Warning']:
-            print(f"\n{m7_out['Warning']}")
-        print("═"*50)
-            
+def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
+    issues: list[dict] = []
+    counter = [0]
+    _check_data(snapshot, issues, counter)
+    _check_modules(snapshot, upstream, issues, counter)
+    _check_m7(upstream, cfg, issues, counter)
+    if any(i["severity"] == "fatal" for i in issues):
+        status = "fail"
+    elif any(i["severity"] == "warn" for i in issues):
+        status = "warn"
     else:
-        print(f"\n❌ LỖI: Không tìm thấy dữ liệu cho mã '{ticker_input}'.")
-
-if __name__ == "__main__":
-    main()
+        status = "pass"
+    return {"status": status, "checked": counter[0], "issues": issues}
