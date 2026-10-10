@@ -12,7 +12,7 @@ from pathlib import Path
 
 from stockai.contracts.helpers import check_no_lookahead
 from stockai.contracts.schemas import assert_valid
-from stockai.m1_data import bank_kpis, news_extra, vnf_source
+from stockai.m1_data import bank_kpis, icb_sector, news_extra, vnf_source
 from stockai.m1_data import normalize as nz
 from stockai.m1_data import sources as src
 
@@ -109,6 +109,10 @@ def fetch_company(ticker: str, as_of: str, cfg: dict) -> tuple[dict, list[dict],
         _flag(cfg, f"company_overview_error: {str(e)[:120]}")
         company = {"name": ticker, "exchange": "", "sector": "", "industry": None,
                    "is_bank": ticker in cfg.get("banks", []), "shares_outstanding": None}
+    # ICB cấp 2 (listing_icb.csv): điền sector khi thiếu; giữ vnstock nếu đã có
+    if cfg.get("icb_sector_enabled", True):
+        for f in icb_sector.apply_to_company(company, ticker, map_path=cfg.get("icb_sector_map")):
+            _flag(cfg, f)
     company["source_id"] = "src_company"
     peers = []
     for p in ([] if cfg.get("skip_peer_fetch") else _peer_list(ticker, cfg)):   # chạy hàng loạt: peers tính sau từ chính universe

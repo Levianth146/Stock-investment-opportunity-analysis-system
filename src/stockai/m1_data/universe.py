@@ -21,6 +21,7 @@ from pathlib import Path
 import yaml
 
 from stockai.m1_data import fetch as f
+from stockai.m1_data import icb_sector
 from stockai.m1_data import normalize as nz
 from stockai.m1_data import quality
 
@@ -111,46 +112,102 @@ def _metrics(snap: dict) -> dict | None:
     return m or None
 
 
-def _view(snap: dict) -> dict:
-    return {"sector": snap["company"].get("sector") or "", "is_bank": bool(snap["company"].get("is_bank")), "met": _metrics(snap)}
+def _view(snap: dict, listing: dict | None = None) -> dict:
+    t = snap["meta"]["ticker"]
+    parent = None
+    if listing is not None:
+        parent = (listing.get(t) or {}).get("parent_en")
+    return {
+        "sector": snap["company"].get("sector") or "",
+        "parent": parent,
+        "is_bank": bool(snap["company"].get("is_bank")),
+        "met": _metrics(snap),
+    }
 
 
-def _closest(group: list[str], t: str, views: dict, max_peers: int | None) -> list[str]:
-    """Giữ tối đa max_peers mã có vốn hóa gần mã t nhất (không có vốn hóa thì theo thứ tự mã)."""
-    if not max_peers or len(group) <= max_peers:
-        return group
+def _closest(
+    group: list[str],
+    t: str,
+    views: dict,
+    max_peers: int | None,
+    *,
+    rank_by_market_cap: bool = False,
+) -> list[str]:
+    """Xếp peers.
+
+    - rank_by_market_cap=True (cascade ICB): luôn sắp |Δ vốn hóa| rồi mã.
+    - False (legacy VN30): giữ thứ tự group trừ khi cắt max_peers (khi đó sắp theo |Δcap|/mã).
+    """
     mc = (views.get(t, {}).get("met") or {}).get("market_cap")
-    if not mc or mc <= 0:
-        return sorted(group)[:max_peers]
-    def dist(x):
+
+    def dist(x: str) -> float:
+        if not mc or mc <= 0:
+            return 1e9
         v = (views[x]["met"] or {}).get("market_cap")
         return abs(math.log(v / mc)) if v and v > 0 else 1e9
+
+    if rank_by_market_cap:
+        ordered = sorted(group, key=lambda x: (dist(x), x))
+        if not max_peers or len(ordered) <= max_peers:
+            return ordered
+        return ordered[:max_peers]
+
+    # Legacy: không đổi thứ tự nếu không cắt
+    if not max_peers or len(group) <= max_peers:
+        return group
+    if not mc or mc <= 0:
+        return sorted(group)[:max_peers]
     return sorted(group, key=lambda x: (dist(x), x))[:max_peers]
 
 
-def _assign_peers(s: dict, t: str, views: dict, by_sector: dict, max_peers: int | None) -> None:
-    group = [x for x in by_sector.get(views[t]["sector"], []) if x != t]
+def _assign_peers(
+    s: dict,
+    t: str,
+    views: dict,
+    by_sector: dict,
+    max_peers: int | None,
+    *,
+    listing: dict | None = None,
+    min_peer_group_size: int | None = None,
+    use_icb_peer_cascade: bool = False,
+) -> None:
+    group, small, finance_blocked = icb_sector.resolve_peer_group(
+        t, views, listing=listing if use_icb_peer_cascade else None,
+        min_size=min_peer_group_size,
+        apply_finance_filter=use_icb_peer_cascade,
+    )
     fallback = False
-    if not group and not views[t]["is_bank"]:   # ngành chỉ có 1 mã trong universe: tạm dùng các mã phi ngân hàng còn lại (khác ngành)
-        group = [x for x in views if x != t and views[x]["met"] and not views[x]["is_bank"]]
+    # Legacy VN30: ngành chỉ có 1 mã phi ngân hàng → peers khác ngành
+    if not use_icb_peer_cascade and not group and not views[t]["is_bank"]:
+        group = [x for x in views if x != t and views[x]["met"] and not views[x]["is_bank"]
+                 and (views[x].get("sector") or "").strip()]
         fallback = bool(group)
+        small = small or fallback
     if not group:
-        if "peers_none_in_universe_same_sector" not in s["meta"]["flags"]:
+        if finance_blocked:
+            if "peers_finance_nonfinance_blocked" not in s["meta"]["flags"]:
+                s["meta"]["flags"].append("peers_finance_nonfinance_blocked")
+        elif "peers_none_in_universe_same_sector" not in s["meta"]["flags"]:
             s["meta"]["flags"].append("peers_none_in_universe_same_sector")
+        s["peers"] = []
         return
-    group = _closest(group, t, views, max_peers)
+    group = _closest(group, t, views, max_peers, rank_by_market_cap=use_icb_peer_cascade)
     s["peers"] = [{"ticker": x, **{k: (round(v, 4) if v is not None else None) for k, v in views[x]["met"].items()},
                    "source_id": "src_universe_calc"} for x in group]
-    s["meta"]["data_status"]["peers"] = "partial" if (fallback or len(group) < 2) else "ok"
+    s["meta"]["data_status"]["peers"] = "partial" if (fallback or small or len(group) < 2) else "ok"
     if not any(x["id"] == "src_universe_calc" for x in s["sources"]):
         s["sources"].append({"id": "src_universe_calc", "name": "PE/PB/ROE tự tính từ snapshot các mã cùng ngành trong universe",
                              "url": "internal://universe", "fetched_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
                              "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"})
     s["meta"]["flags"] = [x for x in s["meta"]["flags"] if x not in (
         "peers_list_empty", "peers_multiples_not_point_in_time", "peers_none_in_universe_same_sector",
-        "peers_cross_sector_vn30_nonbank_fallback")]
+        "peers_cross_sector_vn30_nonbank_fallback", "sector_small_group", "peers_finance_nonfinance_blocked")]
     if fallback:
         s["meta"]["flags"].append("peers_cross_sector_vn30_nonbank_fallback")
+    if small:
+        s["meta"]["flags"].append("sector_small_group")
+    if finance_blocked:
+        s["meta"]["flags"].append("peers_finance_nonfinance_blocked")
     if "universe_membership_current_not_point_in_time" not in s["meta"]["flags"]:
         s["meta"]["flags"].append("universe_membership_current_not_point_in_time")
 
@@ -163,27 +220,67 @@ def _by_sector(views: dict) -> dict:
     return by
 
 
-def fill_peers(snaps: dict[str, dict], max_peers: int | None = None) -> None:
-    """Gán peers = mã cùng sector trong universe. Sector đứng một mình thì giữ peers cũ (nếu có)."""
-    views = {t: _view(s) for t, s in snaps.items()}
+def fill_peers(
+    snaps: dict[str, dict],
+    max_peers: int | None = None,
+    cfg: dict | None = None,
+    *,
+    use_icb_peer_cascade: bool | None = None,
+) -> None:
+    """Gán peers trong universe.
+
+    use_icb_peer_cascade mặc định False (cfg hoặc kwarg). True → cascade ICB + lọc tài chính.
+    """
+    cfg = cfg or {}
+    if use_icb_peer_cascade is None:
+        use_icb_peer_cascade = bool(cfg.get("use_icb_peer_cascade", False))
+    listing = None
+    if use_icb_peer_cascade and cfg.get("icb_sector_enabled", True):
+        listing = icb_sector.load_listing(cfg.get("icb_sector_map"))
+    elif cfg.get("icb_sector_enabled", True):
+        # vẫn nạp listing để gắn parent trên view (không cascade)
+        listing = icb_sector.load_listing(cfg.get("icb_sector_map"))
+    views = {t: _view(s, listing) for t, s in snaps.items()}
     by = _by_sector(views)
+    min_size = None
+    if use_icb_peer_cascade:
+        min_size = cfg.get("min_peer_group_size")
     for t, s in snaps.items():
-        _assign_peers(s, t, views, by, max_peers)
+        _assign_peers(
+            s, t, views, by, max_peers, listing=listing,
+            min_peer_group_size=min_size, use_icb_peer_cascade=use_icb_peer_cascade,
+        )
 
 
-def fill_peers_dir(tickers: list[str], as_of: str, out_dir: str, cfg: dict, log=print) -> dict:
-    """Như fill_peers nhưng đọc/ghi từng file (không giữ cả universe trong RAM) - dùng cho universe lớn hoặc sau khi
-    nhiều người chạy từng lô (--shard) rồi gộp snapshot về một thư mục."""
+def fill_peers_dir(
+    tickers: list[str],
+    as_of: str,
+    out_dir: str,
+    cfg: dict,
+    log=print,
+    *,
+    use_icb_peer_cascade: bool | None = None,
+) -> dict:
+    """Như fill_peers nhưng đọc/ghi từng file (không giữ cả universe trong RAM)."""
+    if use_icb_peer_cascade is None:
+        use_icb_peer_cascade = bool(cfg.get("use_icb_peer_cascade", False))
+    listing = None
+    if cfg.get("icb_sector_enabled", True):
+        listing = icb_sector.load_listing(cfg.get("icb_sector_map"))
     paths = {t: Path(out_dir) / f"{t}_{as_of}.json" for t in tickers}
     views = {}
     for t, p in paths.items():
         if p.exists():
-            views[t] = _view(json.loads(p.read_text(encoding="utf-8")))
+            views[t] = _view(json.loads(p.read_text(encoding="utf-8")), listing)
     by, cap = _by_sector(views), cfg.get("universe_max_peers")
+    min_size = cfg.get("min_peer_group_size") if use_icb_peer_cascade else None
     summary = {}
     for t in views:
         s = json.loads(paths[t].read_text(encoding="utf-8"))
-        _assign_peers(s, t, views, by, cap)
+        _assign_peers(
+            s, t, views, by, cap, listing=listing,
+            min_peer_group_size=min_size, use_icb_peer_cascade=use_icb_peer_cascade,
+        )
         res = quality.apply(s, cfg)
         f.save_snapshot(s, out_dir)
         summary[t] = {"data_status": s["meta"]["data_status"], "flags": s["meta"]["flags"], "quality": res["tier"]}
@@ -240,7 +337,10 @@ def fetch_all(tickers: list[str], as_of: str, cfg: dict, out_dir: str = "data/sn
             summary[t] = {"status": "error", "error": str(e)[:200]}
             log(f"[{i}/{len(tickers)}] {t}: LỖI {str(e)[:120]}")
     if peers:
-        fill_peers(snaps, cfg.get("universe_max_peers"))
+        fill_peers(
+            snaps, cfg.get("universe_max_peers"), cfg=cfg,
+            use_icb_peer_cascade=bool(cfg.get("use_icb_peer_cascade", False)),
+        )
     for t, s in snaps.items():
         res = quality.apply(s, cfg)
         f.save_snapshot(s, out_dir)

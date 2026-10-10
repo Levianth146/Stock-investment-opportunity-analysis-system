@@ -36,6 +36,8 @@ a = ap.parse_args()
 cfg = yaml.safe_load(Path("config/data_sources.yaml").read_text(encoding="utf-8"))
 wide = a.universe.upper() != "VN30" or bool(a.tickers_file)
 out_dir = a.out_dir or ("data/snapshots_ext" if wide else "data/snapshots")
+# Cascade ICB peers chỉ khi universe ≠ VN30 (mặc định fill_peers = False)
+cfg["use_icb_peer_cascade"] = wide  # True khi universe ≠ VN30 hoặc --tickers-file
 if wide:
     cfg["cache_dir"] = "data/raw_ext"
     cfg.setdefault("universe_max_peers", 15)     # VN30 giữ nguyên hành vi cũ (không trần)
