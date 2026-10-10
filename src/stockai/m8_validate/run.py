@@ -84,28 +84,40 @@ def _check_m7(upstream: dict, cfg: dict, issues: list, counter: list) -> None:
     if not isinstance(r, dict) or "score" not in r:
         issues.append(_issue("fatal", "Thiếu kết quả M7", "m7"))
         return
-    try:
-        prof = cfg["profiles"][r["profile"]]
-        sc = r["scores"]
-        expect = sum(prof["weights"][k] * sc[k] for k in ("F", "T", "V", "S")) - prof["lambda_R"] * sc["R"]
-        expect = max(0.0, min(100.0, expect))
-        counter[0] += 1
-        if abs(expect - r["score"]) > 0.05:
-            issues.append(_issue("fatal", f"Điểm M7 {r['score']:.2f} không khớp công thức ({expect:.2f})", "m7.score"))
-        counter[0] += 1
-        label = next(x["label"] for x in cfg["ratings"] if expect >= x["min"])
-        gate = cfg["risk_gate"]
-        if sc["R"] >= gate["R_threshold"] and RATING_ORDER.index(label) > RATING_ORDER.index(gate["max_rating"]):
-            label = gate["max_rating"]
-        if label != r["rating"]:
-            issues.append(_issue("fatal", f"Khuyến nghị '{r['rating']}' không khớp ngưỡng điểm (kỳ vọng '{label}')", "m7.rating"))
-    except (KeyError, StopIteration, TypeError, ValueError) as e:
-        issues.append(_issue("fatal", f"Không kiểm tra lại được M7: {e}", "m7"))
+    qg = r.get("quality_gate") or {}
+    # FR-008: không kiểm tra công thức điểm / ngưỡng khuyến nghị khi không xếp hạng
+    skip_score_rating = qg.get("scored") is False or r.get("score") is None
+    if not skip_score_rating:
+        try:
+            prof = cfg["profiles"][r["profile"]]
+            sc = r["scores"]
+            expect = sum(prof["weights"][k] * sc[k] for k in ("F", "T", "V", "S")) - prof["lambda_R"] * sc["R"]
+            expect = max(0.0, min(100.0, expect))
+            counter[0] += 1
+            if abs(expect - r["score"]) > 0.05:
+                issues.append(_issue("fatal", f"Điểm M7 {r['score']:.2f} không khớp công thức ({expect:.2f})", "m7.score"))
+            counter[0] += 1
+            label = next(x["label"] for x in cfg["ratings"] if expect >= x["min"])
+            gate = cfg["risk_gate"]
+            if sc["R"] >= gate["R_threshold"] and RATING_ORDER.index(label) > RATING_ORDER.index(gate["max_rating"]):
+                label = gate["max_rating"]
+            if label != r["rating"]:
+                issues.append(_issue("fatal", f"Khuyến nghị '{r['rating']}' không khớp ngưỡng điểm (kỳ vọng '{label}')", "m7.rating"))
+        except (KeyError, StopIteration, TypeError, ValueError) as e:
+            issues.append(_issue("fatal", f"Không kiểm tra lại được M7: {e}", "m7"))
+    else:
+        counter[0] += 1  # ghi nhận đã xét nhánh skip công thức/ngưỡng
+        if r.get("rating") != "Không xếp hạng":
+            issues.append(_issue("warn", "quality_gate không xếp hạng nhưng rating không phải 'Không xếp hạng'", "m7.rating"))
     counter[0] += 1
-    if r.get("target") != (upstream.get("m4") or {}).get("target"):
-        issues.append(_issue("fatal", "Giá mục tiêu trong kết quả khác M4 (chỉ M4 được tạo giá mục tiêu)", "m7.target"))
-    if not (upstream.get("m4") or {}).get("target") and (upstream.get("m4") or {}).get("status") in ("stub", "error", None):
-        issues.append(_issue("info", "Chưa có giá mục tiêu (M4 chưa chạy thật)", "m4"))
+    # Khi không xếp hạng: target buộc null — không so với M4
+    if not skip_score_rating:
+        if r.get("target") != (upstream.get("m4") or {}).get("target"):
+            issues.append(_issue("fatal", "Giá mục tiêu trong kết quả khác M4 (chỉ M4 được tạo giá mục tiêu)", "m7.target"))
+        if not (upstream.get("m4") or {}).get("target") and (upstream.get("m4") or {}).get("status") in ("stub", "error", None):
+            issues.append(_issue("info", "Chưa có giá mục tiêu (M4 chưa chạy thật)", "m4"))
+    elif r.get("target") is not None:
+        issues.append(_issue("warn", "quality_gate không xếp hạng nhưng target không null", "m7.target"))
 
 
 def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
