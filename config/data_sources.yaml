@@ -25,6 +25,10 @@ news_google_window_days: 30
 news_google_interval_sec: 1.0
 news_rss: []                    # ví dụ: ["https://cafef.vn/....rss"] - điền nếu vnstock không có tin; lọc theo mã
 
+# --- ngành ICB (listing_icb.csv, Supersector cấp 2 → English) ---
+icb_sector_enabled: true
+icb_sector_map: config/icb_sector_map.yaml   # ánh xạ VI→EN + chuẩn hóa sàn; xem THIRD_PARTY_NOTICES.txt
+
 # --- ngành / đối chứng (curated tay, kiểm tra lại trước khi chốt) ---
 max_peers: 8
 peers_map:

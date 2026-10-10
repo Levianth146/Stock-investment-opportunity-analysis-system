@@ -1,0 +1,65 @@
+# Ánh xạ ICB (tiếng Việt từ listing_icb.csv) → tên tiếng Anh dùng trong snapshot.company.sector.
+# Sở hữu: N2 (M1). Không đoán runtime — thiếu khóa trong bảng này thì để sector "" + cờ.
+# Nguồn listing: config/listing_icb.csv (vn-annual-report-miner, MIT) — xem THIRD_PARTY_NOTICES.txt.
+# Parent peers lấy từ supersector_parent_en (không dùng cột ICB cấp 1 CSV).
+
+listing_csv: config/listing_icb.csv
+min_peer_group_size: 10
+
+exchange_aliases:
+  HOSE: HSX
+  HSX: HSX
+  HNX: HNX
+  UPCOM: UpCoM
+  UpCom: UpCoM
+  UpCoM: UpCoM
+
+# ICB cấp 2 (Supersector) → English (khóa peers / company.sector)
+supersector_to_en:
+  "Ngân hàng": Banks
+  "Bất động sản": "Real Estate"
+  "Thực phẩm và đồ uống": "Food & Beverage"
+  "Điện, nước & xăng dầu khí đốt": Utilities
+  "Tài nguyên Cơ bản": "Basic Resources"
+  "Hóa chất": Chemicals
+  "Công nghệ Thông tin": Technology
+  "Bán lẻ": Retail
+  "Du lịch và Giải trí": "Travel & Leisure"
+  "Dầu khí": "Oil & Gas"
+  "Bảo hiểm": Insurance
+  "Dịch vụ tài chính": "Financial Services"
+  "Hàng & Dịch vụ Công nghiệp": "Industrial Goods & Services"
+  "Hàng cá nhân & Gia dụng": "Personal & Household Goods"
+  "Truyền thông": Media
+  "Viễn thông": Telecommunications
+  "Xây dựng và Vật liệu": "Construction & Materials"
+  "Y tế": "Health Care"
+  "Ô tô và phụ tùng": "Automobiles & Parts"
+
+# Parent peers theo Supersector (authoritative). Real Estate → Real Estate (không Financials).
+supersector_parent_en:
+  "Ngân hàng": Financials
+  "Bảo hiểm": Financials
+  "Dịch vụ tài chính": Financials
+  "Bất động sản": "Real Estate"
+  "Thực phẩm và đồ uống": "Consumer Goods"
+  "Hàng cá nhân & Gia dụng": "Consumer Goods"
+  "Bán lẻ": "Consumer Services"
+  "Du lịch và Giải trí": "Consumer Services"
+  "Truyền thông": "Consumer Services"
+  "Hàng & Dịch vụ Công nghiệp": Industrials
+  "Xây dựng và Vật liệu": Industrials
+  "Ô tô và phụ tùng": Industrials
+  "Tài nguyên Cơ bản": "Basic Materials"
+  "Hóa chất": "Basic Materials"
+  "Điện, nước & xăng dầu khí đốt": Utilities
+  "Dầu khí": "Oil & Gas"
+  "Công nghệ Thông tin": Technology
+  "Viễn thông": Telecommunications
+  "Y tế": "Health Care"
+
+# Nhóm tài chính cho bộ lọc peers (đúng 3 sector)
+financial_sectors:
+  - Banks
+  - Insurance
+  - Financial Services
