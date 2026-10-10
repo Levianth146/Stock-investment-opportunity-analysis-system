@@ -1,0 +1,87 @@
+﻿item,item_en,item_id,2026-Q2,2026-Q1,2025-Q4,2025-Q3,2025-Q2,2025-Q1,2024-Q4,2024-Q3
+"Tiền mặt, vàng bạc, đá quý",Cash and precious metals,cash_and_precious_metals,1771148000000.0,2592698000000.0,1704704000000.0,1560071000000.0,1551561000000.0,1698877000000.0,1292735000000.0,1692781000000.0
+Tài sản cố định,Fixed assets,fixed_assets,1574098000000.0,1627109000000.0,1212704000000.0,1253386000000.0,1189484000000.0,1172615000000.0,1221874000000.0,1091450000000.0
+Tài sản cố định hữu hình,Tangible fixed assets,tangible_fixed_assets,677035000000.0,724961000000.0,748875000000.0,796929000000.0,856436000000.0,819860000000.0,856699000000.0,720716000000.0
+Nguyên giá TSCĐ hữu hình,Cost,cost,2273843000000.0,2281386000000.0,2257192000000.0,2239827000000.0,2250898000000.0,2136513000000.0,2134077000000.0,1949597000000.0
+Hao mòn TSCĐ hữu hình,Accumulated depreciation,accumulated_depreciation,-1596808000000.0,-1556425000000.0,-1508317000000.0,-1442898000000.0,-1394462000000.0,-1316653000000.0,-1277378000000.0,-1228881000000.0
+Tài sản cố định thuê tài chính,Finance leased assets,finance_leased_assets,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Nguyên giá TSCĐ thuê tài chính,Cost,cost,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Hao mòn TSCĐ thuê tài chính,Accumulated depreciation,accumulated_depreciation,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Tài sản cố định vô hình,Intangible fixed assets,intangible_fixed_assets,897063000000.0,902148000000.0,463829000000.0,456457000000.0,333048000000.0,352755000000.0,365175000000.0,370734000000.0
+Nguyên giá TSCĐ vô hình,Cost,cost,1692172000000.0,1669839000000.0,1203852000000.0,1198273000000.0,1039720000000.0,1029724000000.0,1027747000000.0,1005166000000.0
+Hao mòn TSCĐ vô hình,Accumulated amortization,accumulated_amortization,-795109000000.0,-767691000000.0,-740023000000.0,-741816000000.0,-706672000000.0,-676969000000.0,-662572000000.0,-634432000000.0
+Bất động sản đầu tư,Investment properties,investment_properties,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Nguyên giá bất động sản đầu tư,Historical cost,historical_cost,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Hao mòn bất động sản đầu tư,Accumulated depreciation,accumulated_depreciation,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+"Góp vốn, đầu tư dài hạn",Investment in other entities and long term investments,investment_in_other_entities_and_long_term_investments,13200000000.0,13200000000.0,0.0,0.0,0.0,0.0,0.0,0.0
+Đầu tư vào công ty con,Investment in subsidiaries,investment_in_subsidiaries,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Đầu tư vào công ty liên doanh,Investment in associate companies,investment_in_associate_companies,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Đầu tư dài hạn khác,Other Long-term investments,other_long_term_investments,13200000000.0,13200000000.0,0.0,0.0,0.0,0.0,0.0,0.0
+Dự phòng giảm giá đầu tư dài hạn,Provision for long-term investments,provision_for_long_term_investments,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+TỔNG TÀI SẢN,TOTAL ASSETS,total_assets,547664403000000.0,527169377000000.0,505901570000000.0,451893195000000.0,428589979000000.0,388891150000000.0,418028391000000.0,385352239000000.0
+TỔNG NỢ PHẢI TRẢ,TOTAL LIABILITIES,total_liabilities,498098519000000.0,479135059000000.0,459852809000000.0,411899955000000.0,390360071000000.0,349399554000000.0,380433922000000.0,349041157000000.0
+VỐN CHỦ SỞ HỮU,OWNER'S EQUITY,owners_equity,49565884000000.0,48034318000000.0,46048761000000.0,39993240000000.0,38229908000000.0,39491596000000.0,37594469000000.0,36311082000000.0
+Vốn điều lệ,Charter capital,charter_capital,27740469000000.0,27740469000000.0,27740469000000.0,26419562000000.0,26419562000000.0,26419562000000.0,26419562000000.0,22016350000000.0
+Thặng dư vốn cổ phần,Capital surplus,capital_surplus,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Vốn khác,Owner's other capital,owners_other_capital,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Cổ phiếu Quỹ,Treasury shares,treasury_shares,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Chênh lệch đánh giá lại tài sản,Difference upon assets revaluation,difference_upon_assets_revaluation,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Chênh lệch tỷ giá hối đoái,Foreign currency difference reserve,foreign_currency_difference_reserve,0.0,373117000000.0,0.0,252197000000.0,0.0,210436000000.0,0.0,419867000000.0
+Lợi nhuận chưa phân phối,Retained Earnings,retained_earnings,11755970000000.0,11305830000000.0,9629495000000.0,8385337000000.0,6874202000000.0,9139634000000.0,7452942000000.0,10152901000000.0
+Lợi ích của cổ đông thiểu số (trước 2015),Minority interest (Before 2015),minority_interest_before_2015,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NỢ PHẢI TRẢ VÀ VỐN CHỦ SỞ HỮU,LIABILITIES AND SHAREHOLDER'S EQUITY,liabilities_and_shareholders_equity,547664403000000.0,527169377000000.0,505901570000000.0,451893195000000.0,428589979000000.0,388891150000000.0,418028391000000.0,385352239000000.0
+Tiền gửi tại Ngân hàng nhà nước Việt Nam,Balances with the SBV,balances_with_the_sbv,13444607000000.0,10068279000000.0,20459657000000.0,20659033000000.0,10000595000000.0,16631310000000.0,22708369000000.0,13214550000000.0
+Tiền gửi tại các TCTD khác và cho vay các TCTD khác,Placements with and loans to other credit institutions,placements_with_and_loans_to_other_credit_institutions,97759092000000.0,109316911000000.0,103388411000000.0,65344160000000.0,59990100000000.0,35189690000000.0,70520700000000.0,54515768000000.0
+Chứng khoán kinh doanh,"Trading securities, net",trading_securities_net,4714695000000.0,1482130000000.0,2119466000000.0,57321000000.0,8833000000.0,10931000000.0,1000000.0,1000000.0
+Chứng khoán kinh doanh,Trading securities,trading_securities,4945153000000.0,1670636000000.0,2119544000000.0,58183000000.0,9497000000.0,11427000000.0,1000000.0,1000000.0
+Dự phòng giảm giá chứng khoán kinh doanh,Less: Provision for diminution in value of trading securities,less_provision_for_diminution_in_value_of_trading_securities,-230458000000.0,-188506000000.0,-78000000.0,-862000000.0,-664000000.0,-496000000.0,0.0,0.0
+Các công cụ tài chính phái sinh và các tài sản tài chính khác,Derivatives and other financial assets,derivatives_and_other_financial_assets,261305000000.0,171380000000.0,333702000000.0,112651000000.0,171549000000.0,55880000000.0,0.0,0.0
+Cho vay khách hàng,"Loans and advances to customers, net",loans_and_advances_to_customers_net,333970520000000.0,312044784000000.0,302186389000000.0,292020111000000.0,281188723000000.0,259070461000000.0,247238856000000.0,231562431000000.0
+Cho vay khách hàng,Loans and advances to customers,loans_and_advances_to_customers,338148180000000.0,316042203000000.0,305816635000000.0,296054927000000.0,284849379000000.0,262477215000000.0,250331368000000.0,234722105000000.0
+Dự phòng rủi ro cho vay khách hàng,Less: Provision for losses on loans and advances to customers,less_provision_for_losses_on_loans_and_advances_to_customers,-4177660000000.0,-3997419000000.0,-3630246000000.0,-4034816000000.0,-3660656000000.0,-3406754000000.0,-3092512000000.0,-3159674000000.0
+Chứng khoán đầu tư,Investment securities,investment_securities,59281266000000.0,57531215000000.0,51613170000000.0,57166207000000.0,60147095000000.0,59909064000000.0,59472044000000.0,63892590000000.0
+Chứng khoán đầu tư sẵn sàng để bán,Available-for-sales securities,available_for_sales_securities,59588612000000.0,57897100000000.0,52051025000000.0,57216163000000.0,60206683000000.0,59971386000000.0,59549367000000.0,63959218000000.0
+Chứng khoán đầu tư giữ đến ngày đáo hạn,Held-to-maturity securities,held_to_maturity_securities,0.0,0.0,0.0,44700000000.0,44700000000.0,44700000000.0,44700000000.0,44700000000.0
+Dự phòng giảm giá chứng khoán đầu tư,Provision for diminution in value of investment securities,provision_for_diminution_in_value_of_investment_securities,-307346000000.0,-365885000000.0,-437855000000.0,-94656000000.0,-104288000000.0,-107022000000.0,-122023000000.0,-111328000000.0
+Tài sản Có khác,Other assets,other_assets,33938582000000.0,31231723000000.0,21786430000000.0,13092245000000.0,13672162000000.0,14473140000000.0,14807073000000.0,18602021000000.0
+Các khoản nợ chính phủ và NHNN Việt Nam,Due to Gov and Loans from SBV,due_to_gov_and_loans_from_sbv,148164000000.0,8569775000000.0,1641641000000.0,262539000000.0,6212060000000.0,5336899000000.0,238268000000.0,1166989000000.0
+Tiền gửi và vay các Tổ chức tín dụng khác,Deposits and Loans from other credit institutions,deposits_and_loans_from_other_credit_institutions,143343728000000.0,134159815000000.0,112055311000000.0,99689552000000.0,86542116000000.0,65987383000000.0,94513809000000.0,80925983000000.0
+Tiền gửi của khách hàng,Deposits from customers,deposits_from_customers,288477683000000.0,267038156000000.0,279050251000000.0,260245786000000.0,246844312000000.0,233114646000000.0,242805789000000.0,224821010000000.0
+Các công cụ tài chính phái sinh và các khoản nợ tài chính khác,Derivatives and other financial liabilities,derivatives_and_other_financial_liabilities,0.0,0.0,0.0,0.0,0.0,0.0,131331000000.0,154452000000.0
+"Vốn tài trợ, uỷ thác đầu tư của Chính phủ và các tổ chức tín dụng khác","Funds received from Gov, international and other institutions",funds_received_from_gov_international_and_other_institutions,161475000000.0,150825000000.0,140504000000.0,126590000000.0,118537000000.0,103644000000.0,93606000000.0,86548000000.0
+Phát hành giấy tờ có giá,Convertible bonds/CDs and other valuable papers issued,convertible_bonds_cds_and_other_valuable_papers_issued,54157381000000.0,59646208000000.0,58825000000000.0,44305800000000.0,43958600000000.0,38602200000000.0,36632200000000.0,36284473000000.0
+Các khoản nợ khác,Other liabilities,other_liabilities,11810088000000.0,9570280000000.0,8140102000000.0,7269688000000.0,6684446000000.0,6254782000000.0,6018919000000.0,5601702000000.0
+Vốn của tổ chức tín dụng,Capital,capital,27740469000000.0,27740469000000.0,27740469000000.0,26419562000000.0,26419562000000.0,26419562000000.0,26419562000000.0,22016350000000.0
+Vốn đầu tư XDCB,Fund for basic construction,fund_for_basic_construction,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Cổ phiếu ưu đãi,Preferred shares,preferred_shares,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Quỹ của tổ chức tín dụng,Reserves,reserves,6317995000000.0,4936046000000.0,4936046000000.0,4936046000000.0,4936046000000.0,3721866000000.0,3721866000000.0,3721866000000.0
+Bảo lãnh khác,Other guarantee,other_guarantee,84450309000000.0,80590430000000.0,76904679000000.0,65906585000000.0,62241724000000.0,57828842000000.0,59245703000000.0,51317837000000.0
+Cam kết giao dịch hối đoái,Foreign exchange transactions commitments,foreign_exchange_transactions_commitments,8976931000000.0,3408655000000.0,3409781000000.0,1876618000000.0,2079469000000.0,2025135000000.0,2056280000000.0,283521000000.0
+Cam kết mua ngoại tệ,Foreign exchange buying commitments,foreign_exchange_buying_commitments,3413643000000.0,480185000000.0,806530000000.0,1231977000000.0,1204916000000.0,1177701000000.0,6828219000000.0,4532219000000.0
+Cam kết bán ngoại tệ,Foreign exchange selling commitments,foreign_exchange_selling_commitments,3414398000000.0,496567000000.0,804868000000.0,779289000000.0,1204058000000.0,1228989000000.0,6829158000000.0,1487877000000.0
+Cam kết giao dịch hoán đổi,Swap commitments,swap_commitments,91096277000000.0,86244435000000.0,65334616000000.0,60440752000000.0,93769519000000.0,70145427000000.0,76367711000000.0,124816085000000.0
+Cam kết giao dịch tương lai,Future commitments,future_commitments,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Cam kết cho vay không hủy ngang,Irrevocable loan commitments,irrevocable_loan_commitments,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Cam kết trong nghiệp vụ L/C,Letters of credit commitments,letters_of_credit_commitments,21053641000000.0,16069401000000.0,11630343000000.0,8643664000000.0,3876569000000.0,3047268000000.0,3133523000000.0,3757241000000.0
+Cam kết khác,Other commitments,other_commitments,22719533000000.0,13561121000000.0,14746481000000.0,17821871000000.0,11424353000000.0,11997869000000.0,20470360000000.0,23733107000000.0
+Lợi ích của cổ đông thiểu số,Minority interest,minority_interest,3751450000000.0,3678856000000.0,3742751000000.0,98000000.0,98000000.0,98000000.0,99000000.0,98000000.0
+Tiền gửi tại các TCTD khác,Balances with other credit institutions,balances_with_other_credit_institutions,82399456000000.0,97230990000000.0,94871352000000.0,64423385000000.0,55756242000000.0,26465726000000.0,62182536000000.0,42047089000000.0
+Cho vay các TCTD khác,Loans to other credit institutions,loans_to_other_credit_institutions,15359636000000.0,12085921000000.0,8517059000000.0,920775000000.0,4233858000000.0,8723964000000.0,8338164000000.0,12468679000000.0
+Dự phòng rủi ro,Allowance for balances with and loans to other credit institutions,allowance_for_balances_with_and_loans_to_other_credit_institutions,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Hoạt động mua nợ,Debt Buying,debt_buying,935890000000.0,1089948000000.0,1096937000000.0,628010000000.0,669877000000.0,679182000000.0,766739000000.0,780647000000.0
+Mua nợ,Debt Buying,debt_buying,942962000000.0,1098184000000.0,1105226000000.0,632756000000.0,674939000000.0,684314000000.0,772533000000.0,786546000000.0
+Dự phòng rủi ro hoạt động mua nợ,Provision for losses on debt buying,provision_for_losses_on_debt_buying,-7072000000.0,-8236000000.0,-8289000000.0,-4746000000.0,-5062000000.0,-5132000000.0,-5794000000.0,-5899000000.0
+Các khoản phải thu,Other receivables,other_receivables,21573508000000.0,20435850000000.0,12096291000000.0,3256268000000.0,3424992000000.0,5117352000000.0,7033567000000.0,10373665000000.0
+Các khoản lãi và phí phải thu,Accrued interest and fee receivables,accrued_interest_and_fee_receivables,5827609000000.0,4915151000000.0,4021020000000.0,4233668000000.0,4663773000000.0,3773044000000.0,3285020000000.0,3723111000000.0
+Tài sản thuế TNDN hoãn lại,Deferred tax assets,deferred_tax_assets,196422000000.0,185259000000.0,0.0,0.0,0.0,0.0,0.0,0.0
+Tài sản Có khác,Other assets,other_assets,6359127000000.0,5713547000000.0,5687203000000.0,5602338000000.0,5583427000000.0,5590919000000.0,4518359000000.0,4505273000000.0
+Trong đó: Lợi thế thương mại,In which: Goodwill,in_which_goodwill,182160000000.0,189166000000.0,101826000000.0,0.0,0.0,0.0,0.0,0.0
+Các khoản dự phòng rủi ro cho các tài sản Có nội bảng khác,Provision for other assets,provision_for_other_assets,-18084000000.0,-18084000000.0,-18084000000.0,-29000000.0,-30000000.0,-8175000000.0,-29873000000.0,-28000000.0
+Tiền gửi của các tổ chức tín dụng khác,Deposits and Loans from other credit institutions,deposits_and_loans_from_other_credit_institutions,103086103000000.0,103612548000000.0,74215800000000.0,73030858000000.0,55969792000000.0,43029794000000.0,76597834000000.0,70603246000000.0
+Vay các tổ chức tín dụng khác,Loans from other credit institutions,loans_from_other_credit_institutions,40257625000000.0,30547267000000.0,37839511000000.0,26658694000000.0,30572324000000.0,22957589000000.0,17915975000000.0,10322737000000.0
+"Các khoản lãi, phí phải trả",Accrued interest and fee payables,accrued_interest_and_fee_payables,7225997000000.0,6908300000000.0,5113299000000.0,5104297000000.0,4800099000000.0,4639923000000.0,3519767000000.0,3585166000000.0
+Thuế TNDN hoãn lại phải trả,Deferred tax liabilities,deferred_tax_liabilities,97722000000.0,96395000000.0,3965000000.0,0.0,0.0,0.0,0.0,0.0
+Các khoản phải trả và công nợ khác,Other liabilities,other_liabilities,4486369000000.0,2565585000000.0,3022838000000.0,2165391000000.0,1884347000000.0,1614859000000.0,2499152000000.0,2016536000000.0
+Dự phòng rủi ro khác,Allowance for other liabilities,allowance_for_other_liabilities,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Vốn Góp liên doanh,Investments in joint-venture,investments_in_joint_venture,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Đầu tư vào công ty liên kết,Investments in associates,investments_in_associates,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
