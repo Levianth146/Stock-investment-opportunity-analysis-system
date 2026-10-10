@@ -1,6 +1,8 @@
 # Sở hữu: N2 (M1)
 window_years: 5                 # cửa sổ lùi từ as_of
 index_symbol: VNINDEX
+vnf_enabled: true                # đối chiếu/bổ sung BCTC năm từ gói vnfinancialdata (pip install vnfinancialdata); thiếu gói thì tự bỏ qua
+vnf_history_years: 10           # kéo dài lịch sử BCTC năm tối đa N năm
 financial_unit: VND             # M1 luôn chuẩn hóa về VND
 cache_dir: data/raw             # cache thô theo ngày, không commit
 snapshot_dir: data/snapshots    # snapshot demo CÓ commit để chạy lại cho kết quả giống nhau
@@ -16,6 +18,7 @@ financial_multiplier: auto      # auto | 1 | 1000000000 (một số nguồn tr�
 
 # --- tin tức ---
 news_months: 12
+news_enabled: true              # false (hoặc --no-news) = bỏ qua tin tức, cho universe lớn
 max_news: 800                   # trần số tin giữ lại sau khi gộp vnstock + Google News + RSS
 news_google: true               # Google News RSS theo mã, chia cửa sổ 30 ngày (cần Internet; lỗi thì chỉ gắn cờ)
 news_google_window_days: 30
@@ -32,3 +35,13 @@ peers_map:
   MWG: [PNJ, FRT, DGW]
 bank_kpis_file: config/bank_kpis.csv   # NPL, CAR ngân hàng nhập tay từ báo cáo thường niên (xem file)
 banks: [VCB, BID, CTG, TCB, MBB, ACB, VPB, STB, HDB, TPB, SHB, LPB, MSB, OCB, VIB, SSB, EIB, BAB, NAB, ABB, BVB, KLB, PGB, SGB, VAB, NVB, VBB]
+
+# --- universe rộng (HOSE/HNX/UpCom) ---
+# universe_max_peers: 15      # trần số peers (mã cùng ngành có vốn hóa gần nhất). Bỏ trống = không trần; script tự dùng 15 cho universe ngoài VN30
+quality:                        # cổng chất lượng, xem src/stockai/m1_data/quality.py (full / limited / insufficient)
+  min_price_rows: 750           # dưới ngưỡng -> insufficient (không nên chấm điểm)
+  min_annual: 3
+  min_avg_value_vnd: 1000000000   # GTGD bình quân 60 phiên
+  limited_avg_value_vnd: 5000000000
+  limited_annual: 5
+  limited_news: 10

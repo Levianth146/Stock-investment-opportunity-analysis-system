@@ -9,7 +9,8 @@
   "flags": [
    "prices_scaled_x1000_to_VND",
    "news_urls_partly_google_redirect",
-   "universe_membership_current_not_point_in_time"
+   "universe_membership_current_not_point_in_time",
+   "vnf_crosscheck_ok:2025"
   ],
   "data_status": {
    "prices": "ok",
@@ -15010,7 +15011,15 @@
      "cfo": 3898884563124.0,
      "cfi": 2428266891651.0,
      "cff": -6787749735923.0,
-     "capex": 241543771108.0
+     "capex": 241543771108.0,
+     "ebitda": 5024904531235.0,
+     "pretax_profit": 5651965788427.0,
+     "selling_expense": 4022369468136.0,
+     "admin_expense": 983559292855.0,
+     "receivables": 902822762749.0,
+     "trade_receivables": 697568047845.0,
+     "trade_payables": 2403617850061.0,
+     "dividends_paid": 6512668096116.0
     }
    },
    {
@@ -15039,7 +15048,15 @@
      "cfo": 4362509568540.0,
      "cfi": 18884385322.0,
      "cff": -4943450227964.0,
-     "capex": 296018278038.0
+     "capex": 296018278038.0,
+     "ebitda": 4986109849588.0,
+     "pretax_profit": 5647358628166.0,
+     "selling_expense": 4041556507837.0,
+     "admin_expense": 839413837596.0,
+     "receivables": 1818472380110.0,
+     "trade_receivables": 433141431799.0,
+     "trade_payables": 2642248117160.0,
+     "dividends_paid": 4658550227964.0
     }
    },
    {
@@ -15068,7 +15085,15 @@
      "cfo": 2104718257779.0,
      "cfi": 2550929318308.0,
      "cff": -3685025044212.0,
-     "capex": 283734894513.0
+     "capex": 283734894513.0,
+     "ebitda": 4381475067076.0,
+     "pretax_profit": 5370410404295.0,
+     "selling_expense": 4479227839581.0,
+     "admin_expense": 800691619935.0,
+     "receivables": 1229401278553.0,
+     "trade_receivables": 467366764227.0,
+     "trade_payables": 2476372806838.0,
+     "dividends_paid": 3354092726063.0
     }
    },
    {
@@ -15097,7 +15122,15 @@
      "cfo": 4378517423040.0,
      "cfi": -1867768246891.0,
      "cff": -2047707382716.0,
-     "capex": 533164261997.0
+     "capex": 533164261997.0,
+     "ebitda": 6059078318875.0,
+     "pretax_profit": 6813417318962.0,
+     "selling_expense": 4532068273139.0,
+     "admin_expense": 740665660468.0,
+     "receivables": 897692694315.0,
+     "trade_receivables": 337852269601.0,
+     "trade_payables": 2766280031591.0,
+     "dividends_paid": 2418865072091.0
     }
    },
    {
@@ -15126,7 +15159,15 @@
      "cfo": 3517851559382.0,
      "cfi": -1223348339323.0,
      "cff": -1414021691256.0,
-     "capex": 329541012650.0
+     "capex": 329541012650.0,
+     "ebitda": 4067957686838.0,
+     "pretax_profit": 4856894249743.0,
+     "selling_expense": 3500368629369.0,
+     "admin_expense": 597716255412.0,
+     "receivables": 467956130071.0,
+     "trade_receivables": 100965921832.0,
+     "trade_payables": 2400247668451.0,
+     "dividends_paid": 1096306570171.0
     }
    },
    {
@@ -15155,7 +15196,159 @@
      "cfo": 4128611577656.0,
      "cfi": -1523225006902.0,
      "cff": -3995120583696.0,
-     "capex": 367442290535.0
+     "capex": 367442290535.0,
+     "ebitda": 5533504254782.0,
+     "pretax_profit": 6111818325965.0,
+     "selling_expense": 2859036781083.0,
+     "admin_expense": 702005344515.0,
+     "receivables": 590846416109.0,
+     "trade_receivables": 69331890605.0,
+     "trade_payables": 1652906614848.0,
+     "dividends_paid": 3734027010258.0
+    }
+   },
+   {
+    "period": "2019",
+    "published_at": "2020-03-30",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "revenue": 37899059501295.0,
+     "gross_profit": 9550628692014.0,
+     "ebitda": 6146743863615.0,
+     "pretax_profit": 6686176624964.0,
+     "net_income": 5370147708542.0,
+     "net_income_parent": 5053363919165.0,
+     "eps": 7477.0,
+     "interest_expense": 37367206872.0,
+     "selling_expense": 3003290717435.0,
+     "admin_expense": 1047841925145.0,
+     "total_assets": 26962476094045.0,
+     "current_assets": 19164602511633.0,
+     "current_liabilities": 6087830053039.0,
+     "total_liabilities": 6886229037681.0,
+     "total_equity": 20076247056364.0,
+     "inventory": 1967137719907.0,
+     "receivables": 568608377917.0,
+     "trade_receivables": 157654572653.0,
+     "trade_payables": 2427067853887.0,
+     "cash": 4115884646637.0,
+     "short_term_debt": 560511063296.0,
+     "long_term_debt": 494244987274.0,
+     "cfo": 5005012555348.0,
+     "cfi": -4109043881626.0,
+     "cff": -1247477267173.0,
+     "capex": 268997916043.0,
+     "depreciation": 647247814181.0,
+     "dividends_paid": 1136965484108.0
+    }
+   },
+   {
+    "period": "2018",
+    "published_at": "2019-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "revenue": 35948552561947.0,
+     "gross_profit": 8084139172396.0,
+     "ebitda": 5074935696399.0,
+     "pretax_profit": 5390439641506.0,
+     "net_income": 4402749946424.0,
+     "net_income_parent": 4177432235379.0,
+     "eps": 6143.0,
+     "interest_expense": 35244808353.0,
+     "selling_expense": 2731090859491.0,
+     "admin_expense": 912705312866.0,
+     "total_assets": 22366742792213.0,
+     "current_assets": 14690168205219.0,
+     "current_liabilities": 5925696932383.0,
+     "total_liabilities": 6254837224044.0,
+     "total_equity": 16111905568169.0,
+     "inventory": 1813754190894.0,
+     "receivables": 765630597003.0,
+     "trade_receivables": 244119166060.0,
+     "trade_payables": 2027262167712.0,
+     "cash": 4467391585137.0,
+     "short_term_debt": 594242788680.0,
+     "long_term_debt": 14618022047.0,
+     "cfo": 4514785881491.0,
+     "cfi": -311248135909.0,
+     "cff": -4004733772665.0,
+     "capex": 290439347849.0,
+     "depreciation": 634592696360.0,
+     "dividends_paid": 3888748971778.0
+    }
+   },
+   {
+    "period": "2017",
+    "published_at": "2018-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "revenue": 34193390554239.0,
+     "gross_profit": 8865518064577.0,
+     "ebitda": 5743784844190.0,
+     "pretax_profit": 6077091655133.0,
+     "net_income": 4948599251863.0,
+     "net_income_parent": 4711485204580.0,
+     "eps": 6915.0,
+     "interest_expense": 42111534689.0,
+     "selling_expense": 2811111874500.0,
+     "admin_expense": 935974797536.0,
+     "total_assets": 22013689109910.0,
+     "current_assets": 13686327476651.0,
+     "current_liabilities": 7401584603555.0,
+     "total_liabilities": 7593162674962.0,
+     "total_equity": 14420526434948.0,
+     "inventory": 2003535067335.0,
+     "receivables": 715326353415.0,
+     "trade_receivables": 171320969298.0,
+     "trade_payables": 2020399662484.0,
+     "cash": 4268598818042.0,
+     "short_term_debt": 722903981780.0,
+     "long_term_debt": 1941629834.0,
+     "cfo": 5067819308909.0,
+     "cfi": -2820518088654.0,
+     "cff": -1423533432507.0,
+     "capex": 151157759584.0,
+     "depreciation": 625353451649.0,
+     "dividends_paid": 1008864945050.0
+    }
+   },
+   {
+    "period": "2016",
+    "published_at": "2017-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "revenue": 30466693736843.0,
+     "gross_profit": 8167039127188.0,
+     "ebitda": 5346685911565.0,
+     "pretax_profit": 5727343407406.0,
+     "net_income": 4517343440640.0,
+     "net_income_parent": 4338773356882.0,
+     "eps": 6194.0,
+     "interest_expense": 82182081908.0,
+     "selling_expense": 2671906350771.0,
+     "admin_expense": 780911026732.0,
+     "total_assets": 19194747709502.0,
+     "current_assets": 10722470187475.0,
+     "current_liabilities": 6613016425796.0,
+     "total_liabilities": 6898812937830.0,
+     "total_equity": 12295934771672.0,
+     "inventory": 2134361489832.0,
+     "receivables": 1090484124645.0,
+     "trade_receivables": 551218730609.0,
+     "trade_payables": 2016162043577.0,
+     "cash": 3444825444503.0,
+     "short_term_debt": 1042309667870.0,
+     "long_term_debt": 164412285558.0,
+     "cfo": 719373236735.0,
+     "cfi": -1003457258526.0,
+     "cff": -4207056994728.0,
+     "capex": 156346954556.0,
+     "depreciation": 632464161880.0,
+     "dividends_paid": 3757483070376.0
     }
    }
   ],
@@ -16040,6 +16233,13 @@
    "url": "internal://universe",
    "fetched_at": "2026-10-09T11:06:03",
    "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"
+  },
+  {
+   "id": "src_vnf",
+   "name": "vnfinancialdata (Hugging Face thanhnp-uel/vietnam-listed-companies-financial-statements)",
+   "url": "https://huggingface.co/datasets/thanhnp-uel/vietnam-listed-companies-financial-statements",
+   "fetched_at": "2026-10-10T01:10:33",
+   "note": "BCTC năm hợp nhất, VND; không có ngày công bố (ước lượng năm+90 ngày); nguồn gốc: cổng sàn/website công ty"
   }
  ]
 }

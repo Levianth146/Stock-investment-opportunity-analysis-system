@@ -11,7 +11,8 @@
    "bank_nim_cir_derived_approx",
    "bank_npl_car_not_in_statements",
    "news_urls_partly_google_redirect",
-   "universe_membership_current_not_point_in_time"
+   "universe_membership_current_not_point_in_time",
+   "vnf_crosscheck_ok:2025"
   ],
   "data_status": {
    "prices": "ok",
@@ -15012,7 +15013,8 @@
      "customer_loans": 604363682000000.0,
      "customer_deposits": 572149573000000.0,
      "cir": 0.2213,
-     "nim": 0.0227
+     "nim": 0.0227,
+     "dividends_paid": 2011887000000.0
     }
    },
    {
@@ -15041,7 +15043,8 @@
      "customer_loans": 511153150000000.0,
      "customer_deposits": 499896571000000.0,
      "cir": 0.2444,
-     "nim": 0.0284
+     "nim": 0.0284,
+     "dividends_paid": 1746493000000.0
     }
    },
    {
@@ -15070,7 +15073,8 @@
      "customer_loans": 429362729000000.0,
      "customer_deposits": 447503426000000.0,
      "cir": 0.2368,
-     "nim": 0.0306
+     "nim": 0.0306,
+     "dividends_paid": 165000000.0
     }
    },
    {
@@ -15099,7 +15103,8 @@
      "customer_loans": 378575443000000.0,
      "customer_deposits": 361675593000000.0,
      "cir": 0.2271,
-     "nim": 0.0324
+     "nim": 0.0324,
+     "dividends_paid": 122000000.0
     }
    },
    {
@@ -15128,7 +15133,8 @@
      "customer_loans": 357778608000000.0,
      "customer_deposits": 327196828000000.0,
      "cir": 0.2427,
-     "nim": 0.0307
+     "nim": 0.0307,
+     "dividends_paid": 933000000.0
     }
    },
    {
@@ -15157,7 +15163,72 @@
      "customer_loans": 302199056000000.0,
      "customer_deposits": 303581729000000.0,
      "cir": 0.3522,
-     "nim": 0.0241
+     "nim": 0.0241,
+     "dividends_paid": 445000000.0
+    }
+   },
+   {
+    "period": "2019",
+    "published_at": "2020-03-30",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "net_income": 2417890000000.0,
+     "eps": 1890.0,
+     "net_interest_income": 7830439000000.0,
+     "total_assets": 365254318000000.0,
+     "total_equity": 18507443000000.0,
+     "cfo": 15977877000000.0,
+     "capex": 146714000000.0,
+     "dividends_paid": 436000000.0
+    }
+   },
+   {
+    "period": "2018",
+    "published_at": "2019-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "net_income": 1672319000000.0,
+     "eps": 1390.0,
+     "net_interest_income": 5555902000000.0,
+     "total_assets": 323276008000000.0,
+     "total_equity": 16332532000000.0,
+     "cfo": 2073646000000.0,
+     "capex": 172681000000.0,
+     "dividends_paid": 578000000.0
+    }
+   },
+   {
+    "period": "2017",
+    "published_at": "2018-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "net_income": 1539128000000.0,
+     "eps": 1510.0,
+     "net_interest_income": 4796660000000.0,
+     "total_assets": 286010081000000.0,
+     "total_equity": 14691220000000.0,
+     "cfo": 6631972000000.0,
+     "capex": 117245000000.0,
+     "dividends_paid": 330000000.0
+    }
+   },
+   {
+    "period": "2016",
+    "published_at": "2017-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "net_income": 913061000000.0,
+     "eps": 896.0,
+     "net_interest_income": 4175448000000.0,
+     "total_assets": 240752689000000.0,
+     "total_equity": 13231573000000.0,
+     "cfo": -7830395000000.0,
+     "capex": 173680000000.0,
+     "dividends_paid": 288000000.0
     }
    }
   ],
@@ -17270,6 +17341,13 @@
    "url": "internal://universe",
    "fetched_at": "2026-10-09T11:06:03",
    "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"
+  },
+  {
+   "id": "src_vnf",
+   "name": "vnfinancialdata (Hugging Face thanhnp-uel/vietnam-listed-companies-financial-statements)",
+   "url": "https://huggingface.co/datasets/thanhnp-uel/vietnam-listed-companies-financial-statements",
+   "fetched_at": "2026-10-10T01:10:33",
+   "note": "BCTC năm hợp nhất, VND; không có ngày công bố (ước lượng năm+90 ngày); nguồn gốc: cổng sàn/website công ty"
   }
  ]
 }
