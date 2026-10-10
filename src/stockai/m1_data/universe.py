@@ -330,7 +330,7 @@ def fetch_all(tickers: list[str], as_of: str, cfg: dict, out_dir: str = "data/sn
             snap = f.build_snapshot(t, as_of, cfg)
             fetched += 1
             snaps[t] = snap
-            f.save_snapshot(snap, out_dir)
+            f.save_snapshot(snap, out_dir, peers_pending=True)  # lượt 1: peers gán sau fill_peers
             summary[t] = {"status": "ok" if all(v == "ok" for k, v in snap["meta"]["data_status"].items() if k != "peers") else "partial",
                           "data_status": snap["meta"]["data_status"]}
         except Exception as e:  # noqa: BLE001
