@@ -4,14 +4,8 @@ __pycache__/
 .env
 *.egg-info/
 .pytest_cache/
-.DS_Store
-reports/*
-!reports/.gitkeep
-
-# data/raw: cache .pkl KHÔNG commit; CSV thô theo mã + _sources.json CÓ commit (để đối chiếu nguồn)
 data/raw/*
 !data/raw/.gitkeep
-!data/raw/*/
-data/raw/*/*
-!data/raw/*/*.csv
-!data/raw/*/_sources.json
+reports/*
+!reports/.gitkeep
+.DS_Store

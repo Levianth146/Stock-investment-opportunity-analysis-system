@@ -1,34 +1,7 @@
 # Sở hữu: N2 (M1)
-window_years: 5                 # cửa sổ lùi từ as_of
+window_years: 5            # cửa sổ lùi từ as_of
 index_symbol: VNINDEX
-financial_unit: VND             # M1 luôn chuẩn hóa về VND
-cache_dir: data/raw             # cache thô theo ngày, không commit
-snapshot_dir: data/snapshots    # snapshot demo CÓ commit để chạy lại cho kết quả giống nhau
-
-# --- nguồn dữ liệu (vnstock) ---
-vnstock_sources: [VCI, TCBS]    # thử lần lượt, nguồn đầu có dữ liệu thì dùng
-request_interval_sec: 3.5       # giãn cách gọi API (bản guest ~20 request/phút)
-retries: 3
-
-# --- chuẩn hóa đơn vị ---
-price_multiplier: auto          # auto | 1 | 1000   (vnstock thường trả giá theo nghìn đồng)
-financial_multiplier: auto      # auto | 1 | 1000000000 (một số nguồn trả theo tỷ đồng)
-
-# --- tin tức ---
-news_months: 12
-max_news: 800                   # trần số tin giữ lại sau khi gộp vnstock + Google News + RSS
-news_google: true               # Google News RSS theo mã, chia cửa sổ 30 ngày (cần Internet; lỗi thì chỉ gắn cờ)
-news_google_window_days: 30
-news_google_interval_sec: 1.0
-news_rss: []                    # ví dụ: ["https://cafef.vn/....rss"] - điền nếu vnstock không có tin; lọc theo mã
-
-# --- ngành / đối chứng (curated tay, kiểm tra lại trước khi chốt) ---
-max_peers: 8
-peers_map:
-  HPG: [HSG, NKG, SMC, TLH]
-  VNM: [SAB, MSN, KDC, QNS, MCH]
-  FPT: [CMG, ELC, VGI]
-  VCB: [BID, CTG, TCB, MBB, ACB, VPB]
-  MWG: [PNJ, FRT, DGW]
-bank_kpis_file: config/bank_kpis.csv   # NPL, CAR ngân hàng nhập tay từ báo cáo thường niên (xem file)
-banks: [VCB, BID, CTG, TCB, MBB, ACB, VPB, STB, HDB, TPB, SHB, LPB, MSB, OCB, VIB, SSB, EIB, BAB, NAB, ABB, BVB, KLB, PGB, SGB, VAB, NVB, VBB]
+price_source: vnstock      # đổi nguồn tại đây, không sửa code module khác
+financial_unit: VND
+cache_dir: data/raw        # cache thô, không commit
+snapshot_dir: data/snapshots   # snapshot demo CÓ commit để chạy lại cho kết quả giống nhau
