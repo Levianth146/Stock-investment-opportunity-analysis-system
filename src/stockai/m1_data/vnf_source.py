@@ -155,5 +155,6 @@ def apply(snap: dict, cfg: dict, vnf: Vnf | None = None) -> dict:
                                 "url": "https://huggingface.co/datasets/thanhnp-uel/vietnam-listed-companies-financial-statements",
                                 "fetched_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
                                 "note": "BCTC năm hợp nhất, VND; không có ngày công bố (ước lượng năm+90 ngày); nguồn gốc: cổng sàn/website công ty"})
-    snap["meta"]["flags"] = [x for x in dict.fromkeys(flags)]
+    # Giữ cùng object list với cfg["_flags"] trong build_snapshot (không gán list mới).
+    flags[:] = list(dict.fromkeys(flags))
     return stats
