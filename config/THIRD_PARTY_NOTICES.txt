@@ -1,0 +1,7 @@
+﻿Third-party data
+================
+config/listing_icb.csv
+  Source: https://github.com/Tumiqa/vn-annual-report-miner (file danh_sach_doanh_nghiep_niem_yet.csv)
+  License: MIT, Copyright (c) 2024-2026 Truong Minh Quan
+  Underlying listing and ICB data compiled by that project (citing FiinPro / Vietcap IQ and the exchanges).
+  Snapshot taken 2026-10-10; not point-in-time.

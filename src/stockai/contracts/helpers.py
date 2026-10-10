@@ -1,6 +1,29 @@
 """Hàm dùng chung. CHỈ N1 SỬA."""
 from __future__ import annotations
 
+_TIER_PREFIX = "quality_tier_"
+_REASON_PREFIX = "quality_"
+
+
+def quality_tier(snapshot: dict) -> str | None:
+    """Đọc bậc chất lượng từ meta.flags (quality_tier_*). None = legacy/absent."""
+    for x in snapshot.get("meta", {}).get("flags", []) or []:
+        if isinstance(x, str) and x.startswith(_TIER_PREFIX):
+            return x[len(_TIER_PREFIX):] or None
+    return None
+
+
+def quality_reasons(snapshot: dict) -> list[str]:
+    """Lý do quality_* (bỏ prefix), loại trừ quality_tier_*."""
+    out = []
+    for x in snapshot.get("meta", {}).get("flags", []) or []:
+        if not isinstance(x, str) or not x.startswith(_REASON_PREFIX):
+            continue
+        if x.startswith(_TIER_PREFIX):
+            continue
+        out.append(x[len(_REASON_PREFIX):])
+    return out
+
 
 def stub_out(module: str, score: float = 50.0) -> dict:
     """Đầu ra giả hợp lệ schema. Dùng trong module chưa làm xong để pipeline vẫn chạy end-to-end."""

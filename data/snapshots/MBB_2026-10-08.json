@@ -11,7 +11,8 @@
    "bank_nim_cir_derived_approx",
    "bank_npl_car_not_in_statements",
    "news_urls_partly_google_redirect",
-   "universe_membership_current_not_point_in_time"
+   "universe_membership_current_not_point_in_time",
+   "vnf_crosscheck_ok:2025"
   ],
   "data_status": {
    "prices": "ok",
@@ -15012,7 +15013,8 @@
      "customer_loans": 1070868777000000.0,
      "customer_deposits": 921368132000000.0,
      "cir": 0.2907,
-     "nim": 0.0319
+     "nim": 0.0319,
+     "dividends_paid": 2072592000000.0
     }
    },
    {
@@ -15041,7 +15043,8 @@
      "customer_loans": 765047985000000.0,
      "customer_deposits": 714154479000000.0,
      "cir": 0.3069,
-     "nim": 0.0365
+     "nim": 0.0365,
+     "dividends_paid": 2806251000000.0
     }
    },
    {
@@ -15070,7 +15073,8 @@
      "customer_loans": 599579267000000.0,
      "customer_deposits": 567532577000000.0,
      "cir": 0.3152,
-     "nim": 0.0409
+     "nim": 0.0409,
+     "dividends_paid": 2266993000000.0
     }
    },
    {
@@ -15099,7 +15103,8 @@
      "customer_loans": 448598622000000.0,
      "customer_deposits": 443605638000000.0,
      "cir": 0.325,
-     "nim": 0.0494
+     "nim": 0.0494,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15128,7 +15133,8 @@
      "customer_loans": 354797094000000.0,
      "customer_deposits": 384692155000000.0,
      "cir": 0.3351,
-     "nim": 0.0432
+     "nim": 0.0432,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15157,7 +15163,73 @@
      "customer_loans": 293942764000000.0,
      "customer_deposits": 310960354000000.0,
      "cir": 0.3858,
-     "nim": 0.041
+     "nim": 0.041,
+     "dividends_paid": 0.0
+    }
+   },
+   {
+    "period": "2019",
+    "published_at": "2020-03-30",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "ebitda": 17999997000000.0,
+     "net_income": 8068604000000.0,
+     "eps": 3596.0,
+     "net_interest_income": 17999997000000.0,
+     "total_assets": 411487575000000.0,
+     "total_equity": 39885814000000.0,
+     "cfo": 892883000000.0,
+     "capex": 701576000000.0,
+     "dividends_paid": 1304219000000.0
+    }
+   },
+   {
+    "period": "2018",
+    "published_at": "2019-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "net_income": 6189901000000.0,
+     "eps": 2829.0,
+     "net_interest_income": 14583497000000.0,
+     "total_assets": 362325062000000.0,
+     "total_equity": 34172858000000.0,
+     "cfo": 2604652000000.0,
+     "capex": 483966000000.0,
+     "dividends_paid": 1092592000000.0
+    }
+   },
+   {
+    "period": "2017",
+    "published_at": "2018-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "net_income": 3490415000000.0,
+     "eps": 1953.0,
+     "net_interest_income": 11218952000000.0,
+     "total_assets": 313877828000000.0,
+     "total_equity": 29601170000000.0,
+     "cfo": 24002706000000.0,
+     "capex": 502937000000.0,
+     "dividends_paid": 1054493000000.0
+    }
+   },
+   {
+    "period": "2016",
+    "published_at": "2017-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "net_income": 2883551000000.0,
+     "eps": 1706.0,
+     "net_interest_income": 7978944000000.0,
+     "total_assets": 256258500000000.0,
+     "total_equity": 26588446000000.0,
+     "cfo": -3508824000000.0,
+     "capex": 560725000000.0,
+     "dividends_paid": 22185000000.0
     }
    }
   ],
@@ -16942,6 +17014,13 @@
    "url": "internal://universe",
    "fetched_at": "2026-10-09T11:06:03",
    "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"
+  },
+  {
+   "id": "src_vnf",
+   "name": "vnfinancialdata (Hugging Face thanhnp-uel/vietnam-listed-companies-financial-statements)",
+   "url": "https://huggingface.co/datasets/thanhnp-uel/vietnam-listed-companies-financial-statements",
+   "fetched_at": "2026-10-10T01:10:32",
+   "note": "BCTC năm hợp nhất, VND; không có ngày công bố (ước lượng năm+90 ngày); nguồn gốc: cổng sàn/website công ty"
   }
  ]
 }
