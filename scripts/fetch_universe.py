@@ -43,6 +43,11 @@ if wide:
     cfg.setdefault("universe_max_peers", 15)     # VN30 giữ nguyên hành vi cũ (không trần)
 if a.no_news:
     cfg["news_enabled"] = False
+# FR-004: portal chỉ VN30/VN100; --tickers / --tickers-file → custom (không bật portal)
+if a.tickers or a.tickers_file:
+    cfg["universe_name"] = "custom"
+else:
+    cfg["universe_name"] = a.universe.upper()
 if a.tickers:
     tickers = [t.strip().upper() for t in a.tickers.split(",") if t.strip()]
 elif a.tickers_file:

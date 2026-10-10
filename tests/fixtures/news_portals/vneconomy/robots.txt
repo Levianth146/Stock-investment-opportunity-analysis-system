@@ -1,0 +1,37 @@
+﻿User-agent: facebookexternalhit
+Allow: /
+
+User-agent: facebookexternalhit/1.1
+Allow: /
+
+User-agent: FacebookExternalHit
+Allow: /
+
+User-agent: GPTBot
+Crawl-delay: 1
+
+User-agent: ClaudeBot
+Crawl-delay: 1
+
+User-agent: Google-Extended
+Crawl-delay: 1
+
+User-agent: PerplexityBot
+Crawl-delay: 1
+
+User-agent: OAI-SearchBot
+Crawl-delay: 1
+
+User-agent: *
+Allow: /
+Sitemap: https://vneconomy.vn/sitemap.xml
+Sitemap: https://vneconomy.vn/sitemap/google-news.xml
+Sitemap: https://vneconomy.vn/sitemap/latest-news.xml
+Sitemap: https://vneconomy.vn/sitemap/categories.xml
+Sitemap: https://vneconomy.vn/sitemap/static.xml
+Disallow: /api/
+Disallow: /v1/search
+Disallow: /Error/
+Disallow: /*?nocache=true
+Disallow: /*&nocache=true
+Disallow: /tim-kiem.html?

@@ -1,0 +1,19 @@
+User-Agent: facebookexternalhit
+Allow: /
+Disallow:
+
+User-Agent: Facebot
+Allow: /
+Disallow:
+
+User-Agent: *
+Allow: /
+Disallow: /api/
+Disallow: /search/
+Disallow: /tim-kiem/
+Disallow: /search.html
+Disallow: /tim-kiem.html
+Disallow: /tu-khoa.html
+Disallow: /tag.html
+Disallow: /print.html
+Sitemap: https://www.tinnhanhchungkhoan.vn/sitemap.xml

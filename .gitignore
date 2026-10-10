@@ -19,3 +19,6 @@ data/raw/*/*
 # universe rộng (VN100/HOSE/HNX/UpCom): dữ liệu lớn, không commit
 data/snapshots_ext/
 data/raw_ext/
+
+# cache HTML cổng tin M1 (nếu đặt ngoài data/raw/)
+data/cache/news_portals/

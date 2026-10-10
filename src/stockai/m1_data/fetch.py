@@ -12,7 +12,7 @@ from pathlib import Path
 
 from stockai.contracts.helpers import check_no_lookahead
 from stockai.contracts.schemas import assert_valid
-from stockai.m1_data import bank_kpis, icb_sector, news_extra, vnf_source
+from stockai.m1_data import bank_kpis, icb_sector, news_extra, news_portals, vnf_source
 from stockai.m1_data import normalize as nz
 from stockai.m1_data import sources as src
 
@@ -165,7 +165,45 @@ def fetch_news(ticker: str, start: str, as_of: str, cfg: dict) -> tuple[list[dic
         items.sort(key=lambda x: x["published_at"], reverse=True)
         cfg["_flags"][:] = [f for f in cfg["_flags"] if f != "news_url_missing"]
         _flag(cfg, "news_urls_partly_google_redirect")
-    items = items[:max_items]
+
+    if news_portals.portals_enabled(cfg):
+        portal_fetch = cfg.get("_news_portal_fetch") or news_extra.http_get
+        portal_articles, pflags = news_portals.fetch_portals(
+            ticker, cfg.get("_company_name") or "", nstart, as_of, cfg, fetch=portal_fetch,
+        )
+        # FR-007: ok/empty sau lọc ngày/trùng, trước cắt max_news (chỉ slug active)
+        pre_cap = news_portals.merge_pre_cap_for_flags(items, portal_articles)
+        pflags = news_portals.refine_portal_flags_after_dedupe(
+            pflags, portal_articles, pre_cap,
+            active_slugs=news_portals.active_portal_slugs(cfg),
+        )
+        for f in pflags:
+            _flag(cfg, f)
+        items = news_portals.merge_news(items, portal_articles, max_items)
+        final_urls = {news_portals.normalize_url(i.get("url")) for i in items}
+        final_titles = {news_portals.normalize_title(i.get("title")) for i in items}
+        contrib: set[str] = set()
+        for a in portal_articles:
+            nu = news_portals.normalize_url(a.get("url"))
+            nt = news_portals.normalize_title(a.get("title"))
+            if (nu and nu in final_urls) or (nt and nt in final_titles):
+                contrib.add(a["portal_slug"])
+        for slug in sorted(contrib):
+            meta = news_portals.PORTAL_META[slug]
+            cfg.setdefault("_portal_sources", []).append({
+                "id": meta["source_id"],
+                "name": meta["source"],
+                "url": meta["home"],
+                "fetched_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                "note": "cổng tin M1 (HTML); xem specs/003-news-portals/",
+            })
+        for it in items:
+            it.pop("_source_id", None)
+            it.pop("_portal_slug", None)
+            it.pop("portal_slug", None)
+    else:
+        items = items[:max_items]
+
     if items:
         days = (datetime.strptime(as_of, "%Y-%m-%d") - datetime.strptime(items[-1]["published_at"][:10], "%Y-%m-%d")).days
         if days < 30 * months * 0.5:
@@ -219,13 +257,18 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         status["financials"] = "ok" if a >= 5 else ("partial" if a else "missing")
     if snap["financials"]["annual"]:
         step("vnf", lambda: vnf_source.apply(snap, cfg))               # đối chiếu/bổ sung/kéo dài lịch sử từ vnfinancialdata (tùy chọn)
+        # VNF (và mọi bước trước tin) phải giữ cùng list với cfg["_flags"]; gắn lại phòng gán nhầm list mới
+        cfg["_flags"] = snap["meta"]["flags"]
     if snap["company"]["is_bank"] and snap["financials"]["annual"]:
         bank_kpis.apply(snap, cfg.get("bank_kpis_file", "config/bank_kpis.csv"))
+        cfg["_flags"] = snap["meta"]["flags"]
     r = step("news", lambda: fetch_news(ticker, start, as_of, cfg)) if cfg.get("news_enabled", True) else None
     if not cfg.get("news_enabled", True):
         cfg["_flags"].append("news_skipped_by_config")
     if r:
         snap["news"], s = r; snap["sources"].append(s)
+        for ps in cfg.pop("_portal_sources", []) or []:
+            snap["sources"].append(ps)
         status["news"] = "ok" if len(snap["news"]) >= 10 else ("partial" if snap["news"] else "missing")
 
     sh, eps_ni = snap["company"].get("shares_outstanding"), None

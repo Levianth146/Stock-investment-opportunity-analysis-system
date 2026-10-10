@@ -24,6 +24,11 @@ news_google: true               # Google News RSS theo mã, chia cửa sổ 30 n
 news_google_window_days: 30
 news_google_interval_sec: 1.0
 news_rss: []                    # ví dụ: ["https://cafef.vn/....rss"] - điền nếu vnstock không có tin; lọc theo mã
+news_portals_enabled: false     # chỉ VN30/VN100 khi bật
+news_portals_active: [cafef]    # slug chạy; vneconomy/tinnhanhchungkhoan giữ code nhưng tắt mặc định
+news_portal_interval_sec: 1.0
+news_portal_retries: 2
+news_portal_cache_dir: data/raw/news_portals   # cache HTML theo URL; gitignore theo data/raw/*
 
 # --- ngành ICB (listing_icb.csv, Supersector cấp 2 → English) ---
 icb_sector_enabled: true

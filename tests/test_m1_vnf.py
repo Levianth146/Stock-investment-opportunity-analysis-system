@@ -39,6 +39,14 @@ def _snap(as_of="2026-10-08"):
     return s
 
 
+def test_apply_preserves_flags_list_identity():
+    """build_snapshot dùng chung object list cfg[_flags] ↔ meta.flags; không được gán list mới."""
+    s = _snap()
+    before = s["meta"]["flags"]
+    v.apply(s, ON, v.Vnf(_loader()))
+    assert s["meta"]["flags"] is before
+
+
 def test_crosscheck_ok_fill_and_sign_normalisation():
     s = _snap()
     st = v.apply(s, ON, v.Vnf(_loader()))
