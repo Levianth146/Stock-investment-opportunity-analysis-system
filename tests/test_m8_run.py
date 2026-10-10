@@ -50,3 +50,34 @@ def test_stub_modules_warn_not_fail():
     up["m4"]["status"] = "stub"
     out = run(snap, up, cfg)
     assert out["status"] == "warn" and any("M4" in i["message"] for i in out["issues"])
+
+
+def test_quality_gate_unscored_skips_formula_and_rating_checks():
+    """FR-008: khi quality_gate.scored is False, không fail vì công thức điểm / ngưỡng khuyến nghị."""
+    snap, up, cfg = _setup()
+    flags = [f for f in snap["meta"].get("flags", []) if not str(f).startswith("quality_")]
+    flags += ["quality_tier_insufficient", "quality_illiquid"]
+    snap["meta"]["flags"] = flags
+    up["m4"]["target"] = {"base": 99.0, "bull": 120.0, "bear": 80.0, "method": "x", "assumptions": []}
+    up["m7"] = run_m7(snap, up, cfg)
+    assert up["m7"]["score"] is None and up["m7"]["quality_gate"]["scored"] is False
+    assert up["m7"]["target"] is None
+    out = run(snap, up, cfg)
+    assert validate(out, "validation") == []
+    assert not any("không khớp công thức" in i["message"] for i in out["issues"])
+    assert not any("Khuyến nghị" in i["message"] and "không khớp ngưỡng" in i["message"] for i in out["issues"])
+    assert not any("giá mục tiêu" in i["message"].lower() for i in out["issues"])
+    # kiểm tra khác vẫn chạy (vd. synthetic/stub không bắt buộc fatal)
+    assert out["checked"] > 0
+
+
+def test_quality_gate_unscored_skips_target_vs_m4_even_if_tampered():
+    """Khi scored is False, M8 không so target với M4 (dù M4 có target)."""
+    snap, up, cfg = _setup()
+    flags = [f for f in snap["meta"].get("flags", []) if not str(f).startswith("quality_")]
+    snap["meta"]["flags"] = flags + ["quality_tier_insufficient", "quality_illiquid"]
+    up["m4"]["target"] = {"base": 1.0, "bull": 2.0, "bear": 0.5, "method": "x", "assumptions": []}
+    up["m7"] = run_m7(snap, up, cfg)
+    assert up["m7"]["target"] is None
+    out = run(snap, up, cfg)
+    assert not any(i.get("where") == "m7.target" and i["severity"] == "fatal" for i in out["issues"])

@@ -28,8 +28,13 @@ def main() -> None:
     print(f"{snap['meta']['ticker']} as_of={snap['meta']['as_of']} profile={a.profile}")
     print(status_table(up))
     r = up["m7"]
-    if "score" in r:
-        print(f"Score={r['score']:.1f}  Rating={r['rating']}")
+    sc = r.get("score")
+    score_s = "n/a" if sc is None else f"{sc:.1f}"
+    rating_s = str(r.get("rating") or "").encode("ascii", "replace").decode()
+    print(f"Score={score_s}  Rating={rating_s}")
+    qg = r.get("quality_gate") or {}
+    if qg:
+        print(f"quality_gate={qg.get('tier')} scored={qg.get('scored')} reasons={qg.get('reasons')}")
     print("PDF:", up["m9"].get("pdf_path"))
 
 
