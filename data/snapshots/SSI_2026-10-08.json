@@ -10,7 +10,8 @@
    "prices_scaled_x1000_to_VND",
    "news_urls_partly_google_redirect",
    "peers_cross_sector_vn30_nonbank_fallback",
-   "universe_membership_current_not_point_in_time"
+   "universe_membership_current_not_point_in_time",
+   "vnf_ticker_not_found"
   ],
   "data_status": {
    "prices": "ok",

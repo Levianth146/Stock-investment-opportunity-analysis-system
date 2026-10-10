@@ -29,7 +29,7 @@ def test_build_snapshot_valid(fake_sources):
     assert validate(snap, "snapshot") == [] and check_no_lookahead(snap) == []
     st = snap["meta"]["data_status"]
     assert st["prices"] == "ok" and st["financials"] == "ok" and st["peers"] == "ok" and st["news"] == "ok"
-    assert snap["company"]["shares_outstanding"] == 6e9 and not snap["company"]["is_bank"] and snap["company"]["exchange"] == "HOSE"
+    assert snap["company"]["shares_outstanding"] == 6e9 and not snap["company"]["is_bank"] and snap["company"]["exchange"] == "HSX"  # ICB: HOSE→HSX
     assert snap["financials"]["annual"][0]["items"]["revenue"] == 150e9 and snap["financials"]["column_map"]["annual"]["revenue"] == "Net sales"
     assert snap["peers"][0]["roe"] == pytest.approx(13 / 80)           # LNST công ty mẹ / VCSH, tự tính
     assert {s["id"] for s in snap["sources"]} >= {"src_price", "src_index", "src_company", "src_news"}

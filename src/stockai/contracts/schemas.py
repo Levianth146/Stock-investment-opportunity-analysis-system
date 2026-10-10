@@ -151,12 +151,21 @@ RESULT_SCHEMA = {
         "scores": {"type": "object", "required": ["F", "T", "V", "S", "R"]},
         "weights": {"type": "object"},
         "contributions": {"type": "object"},     # đóng góp từng điểm vào Score (để giải thích)
-        "score": {"type": "number", "minimum": 0, "maximum": 100},
-        "rating": {"enum": ["Mua mạnh", "Mua", "Nắm giữ", "Giảm tỷ trọng", "Bán"]},
+        "score": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "rating": {"enum": ["Mua mạnh", "Mua", "Nắm giữ", "Giảm tỷ trọng", "Bán", "Không xếp hạng"]},
         "target": {"type": ["object", "null"]},  # copy NGUYÊN từ M4, M7 không tự đặt
         "bull": {"type": "array", "items": {"type": "object", "required": ["text"]}},
         "bear": {"type": "array", "items": {"type": "object", "required": ["text"]}},
         "flags": {"type": "array", "items": _STR},
+        "quality_gate": {
+            "type": "object",
+            "required": ["tier", "scored", "reasons"],
+            "properties": {
+                "tier": {"enum": ["full", "limited", "insufficient", "absent"]},
+                "scored": {"type": "boolean"},
+                "reasons": {"type": "array", "items": _STR},
+            },
+        },
     },
 }
 

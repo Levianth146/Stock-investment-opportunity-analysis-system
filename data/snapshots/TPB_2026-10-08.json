@@ -11,7 +11,8 @@
    "bank_nim_cir_derived_approx",
    "bank_npl_car_not_in_statements",
    "news_urls_partly_google_redirect",
-   "universe_membership_current_not_point_in_time"
+   "universe_membership_current_not_point_in_time",
+   "vnf_crosscheck_ok:2025"
   ],
   "data_status": {
    "prices": "ok",
@@ -15012,7 +15013,8 @@
      "customer_loans": 302186389000000.0,
      "customer_deposits": 279050251000000.0,
      "cir": 0.3461,
-     "nim": 0.0264
+     "nim": 0.0264,
+     "dividends_paid": 2641956000000.0
     }
    },
    {
@@ -15041,7 +15043,8 @@
      "customer_loans": 247238856000000.0,
      "customer_deposits": 242805789000000.0,
      "cir": 0.3481,
-     "nim": 0.0309
+     "nim": 0.0309,
+     "dividends_paid": 1100818000000.0
     }
    },
    {
@@ -15070,7 +15073,8 @@
      "customer_loans": 202586102000000.0,
      "customer_deposits": 208261560000000.0,
      "cir": 0.4127,
-     "nim": 0.0348
+     "nim": 0.0348,
+     "dividends_paid": 3954389000000.0
     }
    },
    {
@@ -15099,7 +15103,8 @@
      "customer_loans": 159160375000000.0,
      "customer_deposits": 194959921000000.0,
      "cir": 0.3807,
-     "nim": 0.0346
+     "nim": 0.0346,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15128,7 +15133,8 @@
      "customer_loans": 139462565000000.0,
      "customer_deposits": 139562262000000.0,
      "cir": 0.3381,
-     "nim": 0.034
+     "nim": 0.034,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15157,7 +15163,75 @@
      "customer_loans": 118084610000000.0,
      "customer_deposits": 115903526000000.0,
      "cir": 0.4048,
-     "nim": 0.0369
+     "nim": 0.0369,
+     "dividends_paid": 0.0
+    }
+   },
+   {
+    "period": "2019",
+    "published_at": "2020-03-30",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "net_income": 3093842000000.0,
+     "eps": 3691.0,
+     "net_interest_income": 5633322000000.0,
+     "total_assets": 164438534000000.0,
+     "total_equity": 13074679000000.0,
+     "cfo": 8755748000000.0,
+     "capex": 394594000000.0,
+     "dividends_paid": 7415000000.0
+    }
+   },
+   {
+    "period": "2018",
+    "published_at": "2019-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "ebitda": 4377777000000.0,
+     "net_income": 1805238000000.0,
+     "eps": 2911.0,
+     "net_interest_income": 4377777000000.0,
+     "total_assets": 136179403000000.0,
+     "total_equity": 10621685000000.0,
+     "cfo": -5119995000000.0,
+     "capex": 231538000000.0,
+     "dividends_paid": 50659000000.0
+    }
+   },
+   {
+    "period": "2017",
+    "published_at": "2018-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "ebitda": 3172424000000.0,
+     "net_income": 963609000000.0,
+     "eps": 1717.0,
+     "net_interest_income": 3172424000000.0,
+     "total_assets": 124118747000000.0,
+     "total_equity": 6676717000000.0,
+     "cfo": 2272616000000.0,
+     "capex": 165949000000.0,
+     "dividends_paid": 0.0
+    }
+   },
+   {
+    "period": "2016",
+    "published_at": "2017-03-31",
+    "published_at_estimated": true,
+    "source_id": "src_vnf",
+    "items": {
+     "ebitda": 2120825000000.0,
+     "net_income": 565211000000.0,
+     "eps": 1004.0,
+     "net_interest_income": 2120825000000.0,
+     "total_assets": 106311115000000.0,
+     "total_equity": 5681486000000.0,
+     "cfo": 2798667000000.0,
+     "capex": 53159000000.0,
+     "dividends_paid": 0.0
     }
    }
   ],
@@ -16198,6 +16272,13 @@
    "url": "internal://universe",
    "fetched_at": "2026-10-09T11:06:03",
    "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"
+  },
+  {
+   "id": "src_vnf",
+   "name": "vnfinancialdata (Hugging Face thanhnp-uel/vietnam-listed-companies-financial-statements)",
+   "url": "https://huggingface.co/datasets/thanhnp-uel/vietnam-listed-companies-financial-statements",
+   "fetched_at": "2026-10-10T01:10:35",
+   "note": "BCTC năm hợp nhất, VND; không có ngày công bố (ước lượng năm+90 ngày); nguồn gốc: cổng sàn/website công ty"
   }
  ]
 }

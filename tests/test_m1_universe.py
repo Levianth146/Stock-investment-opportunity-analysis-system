@@ -23,7 +23,7 @@ def _snap(ticker, sector, ni=9e9, eq=80e9, shares=5e9, px=20000.0):
 def test_fill_peers_same_sector_point_in_time_math():
     snaps = {"AAA": _snap("AAA", "Ngân hàng"), "BBB": _snap("BBB", "Ngân hàng", ni=10e9, eq=50e9, shares=1e9, px=30000.0),
              "CCC": _snap("CCC", "Thép")}
-    u.fill_peers(snaps)
+    u.fill_peers(snaps, cfg={"icb_sector_enabled": False})  # test peers thuần sector string, không mở rộng ICB
     p = {x["ticker"]: x for x in snaps["AAA"]["peers"]}
     assert set(p) == {"BBB"}                                           # chỉ cùng ngành, không có chính nó
     assert abs(p["BBB"]["pe"] - 30000 * 1e9 / 10e9) < 1e-6             # 3000
