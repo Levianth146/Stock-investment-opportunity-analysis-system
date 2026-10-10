@@ -18,6 +18,26 @@ from stockai.m1_data import sources as src
 
 PROVIDER_URL = {"VCI": "https://trading.vietcap.com.vn", "TCBS": "https://tcinvest.tcbs.com.vn"}
 
+# Cờ chỉ mang thông tin — không in trong khối cảnh báo save_snapshot (meta.flags vẫn giữ đủ).
+INFO_FLAG_PREFIXES: tuple[str, ...] = (
+    "vnf_crosscheck_ok",
+    "vnf_filled",
+    "prices_scaled_x1000_to_VND",
+    "quality_tier_",
+    "news_urls_partly_google_redirect",
+    "news_portal_ok",
+    "news_portal_empty",
+    "universe_membership_current_not_point_in_time",
+)
+
+
+def _is_info_flag(flag: str) -> bool:
+    return any(flag == p or flag.startswith(p) for p in INFO_FLAG_PREFIXES)
+
+
+def _warning_flags(flags: list[str]) -> list[str]:
+    return [f for f in flags if isinstance(f, str) and not _is_info_flag(f)]
+
 
 def _window_start(as_of: str, years: int) -> str:
     return (datetime.strptime(as_of, "%Y-%m-%d") - timedelta(days=365 * years)).strftime("%Y-%m-%d")
@@ -284,17 +304,46 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
     return snap
 
 
-def save_snapshot(snap: dict, out_dir: str = "data/snapshots") -> Path:
+def save_snapshot(
+    snap: dict,
+    out_dir: str = "data/snapshots",
+    *,
+    peers_pending: bool = False,
+) -> Path:
+    """Ghi snapshot JSON rồi in tóm tắt chất lượng (không đổi nội dung so với trước khi in).
+
+    peers_pending=True: lượt 1 fetch_universe (peers chưa gán) — bỏ peers khỏi lưu ý/cảnh báo in.
+    """
+    from stockai.m1_data import quality
+
     p = Path(out_dir) / f"{snap['meta']['ticker']}_{snap['meta']['as_of']}.json"
     p.parent.mkdir(parents=True, exist_ok=True)
     snap["meta"]["flags"] = list(dict.fromkeys(snap["meta"]["flags"]))   # bỏ cờ trùng
     p.write_text(json.dumps(snap, ensure_ascii=False, indent=1), encoding="utf-8")
     st = snap["meta"]["data_status"]
     print("data_status:", ", ".join(f"{k}={v}" for k, v in st.items()))
-    if any(v != "ok" for v in st.values()):
-        print(f"  !! Snapshot CHƯA ĐỦ DỮ LIỆU - đừng dùng cho báo cáo thật. {len(snap['meta']['flags'])} cờ, xem meta.flags:")
-        for fl in snap["meta"]["flags"][:12]:
+
+    tier = quality.tier_of(snap) or quality.assess(snap).get("tier") or "full"
+    status_for_note = {
+        k: v for k, v in st.items()
+        if not (peers_pending and k == "peers")
+    }
+    warn = _warning_flags(snap["meta"]["flags"])
+
+    if tier == "full":
+        partials = [f"{k}={v}" for k, v in status_for_note.items() if v == "partial"]
+        if partials:
+            print("  Lưu ý:", ", ".join(partials))
+        return p
+    if tier == "limited":
+        print(f"  !! Dữ liệu HẠN CHẾ - dùng được nhưng xem quality_gate. {len(warn)} cờ cảnh báo:")
+        for fl in warn:
             print("    -", fl)
+        return p
+    # insufficient (và bậc lạ → xử lý như không đủ)
+    print(f"  !! KHÔNG ĐỦ DỮ LIỆU - không xếp hạng. {len(warn)} cờ cảnh báo:")
+    for fl in warn:
+        print("    -", fl)
     return p
 
 
