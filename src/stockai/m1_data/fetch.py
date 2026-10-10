@@ -12,7 +12,7 @@ from pathlib import Path
 
 from stockai.contracts.helpers import check_no_lookahead
 from stockai.contracts.schemas import assert_valid
-from stockai.m1_data import bank_kpis, news_extra
+from stockai.m1_data import bank_kpis, news_extra, vnf_source
 from stockai.m1_data import normalize as nz
 from stockai.m1_data import sources as src
 
@@ -213,9 +213,13 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         snap["financials"], ss = r; snap["sources"].extend(ss)
         a = len(snap["financials"]["annual"])
         status["financials"] = "ok" if a >= 5 else ("partial" if a else "missing")
+    if snap["financials"]["annual"]:
+        step("vnf", lambda: vnf_source.apply(snap, cfg))               # đối chiếu/bổ sung/kéo dài lịch sử từ vnfinancialdata (tùy chọn)
     if snap["company"]["is_bank"] and snap["financials"]["annual"]:
         bank_kpis.apply(snap, cfg.get("bank_kpis_file", "config/bank_kpis.csv"))
-    r = step("news", lambda: fetch_news(ticker, start, as_of, cfg))
+    r = step("news", lambda: fetch_news(ticker, start, as_of, cfg)) if cfg.get("news_enabled", True) else None
+    if not cfg.get("news_enabled", True):
+        cfg["_flags"].append("news_skipped_by_config")
     if r:
         snap["news"], s = r; snap["sources"].append(s)
         status["news"] = "ok" if len(snap["news"]) >= 10 else ("partial" if snap["news"] else "missing")
