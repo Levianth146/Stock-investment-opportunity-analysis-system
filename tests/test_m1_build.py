@@ -58,6 +58,31 @@ def test_backtest_as_of_in_past_excludes_later_data(fake_sources):
     assert all(p["published_at"] <= "2025-06-30" for p in snap["financials"]["annual"])
 
 
+def test_short_annual_history_is_reported_with_coverage_count(fake_sources, monkeypatch):
+    annual = [
+        {
+            "period": str(year),
+            "published_at": f"{year + 1}-03-20",
+            "source_id": "src_fin",
+            "items": {"revenue": 100.0},
+        }
+        for year in range(2021, 2025)
+    ]
+    monkeypatch.setattr(
+        f,
+        "fetch_financials",
+        lambda *args, **kwargs: (
+            {"unit": "VND", "annual": annual, "quarterly": [], "column_map": {"annual": {}, "quarterly": {}}},
+            [],
+        ),
+    )
+
+    snapshot = f.build_snapshot("HPG", "2026-10-09", CFG)
+
+    assert snapshot["meta"]["data_status"]["financials"] == "partial"
+    assert "financials_annual_history_short:4/5" in snapshot["meta"]["flags"]
+
+
 def test_raw_csv_export_and_sources_json(tmp_path):
     cfg = {"cache_dir": str(tmp_path), "retries": 1, "request_interval_sec": 0}
     df = pd.DataFrame({"time": ["2026-10-09"], "close": [20.1]})

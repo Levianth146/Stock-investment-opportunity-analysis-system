@@ -2,7 +2,7 @@
  "hist.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T11:05:41",
+  "fetched_at": "2026-10-09T23:34:14",
   "rows": 1306,
   "columns": [
    "time",

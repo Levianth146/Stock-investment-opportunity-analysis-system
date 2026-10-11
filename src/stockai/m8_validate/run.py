@@ -1,16 +1,20 @@
-"""M8 - kiểm chứng (N6). Stub: chỉ báo 'pass' với 0 mục kiểm tra.
-
-Việc cần làm: (1) mọi số trong result/narrative phải khớp snapshot hoặc output module;
-(2) mỗi claim có nguồn; (3) cảnh báo dữ liệu giả (meta.synthetic) / module stub.
-Khuyến nghị: lỗi nặng -> status="fail" nhưng pipeline VẪN xuất PDF kèm khung cảnh báo (đừng chặn cứng sát giờ nộp).
-"""
+"""Basic quality gate for synthetic, incomplete and unimplemented analysis inputs."""
 
 
 def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
     issues = []
     if snapshot["meta"].get("synthetic"):
         issues.append({"severity": "warn", "message": "Snapshot là dữ liệu GIẢ (synthetic) - không dùng cho báo cáo thật"})
-    stubs = [m for m, o in upstream.items() if isinstance(o, dict) and o.get("status") == "stub"]
+    stubs = [m for m, o in upstream.items() if isinstance(o, dict) and o.get("status") in {"stub", "error"}]
     if stubs:
-        issues.append({"severity": "warn", "message": f"Module chưa triển khai: {', '.join(stubs)}"})
-    return {"status": "warn" if issues else "pass", "checked": 0, "issues": issues}
+        issues.append({"severity": "warn", "message": f"Module lỗi hoặc chưa triển khai: {', '.join(stubs)}"})
+    partial = [m for m, o in upstream.items() if isinstance(o, dict) and o.get("status") == "partial"]
+    if partial:
+        issues.append({"severity": "warn", "message": f"Module có dữ liệu chưa đầy đủ: {', '.join(partial)}"})
+    incomplete_groups = [
+        name for name, status in snapshot["meta"].get("data_status", {}).items()
+        if status != "ok"
+    ]
+    if incomplete_groups:
+        issues.append({"severity": "warn", "message": f"Nhóm dữ liệu chưa đầy đủ: {', '.join(incomplete_groups)}"})
+    return {"status": "warn" if issues else "pass", "checked": 3, "issues": issues}

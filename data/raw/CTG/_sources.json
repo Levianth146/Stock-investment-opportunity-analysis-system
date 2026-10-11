@@ -2,7 +2,7 @@
  "hist.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:53:36",
   "rows": 1306,
   "columns": [
    "time",
@@ -16,7 +16,7 @@
  "overview.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:53:47",
   "rows": 1,
   "columns": [
    "symbol",
@@ -66,7 +66,7 @@
  "fin-income_year.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:54:00",
   "rows": 26,
   "columns": [
    "item",
@@ -75,17 +75,13 @@
    "2025",
    "2024",
    "2023",
-   "2022",
-   "2021",
-   "2020",
-   "2019",
-   "2018"
+   "2022"
   ]
  },
  "fin-balance_year.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:54:09",
   "rows": 86,
   "columns": [
    "item",
@@ -94,17 +90,13 @@
    "2025",
    "2024",
    "2023",
-   "2022",
-   "2021",
-   "2020",
-   "2019",
-   "2018"
+   "2022"
   ]
  },
  "fin-cashflow_year.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:54:18",
   "rows": 52,
   "columns": [
    "item",
@@ -113,17 +105,13 @@
    "2025",
    "2024",
    "2023",
-   "2022",
-   "2021",
-   "2020",
-   "2019",
-   "2018"
+   "2022"
   ]
  },
  "fin-income_quarter.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:54:28",
   "rows": 26,
   "columns": [
    "item",
@@ -132,17 +120,13 @@
    "2026-Q2",
    "2026-Q1",
    "2025-Q4",
-   "2025-Q3",
-   "2025-Q2",
-   "2025-Q1",
-   "2024-Q4",
-   "2024-Q3"
+   "2025-Q3"
   ]
  },
  "fin-balance_quarter.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:54:38",
   "rows": 86,
   "columns": [
    "item",
@@ -151,17 +135,13 @@
    "2026-Q2",
    "2026-Q1",
    "2025-Q4",
-   "2025-Q3",
-   "2025-Q2",
-   "2025-Q1",
-   "2024-Q4",
-   "2024-Q3"
+   "2025-Q3"
   ]
  },
  "fin-cashflow_quarter.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:54:47",
   "rows": 52,
   "columns": [
    "item",
@@ -170,17 +150,13 @@
    "2026-Q2",
    "2026-Q1",
    "2025-Q4",
-   "2025-Q3",
-   "2025-Q2",
-   "2025-Q1",
-   "2024-Q4",
-   "2024-Q3"
+   "2025-Q3"
   ]
  },
  "news.csv": {
   "provider": "VCI",
   "library": "vnstock",
-  "fetched_at": "2026-10-09T10:56:24",
+  "fetched_at": "2026-10-09T14:54:52",
   "rows": 50,
   "columns": [
    "id",

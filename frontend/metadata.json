@@ -1,0 +1,6 @@
+{
+  "name": "StockLens VN - Hệ Thống Định Lượng Vốn",
+  "description": "Nền tảng phân tích định lượng chứng khoán, mô hình đa nhân tố, định giá DCF và xuất báo cáo phân tích cổ phiếu Việt Nam chuyên sâu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

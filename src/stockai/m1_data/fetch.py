@@ -213,6 +213,8 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         snap["financials"], ss = r; snap["sources"].extend(ss)
         a = len(snap["financials"]["annual"])
         status["financials"] = "ok" if a >= 5 else ("partial" if a else "missing")
+        if a < 5:
+            _flag(cfg, f"financials_annual_history_short:{a}/5")
     if snap["company"]["is_bank"] and snap["financials"]["annual"]:
         bank_kpis.apply(snap, cfg.get("bank_kpis_file", "config/bank_kpis.csv"))
     r = step("news", lambda: fetch_news(ticker, start, as_of, cfg))
