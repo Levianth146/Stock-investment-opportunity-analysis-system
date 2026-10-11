@@ -10,6 +10,7 @@ Tắt format-on-save khi sửa file này (giữ comment tiếng Việt căn cộ
 from __future__ import annotations
 
 import json
+import os
 import re
 import threading
 from datetime import datetime, timedelta
@@ -62,8 +63,17 @@ def fast_mode_enabled(cfg: dict) -> bool:
     return bool(cfg.get("use_icb_peer_cascade") or cfg.get("fast_wide"))
 
 
+def effective_fast(cfg: dict) -> bool:
+    """Chế độ nhanh hiệu lực: fast_mode_enabled và không phải phiên `--deep`."""
+    return fast_mode_enabled(cfg) and not bool(cfg.get("_deep"))
+
+
 def _google_run_decision(cfg: dict, *, fast: bool) -> tuple[bool, str | None]:
-    """Có chạy Google không; nếu bỏ vì wide/CLI ở chế độ nhanh → cờ skip."""
+    """Có chạy Google không; nếu bỏ vì wide/CLI ở chế độ nhanh → cờ skip.
+
+    Deep (`_deep`): chỉ theo `news_google` / `_no_google` (không theo `news_google_wide`)
+    vì `effective_fast` = False nên nhánh wide-skip không kích hoạt.
+    """
     if not cfg.get("news_enabled", True) or not cfg.get("news_google"):
         return False, None
     if cfg.get("_no_google"):
@@ -206,27 +216,59 @@ def _safe_fin(ticker: str, kind: str, period: str, cfg: dict):
         return None, None
 
 
+def fetch_quarterly_blocks(
+    ticker: str, as_of: str, cfg: dict, is_bank: bool = False,
+) -> tuple[list, dict, list[dict], list[str]]:
+    """Ba lệnh BCTC quý + chuẩn hóa (keep=8). Dùng chung fetch_financials và backfill.
+
+    Trả (periods, column_map, sources, flags_local). published_at quý +45 ngày
+    nằm trong normalize_financials; caller MUST check_no_lookahead trước khi lưu.
+    """
+    frames, providers = [], set()
+    local_flags: list[str] = []
+    for kind in ("income", "balance", "cashflow"):
+        df, provider = _safe_fin(ticker, kind, "quarter", cfg)
+        if df is not None:
+            frames.append(df)
+            providers.add(provider)
+    periods, cmap, flags = nz.normalize_financials(
+        frames, False, as_of, "src_fin_quarter", is_bank,
+        cfg.get("financial_multiplier", "auto"), 8,
+    )
+    local_flags.extend(flags)
+    sources: list[dict] = []
+    if providers:
+        sources.append(_source("src_fin_quarter", sorted(providers)[0], "finance quarter (income/balance/cashflow)"))
+    return periods, cmap, sources, local_flags
+
+
 def fetch_financials(ticker: str, as_of: str, cfg: dict, is_bank: bool = False) -> tuple[dict, list[dict]]:
     sources, blocks = [], {}
-    skip_quarterly = fast_mode_enabled(cfg)
-    periods_plan = (("year", True, 6),) if skip_quarterly else (("year", True, 6), ("quarter", False, 8))
-    for period, annual, keep in periods_plan:
-        frames, providers = [], set()
-        for kind in ("income", "balance", "cashflow"):      # bảng ratio của vnstock trả dữ liệu lỗi cấu trúc -> bỏ, tự tính từ BCTC
-            df, provider = _safe_fin(ticker, kind, period, cfg)
-            if df is not None:
-                frames.append(df); providers.add(provider)
-        sid = "src_fin_year" if annual else "src_fin_quarter"
-        periods, cmap, flags = nz.normalize_financials(frames, annual, as_of, sid, is_bank, cfg.get("financial_multiplier", "auto"), keep)
-        for f in flags:
-            _flag(cfg, f)
-        blocks["annual" if annual else "quarterly"] = (periods, cmap)
-        if providers:
-            sources.append(_source(sid, sorted(providers)[0], f"finance {period} (income/balance/cashflow)"))
+    skip_quarterly = effective_fast(cfg)
+    # năm luôn lấy; quý qua helper dùng chung (hoặc bỏ khi fast)
+    frames_y, providers_y = [], set()
+    for kind in ("income", "balance", "cashflow"):      # bảng ratio của vnstock trả dữ liệu lỗi cấu trúc -> bỏ, tự tính từ BCTC
+        df, provider = _safe_fin(ticker, kind, "year", cfg)
+        if df is not None:
+            frames_y.append(df); providers_y.add(provider)
+    periods_y, cmap_y, flags_y = nz.normalize_financials(
+        frames_y, True, as_of, "src_fin_year", is_bank, cfg.get("financial_multiplier", "auto"), 6,
+    )
+    for fl in flags_y:
+        _flag(cfg, fl)
+    blocks["annual"] = (periods_y, cmap_y)
+    if providers_y:
+        sources.append(_source("src_fin_year", sorted(providers_y)[0], "finance year (income/balance/cashflow)"))
     if skip_quarterly:
         blocks["quarterly"] = ([], {})
         _flag(cfg, "quarterly_skipped_fast_mode")
         _flag(cfg, "fast_mode")
+    else:
+        q_per, q_cmap, q_src, q_flags = fetch_quarterly_blocks(ticker, as_of, cfg, is_bank)
+        for fl in q_flags:
+            _flag(cfg, fl)
+        blocks["quarterly"] = (q_per, q_cmap)
+        sources.extend(q_src)
     return {"unit": "VND", "annual": blocks["annual"][0], "quarterly": blocks["quarterly"][0],
             "column_map": {"annual": blocks["annual"][1], "quarterly": blocks["quarterly"][1]},
             "published_at_note": "ngày công bố được ước lượng (quý +45 ngày, năm +90 ngày) vì nguồn không cung cấp"}, sources
@@ -299,7 +341,7 @@ def fetch_news(ticker: str, start: str, as_of: str, cfg: dict) -> tuple[list[dic
     except Exception as e:  # noqa: BLE001
         _flag(cfg, f"news_vnstock_error: {str(e)[:120]}")
     extra: list[dict] = []
-    fast = fast_mode_enabled(cfg)
+    fast = effective_fast(cfg)
     run_google, skip_flag = _google_run_decision(cfg, fast=fast)
     if skip_flag:
         _flag(cfg, skip_flag)
@@ -391,7 +433,7 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         "financials": {"unit": "VND", "annual": [], "quarterly": []},
         "peers": [], "news": [], "sources": [],
     }
-    fast = fast_mode_enabled(cfg)
+    fast = effective_fast(cfg)
     google_thread: threading.Thread | None = None
     google_box: dict = {"rows": [], "flags": [], "err": None}
 
@@ -407,7 +449,7 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         snap["prices"], s = r; snap["sources"].append(s)
         n = len(snap["prices"]["rows"])
         status["prices"] = "ok" if n >= 250 else ("partial" if n else "missing")
-        # A9: dừng sớm chỉ khi bước giá thành công (không exception)
+        # A9: dừng sớm chỉ khi bước giá thành công (không exception); tắt khi --deep
         if fast:
             price_reasons = quality.price_insufficient_reasons(snap["prices"]["rows"], cfg)
             if price_reasons:
@@ -425,7 +467,7 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         n = len(snap["index"]["rows"])
         status["index"] = "ok" if n >= 250 else ("partial" if n else "missing")
 
-    # A8: một luồng Google nền song song với vnstock còn lại (chỉ fast + Google được phép)
+    # A8: một luồng Google nền (chỉ effective_fast + Google được phép; deep = tuần tự)
     run_google, _skip = _google_run_decision(cfg, fast=fast)
     if fast and run_google:
         months = int(cfg.get("news_months", 12))
@@ -478,11 +520,139 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         if it.get("net_income") and it.get("eps"):
             snap["company"]["shares_outstanding"] = it["net_income"] / it["eps"]
             cfg["_flags"].append("shares_derived_from_net_income_over_eps")
+    if cfg.get("_deep"):
+        # Gỡ cờ stub early-exit / fast; gắn deep_fetch; chất lượng tính lại
+        drop_exact = {
+            "fetch_skipped_early", "fast_mode", "quarterly_skipped_fast_mode",
+            "company_name_missing_listing", "company_exchange_missing_listing",
+        }
+        cleaned = [
+            fl for fl in cfg["_flags"]
+            if fl not in drop_exact
+            and not str(fl).startswith("quality_")
+            and not str(fl).startswith("quality_tier_")
+        ]
+        if "deep_fetch" not in cleaned:
+            cleaned.append("deep_fetch")
+        cfg["_flags"][:] = cleaned
+        snap["meta"]["flags"] = cfg["_flags"]
     assert_valid(snap, "snapshot")
     bad = check_no_lookahead(snap)
     if bad:
         raise ValueError("Snapshot vi phạm as_of (look-ahead): " + "; ".join(bad[:5]))
+    if cfg.get("_deep"):
+        quality.apply(snap, cfg)
     return snap
+
+
+def _atomic_write_json(path: Path, data: dict) -> None:
+    """Ghi tạm rồi os.replace — không để file gốc nửa vời."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def run_deep_fetch(
+    tickers: list[str],
+    as_of: str,
+    cfg: dict,
+    *,
+    out_dir: str,
+) -> dict[str, dict]:
+    """Deep: build_snapshot với cfg['_deep']; ghi đè đúng TICKER_as_of.json; không gán peers."""
+    cfg = {**cfg, "_deep": True, "skip_peer_fetch": True}
+    summary: dict[str, dict] = {}
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    for t in tickers:
+        try:
+            snap = build_snapshot(t, as_of, cfg)
+            out_path = Path(out_dir) / f"{t}_{as_of}.json"
+            _atomic_write_json(out_path, snap)
+            # in tóm tắt chất lượng (không đổi nội dung)
+            save_snapshot(snap, out_dir)
+            summary[t] = {
+                "status": "ok",
+                "path": str(out_path),
+                "quality": quality.tier_of(snap) or "?",
+                "flags": list(snap["meta"].get("flags") or []),
+            }
+        except Exception as e:  # noqa: BLE001
+            summary[t] = {"status": "error", "error": str(e)[:200]}
+    return summary
+
+
+def backfill_quarterly(
+    tickers: list[str],
+    as_of: str,
+    cfg: dict,
+    *,
+    in_dir: str,
+    out_dir: str,
+    in_place: bool = False,
+) -> dict[str, dict]:
+    """Chỉ bổ sung BCTC quý (3 lệnh/mã). Bỏ qua early-exit / đã có quý. Ghi atomic."""
+    summary: dict[str, dict] = {}
+    dest_root = in_dir if in_place else out_dir
+    Path(dest_root).mkdir(parents=True, exist_ok=True)
+    for t in tickers:
+        src_path = Path(in_dir) / f"{t}_{as_of}.json"
+        if not src_path.exists():
+            # thử file mới nhất cùng mã nếu đúng as_of không có
+            cands = sorted(Path(in_dir).glob(f"{t}_{as_of}.json"))
+            if not cands:
+                summary[t] = {"status": "error", "error": "missing_source_snapshot"}
+                continue
+            src_path = cands[0]
+        try:
+            snap = json.loads(src_path.read_text(encoding="utf-8"))
+            flags = list((snap.get("meta") or {}).get("flags") or [])
+            if "fetch_skipped_early" in flags:
+                summary[t] = {"status": "skipped_early_exit"}
+                continue
+            qlist = (snap.get("financials") or {}).get("quarterly") or []
+            if qlist:
+                summary[t] = {"status": "skipped"}
+                continue
+            out_path = Path(dest_root) / f"{t}_{as_of}.json"
+            if not in_place and out_path.resolve() == src_path.resolve():
+                summary[t] = {"status": "error", "error": "refuse overwrite without --in-place"}
+                continue
+            is_bank = bool((snap.get("company") or {}).get("is_bank"))
+            cfg_run = {**cfg, "_flags": []}
+            periods, cmap, q_sources, q_flags = fetch_quarterly_blocks(t, as_of, cfg_run, is_bank)
+            for fl in list(q_flags) + list(cfg_run.get("_flags") or []):
+                if fl not in flags:
+                    flags.append(fl)
+            snap.setdefault("financials", {})["quarterly"] = periods
+            snap["financials"].setdefault("column_map", {})["quarterly"] = cmap
+            # nguồn quý: thay/thêm src_fin_quarter
+            snap["sources"] = [
+                s for s in (snap.get("sources") or []) if s.get("id") != "src_fin_quarter"
+            ] + list(q_sources)
+            flags = [fl for fl in flags if fl != "quarterly_skipped_fast_mode"]
+            if "quarterly_backfilled" not in flags:
+                flags.append("quarterly_backfilled")
+            # bỏ quality cũ rồi apply lại
+            flags = [fl for fl in flags if not str(fl).startswith("quality_") and not str(fl).startswith("quality_tier_")]
+            snap["meta"]["flags"] = flags
+            if is_bank and snap["financials"].get("annual"):
+                bank_kpis.apply(snap, cfg.get("bank_kpis_file", "config/bank_kpis.csv"))
+                flags = list(snap["meta"]["flags"])
+            a = len(snap["financials"].get("annual") or [])
+            qn = len(snap["financials"].get("quarterly") or [])
+            ds = snap["meta"].setdefault("data_status", {})
+            ds["financials"] = "ok" if a >= 5 else ("partial" if a or qn else "missing")
+            assert_valid(snap, "snapshot")
+            bad = check_no_lookahead(snap)
+            if bad:
+                raise ValueError("look-ahead: " + "; ".join(bad[:5]))
+            quality.apply(snap, cfg)
+            _atomic_write_json(out_path, snap)
+            summary[t] = {"status": "ok", "path": str(out_path), "flags": snap["meta"]["flags"]}
+        except Exception as e:  # noqa: BLE001
+            summary[t] = {"status": "error", "error": str(e)[:200]}
+    return summary
 
 
 def refresh_news_prices(
