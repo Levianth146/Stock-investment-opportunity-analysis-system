@@ -6,6 +6,7 @@ jsonschema
 requests
 beautifulsoup4
 feedparser
+--extra-index-url https://vnstocks.com/api/simple
 vnstock
 reportlab
 matplotlib

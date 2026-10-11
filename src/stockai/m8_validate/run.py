@@ -46,7 +46,7 @@ def _check_data(snapshot: dict, issues: list, counter: list) -> None:
 def _check_modules(snapshot: dict, upstream: dict, issues: list, counter: list) -> None:
     src_ids = {s["id"] for s in snapshot.get("sources", [])}
     news_ids = {n["id"] for n in snapshot.get("news", [])}
-    stubs, errors = [], []
+    stubs, errors, partial = [], [], []
     for name in ("m2", "m3", "m4", "m5", "m6"):
         o = upstream.get(name)
         counter[0] += 1
@@ -58,6 +58,8 @@ def _check_modules(snapshot: dict, upstream: dict, issues: list, counter: list) 
         elif o.get("status") == "error":
             errors.append(name)
             issues.append(_issue("warn", f"Module {name} lỗi: {str(o.get('error', ''))[:120]}", name))
+        elif o.get("status") == "partial":
+            partial.append(name)
         sc = o.get("score")
         if sc is not None and not (isinstance(sc, (int, float)) and 0 <= sc <= 100):
             issues.append(_issue("fatal", f"Điểm {name} ngoài thang 0-100: {sc}", f"{name}.score"))
@@ -76,6 +78,8 @@ def _check_modules(snapshot: dict, upstream: dict, issues: list, counter: list) 
         issues.append(_issue("warn", f"Module chưa triển khai (dùng điểm trung tính): {', '.join(m.upper() for m in stubs)}"))
     if errors:
         issues.append(_issue("warn", f"Module lỗi/thiếu: {', '.join(m.upper() for m in errors)}"))
+    if partial:
+        issues.append(_issue("warn", f"Module có dữ liệu chưa đầy đủ: {', '.join(m.upper() for m in partial)}"))
 
 
 def _check_m7(upstream: dict, cfg: dict, issues: list, counter: list) -> None:

@@ -21,6 +21,15 @@ Luồng: **M1 → snapshot → M2…M6 → M7 → M8 → M9**. Mọi module có 
 - `limited` / `full` / thiếu tier (legacy → `absent`) → vẫn chấm điểm; `limited` phải lộ `reasons` trên `flags` / `quality_gate`.
 - `score` kiểu `number | null`; thêm enum rating `"Không xếp hạng"`.
 
+## Phép tính hiện triển khai trong M2–M7
+- M2 giữ công thức trên nhánh tích hợp: doanh nghiệp dùng ROE, tăng trưởng lợi nhuận, nợ/vốn chủ, CFO/NI và khả năng trả lãi; ngân hàng dùng ROE, tăng trưởng lợi nhuận, NIM, CIR và cho vay/tiền gửi. Tỷ trọng được chuẩn hóa trên các chỉ tiêu có dữ liệu; các tỷ suất trong metrics dùng đơn vị ratio. Không có BCTC năm hợp lệ thì trả status=error, score=null.
+- M3 chấm T từ MA20/50/200, RSI14 và động lượng 20 phiên trên giá điều chỉnh.
+- M4 chấm V từ PE (phi ngân hàng) hoặc PB (ngân hàng); khi có peers hợp lệ, dùng bội số trung vị để ước tính giá mục tiêu. Không có peer thì chỉ hiển thị điểm tham khảo theo bội số hiện tại, không tự sinh giá mục tiêu.
+- M5 chấm S bằng từ khóa tích cực/tiêu cực minh bạch trên tiêu đề và tóm tắt tin. Cần tối thiểu 3 tin được phân loại; đây là heuristic, không thay thế phân tích ngôn ngữ chuyên sâu.
+- M6 chấm R (rủi ro, càng cao càng xấu) từ biến động năm hóa và drawdown, đồng thời báo beta so với chỉ số khi tính được.
+- Module dùng `partial` khi dữ liệu chưa đủ độ phủ chuẩn; điểm chỉ có khi có đủ chỉ tiêu để tính. `null` và `flags` biểu thị dữ liệu không có, không thay bằng điểm trung tính.
+- M7 tạo luận điểm Bull/Bear từ bằng chứng module/tin có tham chiếu; mức điểm chỉ là heuristic, chưa phải khuyến nghị đầu tư đã được hiệu chuẩn.
+
 ## Quy tắc bất biến
 - `as_of`: không dùng dữ liệu có `published_at`/`date` > `as_of`. Báo cáo tài chính tính theo **ngày công bố**.
 - Thiếu dữ liệu -> `null` + `flags`. Không điền số ước đoán. Module lỗi -> pipeline dùng điểm trung tính 50 và gắn cờ.
