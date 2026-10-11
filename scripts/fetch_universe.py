@@ -25,13 +25,45 @@ except Exception:  # noqa: BLE001
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import yaml  # noqa: E402
 
-from stockai.m1_data.fetch import fast_mode_enabled, refresh_news_prices  # noqa: E402
+from stockai.m1_data.fetch import (  # noqa: E402
+    backfill_quarterly,
+    fast_mode_enabled,
+    refresh_news_prices,
+    run_deep_fetch,
+)
 from stockai.m1_data.universe import fetch_all, fill_peers_dir, load_universe, read_tickers_file  # noqa: E402
 
 
 def compute_wide(*, universe: str, tickers_file: str | None) -> bool:
     """Wide khi universe ≠ VN30 hoặc có --tickers-file. --tickers đơn không làm wide."""
     return universe.upper() != "VN30" or bool(tickers_file)
+
+
+def validate_deep_backfill_args(
+    *,
+    deep: bool,
+    backfill: bool,
+    has_tickers: bool,
+    wide: bool,
+) -> str | None:
+    """Trả thông báo lỗi tiếng Việt nếu FR-001 vi phạm; None nếu OK. Caller `sys.exit(2)`."""
+    if deep and backfill:
+        return (
+            "Lỗi: không dùng --deep cùng --backfill-quarterly. "
+            "Chạy riêng: --deep (lấy đủ mã chọn) hoặc --backfill-quarterly (chỉ bổ sung quý)."
+        )
+    if deep and not has_tickers:
+        return (
+            "Lỗi: --deep cần --tickers hoặc --tickers-file (không deep cả universe). "
+            "Ví dụ: --deep --tickers HPG --universe VN100 --as-of YYYY-MM-DD"
+        )
+    if deep and not wide:
+        return (
+            "Lỗi: --deep chỉ hợp lệ ở chế độ rộng (wide): dùng --tickers-file, "
+            "hoặc --tickers kèm --universe khác VN30. "
+            "VN30 thuần không hỗ trợ --deep."
+        )
+    return None
 
 
 def apply_cli_cfg(
@@ -79,7 +111,12 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--out-dir")
     ap.add_argument("--peers-only", action="store_true", help="không cào, chỉ gán peers và bậc chất lượng cho snapshot đã có trong out-dir")
     ap.add_argument("--refresh-news-prices", action="store_true", help="chỉ làm mới giá/chỉ số/tin trên snapshot đã có")
-    ap.add_argument("--in-place", action="store_true", help="cho phép ghi đè thư mục nguồn khi refresh")
+    ap.add_argument("--in-place", action="store_true", help="cho phép ghi đè thư mục nguồn khi refresh / backfill")
+    ap.add_argument("--deep", action="store_true", help="lấy đủ dữ liệu cho mã chọn (wide + tickers/file); tắt early-exit/bỏ quý")
+    ap.add_argument(
+        "--backfill-quarterly", action="store_true",
+        help="chỉ bổ sung BCTC quý (3 lệnh/mã) vào snapshot thiếu quý; mutual exclusive với --deep",
+    )
     return ap
 
 
@@ -104,6 +141,44 @@ def main(argv: list[str] | None = None) -> None:
         tickers = load_universe(cfg, a.universe, a.refresh_universe)
     if a.limit:
         tickers = tickers[: a.limit]
+
+    err = validate_deep_backfill_args(
+        deep=bool(a.deep),
+        backfill=bool(a.backfill_quarterly),
+        has_tickers=bool(tickers_arg or a.tickers_file),
+        wide=wide,
+    )
+    if err:
+        print(err, file=sys.stderr)
+        sys.exit(2)
+
+    if a.deep:
+        cfg["_deep"] = True
+        print(
+            f"deep: {len(tickers)} mã -> {out_dir} (không gán peers; sau đó chạy --peers-only)",
+            flush=True,
+        )
+        res = run_deep_fetch(tickers, a.as_of, cfg, out_dir=out_dir)
+        print("\n=== TÓM TẮT DEEP ===")
+        for t, r in res.items():
+            print(f"{t:<5} {r.get('status', '')} {r.get('quality', '')} {r.get('error', '')}")
+        print("Nhắc: gán peers bằng --peers-only sau khi deep xong.", flush=True)
+        return
+
+    if a.backfill_quarterly:
+        in_dir = out_dir
+        dest = out_dir
+        if a.shard:
+            i, n = (int(x) for x in a.shard.split("/"))
+            assert 1 <= i <= n, "--shard phải dạng i/n với 1 <= i <= n"
+            tickers = tickers[i - 1::n]
+        res = backfill_quarterly(
+            tickers, a.as_of, cfg, in_dir=in_dir, out_dir=dest, in_place=a.in_place,
+        )
+        print("\n=== TÓM TẮT BACKFILL QUARTERLY ===")
+        for t, r in res.items():
+            print(f"{t:<5} {r.get('status', '')} {r.get('error', '')}")
+        return
 
     if a.refresh_news_prices:
         in_dir = out_dir
