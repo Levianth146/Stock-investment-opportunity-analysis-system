@@ -7,6 +7,7 @@ Chỉ dùng thư viện chuẩn (urllib + xml). Lỗi mạng không làm sập M
 from __future__ import annotations
 
 import re
+import threading
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
@@ -16,6 +17,7 @@ from urllib.request import Request, urlopen
 
 GOOGLE_RSS = "https://news.google.com/rss/search?q={q}&hl=vi&gl=VN&ceid=VN:vi"
 _UA = "Mozilla/5.0 (compatible; stockai-m1/1.0)"
+_google_interval_lock = threading.Lock()
 
 
 def http_get(url: str, timeout: float = 20.0) -> bytes:
@@ -77,7 +79,9 @@ def google_news(ticker: str, start: str, as_of: str, cfg: dict, fetch=http_get) 
             rows += [r for r in parse_rss(fetch(GOOGLE_RSS.format(q=q))) if relevant(r, ticker)]
         except Exception:  # noqa: BLE001
             errors += 1
-        time.sleep(float(cfg.get("news_google_interval_sec", 1.0)) if fetch is http_get else 0)
+        if fetch is http_get:
+            with _google_interval_lock:
+                time.sleep(float(cfg.get("news_google_interval_sec", 1.0)))
     if errors:
         flags.append(f"news_google_errors:{errors}_windows")
     return rows, flags

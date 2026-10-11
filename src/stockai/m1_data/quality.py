@@ -25,18 +25,35 @@ def avg_traded_value(rows: list[dict], sessions: int) -> float | None:
     return sum(r["close"] * r["volume"] for r in tail) / len(tail) if tail else None
 
 
-def assess(snap: dict, cfg: dict | None = None) -> dict:
-    q = {**DEFAULTS, **((cfg or {}).get("quality") or {})}
-    rows, annual = snap["prices"]["rows"], snap["financials"]["annual"]
-    bad, soft = [], []
+def _quality_cfg(cfg: dict | None = None) -> dict:
+    return {**DEFAULTS, **((cfg or {}).get("quality") or {})}
+
+
+def price_insufficient_reasons(rows: list[dict], cfg: dict | None = None) -> list[str]:
+    """Lý do insufficient chỉ từ giá — cùng ngưỡng/token với assess (không nhân đôi số magic)."""
+    q = _quality_cfg(cfg)
+    bad: list[str] = []
     if len(rows) < q["min_price_rows"]:
         bad.append(f"prices_lt_{q['min_price_rows']}")
-    if len(annual) < q["min_annual"]:
-        bad.append(f"annual_lt_{q['min_annual']}")
     val = avg_traded_value(rows, int(q["liquidity_sessions"]))
     if val is None or val < q["min_avg_value_vnd"]:
         bad.append("illiquid")
-    elif val < q["limited_avg_value_vnd"]:
+    return bad
+
+
+def assess(snap: dict, cfg: dict | None = None) -> dict:
+    q = _quality_cfg(cfg)
+    rows, annual = snap["prices"]["rows"], snap["financials"]["annual"]
+    val = avg_traded_value(rows, int(q["liquidity_sessions"]))
+    # Early-exit A9: chỉ đánh giá phần giá (không gắn annual_lt_* / soft tin-ngành)
+    if "fetch_skipped_early" in snap["meta"]["flags"]:
+        bad = list(price_insufficient_reasons(rows, cfg))
+        return {"tier": "insufficient", "reasons": bad, "avg_value_vnd": val}
+    bad = list(price_insufficient_reasons(rows, cfg))
+    soft: list[str] = []
+    if len(annual) < q["min_annual"]:
+        bad.append(f"annual_lt_{q['min_annual']}")
+    if val is not None and val >= q["min_avg_value_vnd"] and val < q["limited_avg_value_vnd"]:
         soft.append("low_liquidity")
     if len(annual) < q["limited_annual"] and "annual_lt_%d" % q["min_annual"] not in bad:
         soft.append(f"annual_lt_{q['limited_annual']}")
