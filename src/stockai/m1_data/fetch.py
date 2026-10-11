@@ -2,17 +2,22 @@
 
 Luồng: sources.py (gọi vnstock, cache) -> normalize.py (đưa về schema) -> fetch.py (ghép snapshot).
 Quy tắc: mọi dữ liệu có ngày > as_of bị loại; 1 khối lỗi chỉ đánh dấu thiếu + cờ, không làm sập snapshot.
-Cờ phát sinh khi chuẩn hóa được ghi vào snapshot["meta"]["flags"] (qua cfg["_flags"])."""
+Cờ phát sinh khi chuẩn hóa được ghi vào snapshot["meta"]["flags"] (qua cfg["_flags"]).
+
+Tắt format-on-save khi sửa file này (giữ comment tiếng Việt căn cột). # fmt: off
+"""
+# fmt: off
 from __future__ import annotations
 
 import json
 import re
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from stockai.contracts.helpers import check_no_lookahead
 from stockai.contracts.schemas import assert_valid
-from stockai.m1_data import bank_kpis, icb_sector, news_extra, news_portals, vnf_source
+from stockai.m1_data import bank_kpis, icb_sector, news_extra, news_portals, quality, vnf_source
 from stockai.m1_data import normalize as nz
 from stockai.m1_data import sources as src
 
@@ -52,6 +57,131 @@ def _source(sid: str, provider: str, what: str) -> dict:
             "fetched_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), "note": "thư viện vnstock; xem docs/CONTRACTS.md"}
 
 
+def fast_mode_enabled(cfg: dict) -> bool:
+    """True khi cascade rộng hoặc ép `fast_wide` (data-model)."""
+    return bool(cfg.get("use_icb_peer_cascade") or cfg.get("fast_wide"))
+
+
+def _google_run_decision(cfg: dict, *, fast: bool) -> tuple[bool, str | None]:
+    """Có chạy Google không; nếu bỏ vì wide/CLI ở chế độ nhanh → cờ skip."""
+    if not cfg.get("news_enabled", True) or not cfg.get("news_google"):
+        return False, None
+    if cfg.get("_no_google"):
+        return (False, "google_news_skipped_fast_mode") if fast else (False, None)
+    if fast and not cfg.get("news_google_wide", True):
+        return False, "google_news_skipped_fast_mode"
+    return True, None
+
+
+def company_from_listing(ticker: str, cfg: dict) -> tuple[dict, list[str], str]:
+    """Company từ listing_icb.csv (không mạng). Trả (company, flags, data_status company)."""
+    listing = icb_sector.load_listing(cfg.get("icb_sector_map"))
+    row = listing.get(ticker.strip().upper())
+    flags: list[str] = []
+    name = (row or {}).get("name") if row else None
+    exchange = (row or {}).get("exchange") if row else None
+    sector = (row or {}).get("sector_en") if row else None
+    if row is None:
+        flags.append("icb_ticker_not_found")
+    if not name:
+        name = ticker
+        flags.append("company_name_missing_listing")
+    if not exchange:
+        exchange = ""
+        flags.append("company_exchange_missing_listing")
+    if not sector:
+        sector = ""
+        if row is not None:
+            flags.append("icb_sector_unmapped")
+    company = {
+        "name": name,
+        "exchange": exchange,
+        "sector": sector,
+        "industry": None,
+        "is_bank": ticker in cfg.get("banks", []),
+        "shares_outstanding": None,
+        "source_id": "src_company_listing",
+    }
+    status = "ok" if (row and (row.get("name") or "").strip() and (row.get("exchange") or "").strip()) else "partial"
+    return company, flags, status
+
+
+def _ensure_shared_index(symbol: str, start: str, as_of: str, cfg: dict) -> tuple[dict, dict]:
+    """Index dùng chung lượt chạy (không tính lệnh theo mã trên early-exit)."""
+    cache = cfg.setdefault("_shared_index", {})
+    if symbol in cache:
+        return cache[symbol]
+    block, source = fetch_index(symbol, start, as_of, cfg)
+    cache[symbol] = (block, source)
+    return block, source
+
+
+def build_early_exit_snapshot(
+    ticker: str,
+    as_of: str,
+    cfg: dict,
+    prices_block: dict,
+    price_reasons: list[str],
+    index_block: dict,
+    index_source: dict | None,
+    start: str,
+) -> dict:
+    """Snapshot dừng sớm A9 — company listing, index cache, không BCTC/tin."""
+    flags = list(cfg.get("_flags") or [])
+    for tok in ("fast_mode", "fetch_skipped_early", "quality_tier_insufficient"):
+        if tok not in flags:
+            flags.append(tok)
+    for r in price_reasons:
+        fl = f"quality_{r}"
+        if fl not in flags:
+            flags.append(fl)
+    company, cflags, cstat = company_from_listing(ticker, cfg)
+    for f in cflags:
+        if f not in flags:
+            flags.append(f)
+    n = len(prices_block.get("rows") or [])
+    pstat = "ok" if n >= 250 else ("partial" if n else "missing")
+    idx_rows = len(index_block.get("rows") or [])
+    istat = "ok" if idx_rows >= 250 else ("partial" if idx_rows else "missing")
+    status = {
+        "prices": pstat,
+        "index": istat,
+        "financials": "missing",
+        "company": cstat,
+        "peers": "missing",
+        "news": "missing",
+    }
+    snap = {
+        "meta": {
+            "schema_version": "1.0",
+            "ticker": ticker,
+            "as_of": as_of,
+            "window_start": start,
+            "synthetic": False,
+            "fetched_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+            "flags": flags,
+            "data_status": status,
+        },
+        "company": company,
+        "prices": prices_block,
+        "index": index_block,
+        "financials": {"unit": "VND", "annual": [], "quarterly": []},
+        "peers": [],
+        "news": [],
+        "sources": list(cfg.get("_early_sources") or []),
+    }
+    listing_src = _source("src_company_listing", "listing_icb.csv", "company từ listing ICB")
+    if not any(s.get("id") == "src_company_listing" for s in snap["sources"]):
+        snap["sources"].append(listing_src)
+    if index_source and not any(s.get("id") == index_source.get("id") for s in snap["sources"]):
+        snap["sources"].append(index_source)
+    assert_valid(snap, "snapshot")
+    bad = check_no_lookahead(snap)
+    if bad:
+        raise ValueError("Snapshot vi phạm as_of (look-ahead): " + "; ".join(bad[:5]))
+    return snap
+
+
 # ------------------------------------------------------------------ từng khối
 def fetch_prices(ticker: str, start: str, as_of: str, cfg: dict) -> tuple[dict, dict]:
     df, provider = src.get_history(ticker, start, as_of, cfg)
@@ -78,7 +208,9 @@ def _safe_fin(ticker: str, kind: str, period: str, cfg: dict):
 
 def fetch_financials(ticker: str, as_of: str, cfg: dict, is_bank: bool = False) -> tuple[dict, list[dict]]:
     sources, blocks = [], {}
-    for period, annual, keep in (("year", True, 6), ("quarter", False, 8)):
+    skip_quarterly = fast_mode_enabled(cfg)
+    periods_plan = (("year", True, 6),) if skip_quarterly else (("year", True, 6), ("quarter", False, 8))
+    for period, annual, keep in periods_plan:
         frames, providers = [], set()
         for kind in ("income", "balance", "cashflow"):      # bảng ratio của vnstock trả dữ liệu lỗi cấu trúc -> bỏ, tự tính từ BCTC
             df, provider = _safe_fin(ticker, kind, period, cfg)
@@ -91,6 +223,10 @@ def fetch_financials(ticker: str, as_of: str, cfg: dict, is_bank: bool = False) 
         blocks["annual" if annual else "quarterly"] = (periods, cmap)
         if providers:
             sources.append(_source(sid, sorted(providers)[0], f"finance {period} (income/balance/cashflow)"))
+    if skip_quarterly:
+        blocks["quarterly"] = ([], {})
+        _flag(cfg, "quarterly_skipped_fast_mode")
+        _flag(cfg, "fast_mode")
     return {"unit": "VND", "annual": blocks["annual"][0], "quarterly": blocks["quarterly"][0],
             "column_map": {"annual": blocks["annual"][1], "quarterly": blocks["quarterly"][1]},
             "published_at_note": "ngày công bố được ước lượng (quý +45 ngày, năm +90 ngày) vì nguồn không cung cấp"}, sources
@@ -163,8 +299,16 @@ def fetch_news(ticker: str, start: str, as_of: str, cfg: dict) -> tuple[list[dic
     except Exception as e:  # noqa: BLE001
         _flag(cfg, f"news_vnstock_error: {str(e)[:120]}")
     extra: list[dict] = []
-    if cfg.get("news_google"):                                           # tin bổ sung có URL, phủ cả cửa sổ 12 tháng
-        rows, fl = news_extra.google_news(ticker, nstart, as_of, cfg)
+    fast = fast_mode_enabled(cfg)
+    run_google, skip_flag = _google_run_decision(cfg, fast=fast)
+    if skip_flag:
+        _flag(cfg, skip_flag)
+    prefetch = cfg.pop("_google_prefetch", None)
+    if run_google:                                                       # tin bổ sung có URL, phủ cả cửa sổ 12 tháng
+        if prefetch is not None:
+            rows, fl = prefetch
+        else:
+            rows, fl = news_extra.google_news(ticker, nstart, as_of, cfg)
         extra += rows
         for f in fl:
             _flag(cfg, f)
@@ -247,6 +391,9 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         "financials": {"unit": "VND", "annual": [], "quarterly": []},
         "peers": [], "news": [], "sources": [],
     }
+    fast = fast_mode_enabled(cfg)
+    google_thread: threading.Thread | None = None
+    google_box: dict = {"rows": [], "flags": [], "err": None}
 
     def step(name: str, fn):
         try:
@@ -260,11 +407,40 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         snap["prices"], s = r; snap["sources"].append(s)
         n = len(snap["prices"]["rows"])
         status["prices"] = "ok" if n >= 250 else ("partial" if n else "missing")
-    r = step("index", lambda: fetch_index(snap["index"]["symbol"], start, as_of, cfg))
+        # A9: dừng sớm chỉ khi bước giá thành công (không exception)
+        if fast:
+            price_reasons = quality.price_insufficient_reasons(snap["prices"]["rows"], cfg)
+            if price_reasons:
+                idx_sym = snap["index"]["symbol"]
+                cfg["_early_sources"] = list(snap["sources"])
+                idx_block, idx_src = _ensure_shared_index(idx_sym, start, as_of, cfg)
+                return build_early_exit_snapshot(
+                    ticker, as_of, cfg, snap["prices"], price_reasons, idx_block, idx_src, start,
+                )
+
+    # Index dùng chung cache lượt chạy
+    r = step("index", lambda: _ensure_shared_index(snap["index"]["symbol"], start, as_of, cfg))
     if r:
         snap["index"], s = r; snap["sources"].append(s)
         n = len(snap["index"]["rows"])
         status["index"] = "ok" if n >= 250 else ("partial" if n else "missing")
+
+    # A8: một luồng Google nền song song với vnstock còn lại (chỉ fast + Google được phép)
+    run_google, _skip = _google_run_decision(cfg, fast=fast)
+    if fast and run_google:
+        months = int(cfg.get("news_months", 12))
+        nstart = max(start, (datetime.strptime(as_of, "%Y-%m-%d") - timedelta(days=30 * months)).strftime("%Y-%m-%d"))
+
+        def _bg_google() -> None:
+            try:
+                google_box["rows"], google_box["flags"] = news_extra.google_news(ticker, nstart, as_of, cfg)
+            except Exception as e:  # noqa: BLE001
+                google_box["err"] = e
+                google_box["rows"], google_box["flags"] = [], [f"news_google_errors:bg:{str(e)[:80]}"]
+
+        google_thread = threading.Thread(target=_bg_google, name=f"google-{ticker}", daemon=True)
+        google_thread.start()
+
     r = step("company", lambda: fetch_company(ticker, as_of, cfg))
     if r:
         snap["company"], snap["peers"], s = r; snap["sources"].append(s)
@@ -282,6 +458,11 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
     if snap["company"]["is_bank"] and snap["financials"]["annual"]:
         bank_kpis.apply(snap, cfg.get("bank_kpis_file", "config/bank_kpis.csv"))
         cfg["_flags"] = snap["meta"]["flags"]
+
+    if google_thread is not None:
+        google_thread.join()
+        cfg["_google_prefetch"] = (google_box["rows"], google_box["flags"])
+
     r = step("news", lambda: fetch_news(ticker, start, as_of, cfg)) if cfg.get("news_enabled", True) else None
     if not cfg.get("news_enabled", True):
         cfg["_flags"].append("news_skipped_by_config")
@@ -291,7 +472,7 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
             snap["sources"].append(ps)
         status["news"] = "ok" if len(snap["news"]) >= 10 else ("partial" if snap["news"] else "missing")
 
-    sh, eps_ni = snap["company"].get("shares_outstanding"), None
+    sh = snap["company"].get("shares_outstanding")
     if sh is None and snap["financials"]["annual"]:                     # dự phòng: số cổ phiếu ≈ LNST / EPS
         it = snap["financials"]["annual"][0]["items"]
         if it.get("net_income") and it.get("eps"):
@@ -302,6 +483,76 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
     if bad:
         raise ValueError("Snapshot vi phạm as_of (look-ahead): " + "; ".join(bad[:5]))
     return snap
+
+
+def refresh_news_prices(
+    tickers: list[str],
+    as_of: str,
+    cfg: dict,
+    *,
+    in_dir: str,
+    out_dir: str,
+    in_place: bool = False,
+) -> dict[str, dict]:
+    """Làm mới giá/chỉ số/tin; giữ financials/peers/company. Ghi out_dir trừ khi in_place."""
+    summary: dict[str, dict] = {}
+    dest = in_dir if in_place else out_dir
+    Path(dest).mkdir(parents=True, exist_ok=True)
+    start = _window_start(as_of, cfg.get("window_years", 5))
+    for t in tickers:
+        src_path = None
+        for p in sorted(Path(in_dir).glob(f"{t}_*.json"), reverse=True):
+            src_path = p
+            break
+        if src_path is None:
+            summary[t] = {"status": "error", "error": "missing_source_snapshot"}
+            continue
+        try:
+            snap = json.loads(src_path.read_text(encoding="utf-8"))
+            if "fetch_skipped_early" in (snap.get("meta") or {}).get("flags", []):
+                summary[t] = {"status": "skipped_early_exit"}
+                continue
+            cfg_run = {**cfg, "_flags": list(snap["meta"].get("flags") or [])}
+            # bỏ cờ refresh cũ / skip google cũ nếu chạy lại
+            cfg_run["_flags"] = [f for f in cfg_run["_flags"] if f not in ("refreshed_news_prices", "google_news_skipped_fast_mode")]
+            prices, ps = fetch_prices(t, start, as_of, cfg_run)
+            index, ix = _ensure_shared_index(cfg_run.get("index_symbol", "VNINDEX"), start, as_of, cfg_run)
+            news_items, ns = ([], None)
+            if cfg_run.get("news_enabled", True):
+                news_items, ns = fetch_news(t, start, as_of, cfg_run)
+            else:
+                cfg_run["_flags"].append("news_skipped_by_config")
+            snap["prices"] = prices
+            snap["index"] = index
+            snap["news"] = news_items
+            snap["meta"]["as_of"] = as_of
+            snap["meta"]["window_start"] = start
+            snap["meta"]["fetched_at"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            if "refreshed_news_prices" not in cfg_run["_flags"]:
+                cfg_run["_flags"].append("refreshed_news_prices")
+            snap["meta"]["flags"] = list(dict.fromkeys(cfg_run["_flags"]))
+            # sources: giữ non price/index/news; thêm mới
+            keep_ids = {"src_fin_year", "src_fin_quarter", "src_company", "src_universe_calc", "src_company_listing"}
+            snap["sources"] = [s for s in snap.get("sources") or [] if s.get("id") in keep_ids or str(s.get("id", "")).startswith("src_portal")]
+            snap["sources"].extend([ps, ix] + ([ns] if ns else []))
+            ds = snap["meta"]["data_status"]
+            n = len(prices["rows"])
+            ds["prices"] = "ok" if n >= 250 else ("partial" if n else "missing")
+            ni = len(index["rows"])
+            ds["index"] = "ok" if ni >= 250 else ("partial" if ni else "missing")
+            ds["news"] = "ok" if len(news_items) >= 10 else ("partial" if news_items else "missing")
+            assert_valid(snap, "snapshot")
+            bad = check_no_lookahead(snap)
+            if bad:
+                raise ValueError("look-ahead: " + "; ".join(bad[:5]))
+            out_path = Path(dest) / f"{t}_{as_of}.json"
+            if not in_place and out_path.resolve() == src_path.resolve():
+                raise ValueError("refuse overwrite without --in-place")
+            out_path.write_text(json.dumps(snap, ensure_ascii=False, indent=1), encoding="utf-8")
+            summary[t] = {"status": "ok", "path": str(out_path), "flags": snap["meta"]["flags"]}
+        except Exception as e:  # noqa: BLE001
+            summary[t] = {"status": "error", "error": str(e)[:200]}
+    return summary
 
 
 def save_snapshot(

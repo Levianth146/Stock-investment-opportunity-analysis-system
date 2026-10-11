@@ -21,6 +21,8 @@ news_months: 12
 news_enabled: true              # false (hoặc --no-news) = bỏ qua tin tức, cho universe lớn
 max_news: 800                   # trần số tin giữ lại sau khi gộp vnstock + Google News + RSS
 news_google: true               # Google News RSS theo mã, chia cửa sổ 30 ngày (cần Internet; lỗi thì chỉ gắn cờ)
+news_google_wide: true # chế độ nhanh: cho phép Google trừ khi false hoặc --no-google
+fast_wide: false # ép chế độ nhanh khi không có cascade
 news_google_window_days: 30
 news_google_interval_sec: 1.0
 news_rss: []                    # ví dụ: ["https://cafef.vn/....rss"] - điền nếu vnstock không có tin; lọc theo mã

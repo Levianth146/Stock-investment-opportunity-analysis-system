@@ -117,11 +117,14 @@ def _view(snap: dict, listing: dict | None = None) -> dict:
     parent = None
     if listing is not None:
         parent = (listing.get(t) or {}).get("parent_en")
+    early = "fetch_skipped_early" in (snap.get("meta") or {}).get("flags", [])
     return {
         "sector": snap["company"].get("sector") or "",
         "parent": parent,
         "is_bank": bool(snap["company"].get("is_bank")),
-        "met": _metrics(snap),
+        # Early-exit A9: không đóng góp peers (met=None → loại khỏi nhóm)
+        "met": None if early else _metrics(snap),
+        "early_exit": early,
     }
 
 
@@ -215,6 +218,8 @@ def _assign_peers(
 def _by_sector(views: dict) -> dict:
     by: dict[str, list[str]] = {}
     for t, v in views.items():
+        if v.get("early_exit"):
+            continue
         if v["sector"] and v["met"]:
             by.setdefault(v["sector"], []).append(t)
     return by
