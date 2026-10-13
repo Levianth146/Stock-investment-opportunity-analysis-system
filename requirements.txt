@@ -6,9 +6,14 @@ jsonschema
 requests
 beautifulsoup4
 feedparser
+--extra-index-url https://vnstocks.com/api/simple
 vnstock
 reportlab
 matplotlib
+jinja2
+xhtml2pdf
+pypdf
+streamlit
 pytest
 # LLM (chọn 1 provider ở config/llm.yaml)
 anthropic
