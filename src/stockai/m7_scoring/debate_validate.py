@@ -142,10 +142,17 @@ def _collect_payload_number_forms(payload_metrics: dict | None, news: list | Non
                 val = entry.get("value")
                 if isinstance(val, (int, float)):
                     _add_num(float(val))
-                disp = entry.get("display")
-                if isinstance(disp, str) and disp.strip():
-                    forms.add(disp.strip())
-                    forms.add(disp.strip().replace(",", "."))
+                for key in ("display", "display_name", "name"):
+                    disp = entry.get(key)
+                    if isinstance(disp, str) and disp.strip():
+                        forms.add(disp.strip())
+                        forms.add(disp.strip().replace(",", "."))
+                        # Cho phép số nằm trong tên (vd RSI(14) → 14)
+                        for m in _NUM_TOKEN_RE.finditer(disp):
+                            raw = m.group(1)
+                            forms.add(raw)
+                            forms.add(raw.replace(",", "."))
+                            forms.add(raw.replace(".", ","))
             elif isinstance(entry, (int, float)):
                 _add_num(float(entry))
     return forms
@@ -322,6 +329,71 @@ def validate_debate_sides(
                 )
             )
     return errs
+
+
+def repair_debate_sides(
+    bull: Any,
+    bear: Any,
+    *,
+    metrics_allowed: set[str] | list[str],
+    news_ref_map: dict[str, str] | None,
+    upstream: dict | None = None,
+    module_polarity: dict[str, float] | None = None,
+    payload_metrics: dict | None = None,
+    scores: dict | None = None,
+    news_items: list | None = None,
+    min_items: int = 2,
+    max_items: int = 4,
+) -> tuple[list[dict], list[dict], list[str]]:
+    """Bỏ item lỗi polarity/số nếu vẫn còn đủ min_items mỗi phía; trả (bull, bear, errs).
+
+    Không bịa nội dung mới — chỉ cắt item không đạt validator.
+    """
+    out_bull = list(bull) if isinstance(bull, list) else []
+    out_bear = list(bear) if isinstance(bear, list) else []
+
+    # Bỏ dần item lỗi khi còn dư (≥ min_items)
+    for _ in range(4):
+        repaired_b: list[dict] = []
+        repaired_r: list[dict] = []
+        for side, src, dst in (("bull", out_bull, repaired_b), ("bear", out_bear, repaired_r)):
+            for i, item in enumerate(src):
+                if not isinstance(item, dict):
+                    continue
+                ie = _item_errors(
+                    item,
+                    side,
+                    i,
+                    metrics_allowed=metrics_allowed,
+                    news_ref_map=news_ref_map,
+                    upstream=upstream,
+                    payload_numbers=None,
+                    module_polarity=module_polarity,
+                    payload_metrics=payload_metrics,
+                    scores=scores,
+                    news_items=news_items,
+                )
+                if ie and len(src) > min_items and (len(dst) + len(src) - i - 1) >= min_items:
+                    continue
+                dst.append(item)
+            del dst[max_items:]
+        out_bull, out_bear = repaired_b, repaired_r
+        errs = validate_debate_sides(
+            out_bull,
+            out_bear,
+            metrics_allowed=metrics_allowed,
+            news_ref_map=news_ref_map,
+            upstream=upstream,
+            module_polarity=module_polarity,
+            payload_metrics=payload_metrics,
+            scores=scores,
+            news_items=news_items,
+            min_items=min_items,
+            max_items=max_items,
+        )
+        if not errs:
+            break
+    return out_bull, out_bear, errs
 
 
 def ungrounded_refs_in_item(

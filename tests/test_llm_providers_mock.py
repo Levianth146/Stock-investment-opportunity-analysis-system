@@ -23,9 +23,15 @@ def test_gemini_success_and_429(monkeypatch):
         args, kwargs = post.call_args
         assert "key=" not in args[0]
         assert kwargs["headers"].get("x-goog-api-key") == "fake"
+        gen_cfg = kwargs["json"]["generationConfig"]
+        assert gen_cfg["maxOutputTokens"] >= 2048
+        assert gen_cfg["responseMimeType"] == "application/json"
+        assert "thinkingConfig" in gen_cfg
+        assert gen_cfg["thinkingConfig"]["thinkingLevel"] in ("LOW", "MINIMAL")
 
     bad = MagicMock()
     bad.status_code = 429
+    bad.text = "rate limit per minute"
     with patch("stockai.llm.providers.gemini_rest.requests.post", return_value=bad):
         with pytest.raises(gemini_rest.GeminiRestError) as ei:
             gemini_rest.generate_content_json("hi")
