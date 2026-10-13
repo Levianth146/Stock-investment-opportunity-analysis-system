@@ -91,10 +91,20 @@ def _check_m7(upstream: dict, cfg: dict, issues: list, counter: list) -> None:
     skip_score_rating = qg.get("scored") is False or r.get("score") is None
     if not skip_score_rating:
         try:
+            # Tính lại độc lập (v2 centered) — không import compute_score
             prof = cfg["profiles"][r["profile"]]
             sc = r["scores"]
-            expect = sum(prof["weights"][k] * sc[k] for k in ("F", "T", "V", "S")) - prof["lambda_R"] * sc["R"]
-            expect = max(0.0, min(100.0, expect))
+            wsum = sum(float(prof["weights"][k]) for k in ("F", "T", "V", "S"))
+            counter[0] += 1
+            if abs(wsum - 1.0) > 1e-6:
+                issues.append(
+                    _issue("fatal", f"Tổng trọng số profile '{r['profile']}' = {wsum:.8f}, phải = 1", "m7.weights")
+                )
+            r_ref = float(cfg.get("risk_reference", 50))
+            raw = 50.0 + sum(
+                float(prof["weights"][k]) * (float(sc[k]) - 50.0) for k in ("F", "T", "V", "S")
+            ) - float(prof["lambda_R"]) * (float(sc["R"]) - r_ref)
+            expect = max(0.0, min(100.0, raw))
             counter[0] += 1
             if abs(expect - r["score"]) > 0.05:
                 issues.append(_issue("fatal", f"Điểm M7 {r['score']:.2f} không khớp công thức ({expect:.2f})", "m7.score"))

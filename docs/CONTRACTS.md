@@ -10,7 +10,7 @@ Luồng: **M1 → snapshot → M2…M6 → M7 → M8 → M9**. Mọi module có 
 | M4 | financials, prices, shares, peers; `upstream["m2"]` | `module_out` (score = **V**) + `target{base,bull,bear,method,assumptions}` | giá mục tiêu CHỈ do M4 tính |
 | M5 | `snapshot.news` | `module_out` (score = **S**) | mỗi nhận định phải có `news_id` |
 | M6 | prices + index | `module_out` (score = **R**, penalty) | R cao = rủi ro cao |
-| M7 | cả 5 module trên + `cfg.profile` | `result` | copy `target` từ M4, không tự đặt; đọc `quality_tier_*` trên snapshot |
+| M7 | cả 5 module trên + `cfg.profile` | `result` | copy `target` từ M4, không tự đặt; đọc `quality_tier_*` trên snapshot; điểm v2 centered (dưới) |
 | M8 | snapshot + `upstream["m7"]` | `validation` (`pass/warn/fail`) | lỗi nặng -> `fail` nhưng vẫn xuất PDF kèm cảnh báo; bỏ qua kiểm tra công thức điểm, ngưỡng khuyến nghị và so `target` với M4 khi `quality_gate.scored == false` |
 | M9 | tất cả | `{"pdf_path": ...}` | `score` có thể `null` — không format float khi không xếp hạng |
 
@@ -21,7 +21,8 @@ Luồng: **M1 → snapshot → M2…M6 → M7 → M8 → M9**. Mọi module có 
 - `limited` / `full` / thiếu tier (legacy → `absent`) → vẫn chấm điểm; `limited` phải lộ `reasons` trên `flags` / `quality_gate`.
 - `score` kiểu `number | null`; thêm enum rating `"Không xếp hạng"`.
 - Mỗi luận điểm `bull`/`bear` (nhánh scored) có `text` và `refs` (mảng chuỗi): metric `mN.name` (vd. `m4.pe`), tin `nK` (vd. `n12`) — convention docs, không đổi JSON Schema.
-- Ánh xạ `nK` (ổn định, 1-based): rebuild từ `upstream["m5"]["evidence"]` có `news_id` (đã lọc polarity / tối đa 6 tin trong compact payload) — **không** lấy 12 tin đầu `snapshot.news`. Validator và M8 `_check_debate_grounding` resolve qua `news_ref_map` do `build_debate_payload` tạo lại cùng quy tắc. Payload còn có `module_polarity` `{F,T,V,S,R}` = độ lệch điểm trụ (`d_k`) để LLM/template không đảo Bull/Bear.
+- Ánh xạ `nK` (ổn định, 1-based): rebuild từ `upstream["m5"]["evidence"]` có `news_id` (đã lọc polarity / tối đa 6 tin trong compact payload) — **không** lấy 12 tin đầu `snapshot.news`. Validator và M8 `_check_debate_grounding` resolve qua `news_ref_map` do `build_debate_payload` tạo lại cùng quy tắc. Payload còn có `module_polarity` `{F,T,V,S,R}` = `contributions` từ `compute_score` (đóng góp so với mức trung tính 50) để LLM/template không đảo Bull/Bear.
+- **Công thức điểm M7 (feature 010, v2):** `Score = clamp(50 + Σ w_k·(X_k − 50) − λ_R·(R − R_ref), 0, 100)` với `R_ref = risk_reference` (mặc định 50) trong `config/scoring.yaml`. **50 = mức trung tính.** `contributions[k] = w_k·(X_k−50)`, `contributions["R"] = −λ_R·(R−R_ref)`; khi chưa clamp: `score = 50 + Σ contributions`. Trọng số / `λ_R` / ngưỡng rating / risk gate không đổi trong 010.
 
 ## Quy tắc bất biến
 - `as_of`: không dùng dữ liệu có `published_at`/`date` > `as_of`. Báo cáo tài chính tính theo **ngày công bố**.

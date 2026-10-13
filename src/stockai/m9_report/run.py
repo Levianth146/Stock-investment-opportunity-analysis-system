@@ -48,9 +48,21 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
     # pageCompression=0: giữ text ASCII trong PDF để test/offline assert được
     c = canvas.Canvas(str(out), pagesize=A4, pageCompression=0)
     y = 800
+    # contributions = đóng góp so với mức trung tính 50 (feature 010)
+    contrib = result.get("contributions") or {}
+    contrib_bits = []
+    for k in ("F", "T", "V", "S", "R"):
+        if k in contrib and isinstance(contrib[k], (int, float)):
+            contrib_bits.append(f"{k}={contrib[k]:+.2f}")
+    contrib_line = (
+        "Dong gop so voi muc trung tinh 50: " + ", ".join(contrib_bits)
+        if contrib_bits
+        else "Dong gop so voi muc trung tinh 50: (n/a)"
+    )
     lines = [
         f"STOCK REPORT (STUB) - {result['ticker']} - as_of {result['as_of']}",
         f"Profile: {result['profile']}   Score: {_score_text(result)}   Rating(code): {_rating_text(result)}",
+        contrib_line,
         f"Validation: {validation['status']} ({len(validation['issues'])} issue)",
         *_quality_lines(result),
         "TODO: Vietnamese font + full 10-section layout",
