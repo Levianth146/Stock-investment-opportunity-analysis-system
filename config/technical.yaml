@@ -1,0 +1,74 @@
+# Sở hữu: N4 (M3 technical / M6 risk). Ngưỡng rubric T và mapping R.
+# Q1:B / CONTRACTS: R cao = rủi ro cao. StockAI tham chiếu chấm "safety"
+# (cao = rủi ro thấp) — feature này CHỈ đảo mapping sau khi tính cùng hệ số.
+
+m3:
+  min_sessions_ma200: 200
+  stale_calendar_days: 7
+  rsi_period: 14
+  macd:
+    fast: 12
+    slow: 26
+    signal: 9
+  volume_ma: 20
+  atr_period: 14
+  # Rubric điểm cộng tối đa: trend 35 / momentum 30 / volume 20 / volatility 15
+  trend:
+    above_ma_points: 10
+    alignment_bonus: 5
+  momentum:
+    macd_above_signal: 10
+    macd_above_zero: 10
+    rsi:
+      mid_low: 45
+      mid_high: 70
+      mid_points: 10
+      outer_low: 30
+      outer_high: 80
+      outer_points: 5
+  volume:
+    ratio_high: 1.2
+    ratio_mid: 0.8
+    up_high: 20
+    up_mid: 12
+    low_ratio: 8
+    else_points: 3
+  volatility_atr_pct:
+    - {max: 2, points: 15}
+    - {max: 4, points: 10}
+    - {max: 6, points: 5}
+    - {else: true, points: 0}
+
+m6:
+  # Cực tính CONTRACTS / M7 (−lambda*R, risk_gate): R cao = rủi ro cao.
+  scoring_polarity: high_R_means_high_risk
+  inverted_vs_stockai: true
+  # Các safety-subscore StockAI bị đảo: risk_sub = 100 - safety_sub
+  inverted_components:
+    - volatility
+    - drawdown
+    - var
+    - cvar
+    - beta
+  lookback_sessions: 252
+  min_observations: 120
+  annual_sessions: 252
+  # Phiên chỉ số bị bỏ qua giữa hai ngày giao liên tiếp (không phải ngày lịch).
+  # Nghỉ chung với chỉ số (Tết…) → 0 → giữ return. Alias cũ: max_return_gap_days.
+  max_missed_index_sessions: 5
+  max_stale_aligned_days: 10
+  # Hệ số safety-subscore StockAI (trước invert) — không đổi công thức đo
+  safety_coeffs:
+    vol_floor: 0.15
+    vol_mult: 200
+    mdd_mult: 180
+    var_mult: 1400
+    cvar_mult: 900
+    beta_floor: 0.7
+    beta_mult: 45
+  weights:
+    vol: 0.25
+    drawdown: 0.25
+    var: 0.20
+    tail: 0.15
+    beta: 0.15
