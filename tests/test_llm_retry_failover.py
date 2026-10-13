@@ -22,9 +22,16 @@ def keys(monkeypatch, tmp_path):
     debate["providers"] = ["gemini", "glm"]
     debate["gemini"] = {
         "model": "gemini-3.8-flash",
-        "models": ["gemini-3.8-flash", "gemini-3.5-flash-lite"],
+        "models": ["gemini-3.8-flash", "gemini-3.6-flash"],
+        "timeout_sec": 90,
     }
-    debate["glm"] = {"model": "glm-5.3-flash", "models": ["glm-5.3-flash"], "base_url": "https://api.z.ai/api/paas/v4/"}
+    debate["glm"] = {
+        "model": "glm-4.7-flash",
+        "models": ["glm-4.7-flash"],
+        "use_paid_models": False,
+        "timeout_sec": 120,
+        "base_url": "https://api.z.ai/api/paas/v4/",
+    }
     cfg = {**cfg, "debate": debate}
     return cfg
 
@@ -65,7 +72,7 @@ def test_retry_503_then_success_attempt2(keys, monkeypatch):
 
 
 def test_model_failover_after_retries(keys, monkeypatch):
-    """Hết retry trên model 1 → thử gemini-3.5-flash-lite."""
+    """Hết retry trên model 1 → thử gemini-3.6-flash."""
     models_seen: list[str] = []
 
     def by_model(prompt, *, model, **k):
@@ -89,7 +96,7 @@ def test_model_failover_after_retries(keys, monkeypatch):
             use_cache=False,
         )
     assert "gemini-3.8-flash" in models_seen
-    assert out["_meta"]["model"] == "gemini-3.5-flash-lite"
+    assert out["_meta"]["model"] == "gemini-3.6-flash"
     # 3 retries trên model đầu
     assert models_seen.count("gemini-3.8-flash") == 3
 
@@ -118,5 +125,5 @@ def test_provider_failover_gemini_to_glm(keys, monkeypatch):
                 use_cache=False,
             )
     assert out["_meta"]["provider"] == "glm"
-    assert out["_meta"]["model"] == "glm-5.3-flash"
+    assert out["_meta"]["model"] == "glm-4.7-flash"
     assert any("llm_provider_exhausted_gemini" in f for f in out["_meta"]["flags"])

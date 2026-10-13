@@ -35,11 +35,15 @@ def keys(monkeypatch, tmp_path):
     debate["circuit_breaker"] = {"consecutive_failures": 3, "cooldown_minutes": 15}
     debate["gemini"] = {
         "model": "gemini-3.8-flash",
-        "models": ["gemini-3.8-flash", "gemini-3.5-flash-lite"],
+        "models": ["gemini-3.8-flash", "gemini-3.6-flash"],
+        "timeout_sec": 90,
     }
     debate["glm"] = {
-        "model": "glm-5.3-flash",
-        "models": ["glm-5.3-flash", "glm-4.7-flash"],
+        "model": "glm-4.7-flash",
+        "models": ["glm-4.7-flash"],
+        "paid_models": ["glm-5.3-flash"],
+        "use_paid_models": False,
+        "timeout_sec": 120,
         "base_url": "https://api.z.ai/api/paas/v4/",
     }
     return {**cfg, "debate": debate}
@@ -79,8 +83,8 @@ def test_quota_exhausted_no_backoff_failover_glm(keys, monkeypatch):
     assert "llm_quota_exhausted:gemini" in out["_meta"]["flags"]
     # Không backoff trên quota (có thể vẫn có sleep RPM=0)
     assert not any(s in (2.0, 4.0, 8.0) for s in sleeps)
-    # Mỗi model Gemini chỉ gọi 1 lần rồi skip provider
-    assert gemini_calls["n"] == 1
+    # Mỗi model Gemini gọi 1 lần (quota) rồi failover — không nhân retry backoff
+    assert gemini_calls["n"] == len(keys["debate"]["gemini"]["models"])
 
 
 def test_rate_limited_still_retries_with_backoff(keys, monkeypatch):

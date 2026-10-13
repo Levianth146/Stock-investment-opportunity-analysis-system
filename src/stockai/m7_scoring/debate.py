@@ -14,7 +14,7 @@ from typing import Any, Callable
 from stockai.llm.generate import generate_json, load_dotenv_keys, load_llm_cfg
 from stockai.llm.payload import build_debate_payload, payload_for_llm, payload_hash
 from stockai.m7_scoring.debate_template import build_template_debate
-from stockai.m7_scoring.debate_validate import validate_debate_sides
+from stockai.m7_scoring.debate_validate import repair_debate_sides, validate_debate_sides
 from stockai.m7_scoring.scoring import compute_score, to_rating
 
 # Hook test: thay generate_json
@@ -50,6 +50,12 @@ def _build_prompt(payload_llm: dict, *, feedback: str | None = None) -> str:
         f"Allow-list news refs: {news_refs}\n"
         "Mỗi ref metric dạng mN.name (vd m4.pe); news dạng nK (vd n1).\n"
         "Trong text dùng tên tiếng Việt và số đã format (%, x, 1 chữ số thập phân).\n"
+        "Không chèn số lạ ngoài giá trị đã format (vd viết RSI chứ không RSI(14); "
+        "không bịa số trong ngoặc).\n"
+        "Quy tắc polarity (refs[0] = luận điểm chính):\n"
+        "- Bull: refs[0] phải thuộc trụ có module_polarity d>=0 (thường F/S/R khi d dương).\n"
+        "- Bear: refs[0] phải thuộc trụ có d<=0 (thường T/V khi d âm).\n"
+        "- Không dùng metric trụ d>0 làm bear chính; không dùng trụ d<0 làm bull chính.\n"
         "Trả về đúng một JSON object:\n"
         '{"bull":[{"text":"...","refs":["m4.pe","n1"]}],'
         '"bear":[{"text":"...","refs":["m6.beta"]}]}\n'
@@ -169,12 +175,20 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
             break
         try:
             prompt = _build_prompt(payload_llm, feedback=feedback)
-            # Cắt timeout HTTP theo thời gian còn lại của mã
+            # Cắt timeout HTTP theo thời gian còn lại của mã (cả timeout chung + per-provider)
             call_cfg = copy.deepcopy(llm_cfg)
             dsec = call_cfg.setdefault("debate", {})
             if isinstance(dsec, dict):
-                base_to = float(dsec.get("timeout_sec") or 45)
-                dsec["timeout_sec"] = max(1.0, min(base_to, remaining - 0.5))
+                cap = max(1.0, remaining - 0.5)
+                base_to = float(dsec.get("timeout_sec") or 90)
+                dsec["timeout_sec"] = min(base_to, cap)
+                for pname in ("gemini", "glm"):
+                    psec = dsec.get(pname)
+                    if isinstance(psec, dict) and psec.get("timeout_sec") is not None:
+                        try:
+                            psec["timeout_sec"] = min(float(psec["timeout_sec"]), cap)
+                        except (TypeError, ValueError):
+                            pass
             raw = gen(
                 prompt,
                 None,
@@ -210,6 +224,20 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
                 scores=scores,
                 news_items=payload.get("news"),
             )
+            if errs:
+                bull, bear, errs = repair_debate_sides(
+                    bull,
+                    bear,
+                    metrics_allowed=metrics_allowed,
+                    news_ref_map=news_ref_map,
+                    upstream=upstream,
+                    module_polarity=module_polarity,
+                    payload_metrics=payload.get("metrics"),
+                    scores=scores,
+                    news_items=payload.get("news"),
+                )
+                if not errs:
+                    flags.append("debate_repaired_drop_bad_items")
             if not errs:
                 flags.append("m7_debate_llm_used")
                 if cost_usd > 0:

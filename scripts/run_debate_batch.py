@@ -24,9 +24,12 @@ except Exception:
 
 from stockai.llm.generate import (  # noqa: E402
     format_error_reason_table,
+    get_network_call_count,
     load_dotenv_keys,
     load_llm_cfg,
     reset_circuit_state,
+    reset_network_call_count,
+    set_max_live_calls,
 )
 from stockai.m2_fundamental.run import run as run_m2  # noqa: E402
 from stockai.m3_technical.run import run as run_m3  # noqa: E402
@@ -55,6 +58,17 @@ def _parse_args() -> argparse.Namespace:
         "--template-only",
         action="store_true",
         help="Bỏ qua LLM (không đọc lại .env key) — chỉ template fallback",
+    )
+    p.add_argument(
+        "--max-live-calls",
+        type=int,
+        default=6,
+        help="Trần số HTTP LLM thật trong batch (mặc định 6; free Gemini ~20/ngày/model)",
+    )
+    p.add_argument(
+        "--prefer-model",
+        default="",
+        help="Ưu tiên model Gemini đầu danh sách (vd gemini-3.6-flash)",
     )
     return p.parse_args()
 
@@ -106,7 +120,21 @@ def main() -> int:
         _deb.load_dotenv_keys = lambda *a, **k: None  # type: ignore[assignment]
     else:
         load_dotenv_keys()
+    reset_network_call_count()
+    if not args.template_only:
+        set_max_live_calls(args.max_live_calls)
     llm_cfg = load_llm_cfg(args.config)
+    if args.prefer_model.strip() and isinstance(llm_cfg.get("debate"), dict):
+        g = dict(llm_cfg["debate"].get("gemini") or {})
+        pref = args.prefer_model.strip()
+        models = list(g.get("models") or [])
+        if pref in models:
+            models = [pref] + [m for m in models if m != pref]
+        else:
+            models = [pref] + models
+        g["models"] = models
+        g["model"] = pref
+        llm_cfg["debate"]["gemini"] = g
     snap_dir = Path(args.snapshots_dir)
     if args.tickers.strip():
         tickers = [t.strip().upper() for t in args.tickers.split(",") if t.strip()]
@@ -129,7 +157,10 @@ def main() -> int:
     reset_circuit_state()
     counts = {"llm_ok": 0, "fallback": 0, "cache_hit": 0, "error": 0}
     total_cost = 0.0
-    print(f"as_of={args.as_of} tickers={len(tickers)} dir={snap_dir}")
+    print(
+        f"as_of={args.as_of} tickers={len(tickers)} dir={snap_dir} "
+        f"max_live_calls={args.max_live_calls if not args.template_only else 0}"
+    )
 
     for ticker in tickers:
         path = snap_dir / f"{ticker}_{args.as_of}.json"
@@ -191,9 +222,11 @@ def main() -> int:
         f"cache_hit={counts['cache_hit']} error={counts['error']} "
         f"est_cost_usd={total_cost:.6f}"
     )
+    print(f"TOTAL_NETWORK_CALLS={get_network_call_count()}")
     print(format_error_reason_table())
     # Ghi chú giá Gemini Flash tăng 01/01/2027
     print("NOTE pricing: Gemini Flash rates rise 2027-01-01 — see config/llm.yaml debate.pricing")
+    set_max_live_calls(None)
     return 0 if counts["error"] == 0 else 1
 
 

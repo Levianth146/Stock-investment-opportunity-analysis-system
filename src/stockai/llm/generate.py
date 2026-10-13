@@ -1,4 +1,4 @@
-"""Façade ``generate_json`` — Gemini/GLM qua requests, cache, failover."""
+"""Façade ``generate_json`` — Gemini/GLM qua requests, cache, failover, quota state."""
 from __future__ import annotations
 
 import json
@@ -11,8 +11,21 @@ from typing import Any, Callable
 import yaml
 
 from stockai.llm.cache import cache_key, cache_path, read_cache, write_cache
+from stockai.llm.netcount import (
+    bump_network_call,  # noqa: F401 — re-export tương thích
+    get_max_live_calls,
+    get_network_call_count,
+    reset_network_call_count,
+    set_max_live_calls,
+)
 from stockai.llm.payload import payload_hash
 from stockai.llm.providers import gemini_rest, glm_rest
+from stockai.llm.quota_state import (
+    default_quota_path,
+    format_blocked_until,
+    is_blocked,
+    mark_blocked,
+)
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _DEFAULT_CFG = _REPO_ROOT / "config" / "llm.yaml"
@@ -21,7 +34,7 @@ _rpm_lock = threading.Lock()
 _rpm_times: list[float] = []
 
 # Retry cùng model: rate-limit 429 + 5xx; backoff 2s, 4s, 8s (tối đa 3 lần)
-# Quota exhausted → KHÔNG backoff, failover ngay
+# Quota exhausted → KHÔNG backoff, ghi state + skip model
 _RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 _BACKOFF_SEC = (2.0, 4.0, 8.0)
 
@@ -30,7 +43,6 @@ _circuit_lock = threading.Lock()
 _circuit: dict[str, dict[str, Any]] = {}
 # Thống kê lý do lỗi theo provider (batch in bảng cuối)
 _error_reasons: dict[str, dict[str, int]] = {}
-
 
 def load_dotenv_keys(env_path: str | Path | None = None) -> None:
     """Nạp GEMINI_API_KEY / ZAI_API_KEY từ .env nếu chưa có trong environ.
@@ -120,7 +132,6 @@ def _circuit_is_open(provider: str, model: str, debate: dict) -> bool:
         if until <= 0:
             return False
         if time.monotonic() >= until:
-            # hết cooldown — cho thử lại, giữ fails=0
             st["open_until"] = 0.0
             st["fails"] = 0
             return False
@@ -175,6 +186,11 @@ def _has_key(provider: str) -> bool:
     return False
 
 
+def _quota_path(debate: dict) -> Path:
+    cache_dir = debate.get("cache_dir") or "data/llm_cache"
+    return default_quota_path(cache_dir)
+
+
 def _models_for(provider: str, debate: dict) -> list[str]:
     """Danh sách model theo thứ tự failover trong config."""
     if provider == "gemini":
@@ -185,11 +201,54 @@ def _models_for(provider: str, debate: dict) -> list[str]:
         return [str(g.get("model") or gemini_rest.DEFAULT_MODEL)]
     if provider == "glm":
         g = debate.get("glm") or {}
-        models = g.get("models")
-        if isinstance(models, list) and models:
-            return [str(m) for m in models if m]
-        return [str(g.get("model") or glm_rest.DEFAULT_MODEL)]
+        models: list[str] = []
+        base = g.get("models")
+        if isinstance(base, list) and base:
+            models = [str(m) for m in base if m]
+        else:
+            models = [str(g.get("model") or glm_rest.DEFAULT_MODEL)]
+        use_paid = bool(g.get("use_paid_models"))
+        paid = g.get("paid_models") if isinstance(g.get("paid_models"), list) else []
+        if use_paid:
+            for m in paid:
+                sm = str(m)
+                if sm and sm not in models:
+                    models.insert(0, sm)
+        else:
+            # Loại paid khỏi danh sách khi use_paid_models=false
+            paid_set = {str(m) for m in paid if m}
+            if paid_set:
+                models = [m for m in models if m not in paid_set]
+            # Mặc định không dùng glm-5.3-flash nếu không bật paid
+            if not use_paid:
+                models = [m for m in models if m != "glm-5.3-flash"]
+        if not models:
+            models = [glm_rest.DEFAULT_MODEL]
+        return models
     return []
+
+
+def _timeout_for(provider: str, debate: dict) -> float:
+    """Timeout per-provider; fallback debate.timeout_sec."""
+    base = float(debate.get("timeout_sec") or 90)
+    sec = debate.get(provider) if isinstance(debate.get(provider), dict) else {}
+    if isinstance(sec, dict) and sec.get("timeout_sec") is not None:
+        try:
+            return float(sec["timeout_sec"])
+        except (TypeError, ValueError):
+            pass
+    return base
+
+
+def _gemini_gen_opts(debate: dict) -> dict[str, Any]:
+    g = debate.get("gemini") if isinstance(debate.get("gemini"), dict) else {}
+    max_tok = g.get("max_output_tokens", debate.get("max_output_tokens", 2048))
+    try:
+        max_tok_i = int(max_tok)
+    except (TypeError, ValueError):
+        max_tok_i = 2048
+    thinking = str(g.get("thinking_level") or debate.get("thinking_level") or "lowest")
+    return {"max_output_tokens": max_tok_i, "thinking_level": thinking}
 
 
 def estimate_cost_usd(
@@ -216,15 +275,22 @@ def _call_provider_model(
     temperature: float,
     timeout_sec: float,
     schema_hint: dict | None,
-) -> tuple[dict, dict[str, int]]:
-    """Gọi một model; trả (parsed_without_usage, usage)."""
+) -> tuple[dict, dict[str, int], list[str]]:
+    """Gọi một model; trả (parsed_without_usage, usage, extra_flags).
+
+    Đếm HTTP nằm trong gemini_rest/glm_rest (mỗi requests.post).
+    """
+    extra_flags: list[str] = []
     if provider == "gemini":
+        opts = _gemini_gen_opts(debate)
         out = gemini_rest.generate_content_json(
             prompt,
             model=model,
             temperature=temperature,
             timeout_sec=timeout_sec,
             schema_hint=schema_hint,
+            max_output_tokens=int(opts["max_output_tokens"]),
+            thinking_level=str(opts["thinking_level"]),
         )
     elif provider == "glm":
         g = debate.get("glm") or {}
@@ -238,10 +304,14 @@ def _call_provider_model(
         )
     else:
         raise RuntimeError(f"unknown_provider:{provider}")
-    usage = {}
-    if isinstance(out, dict) and isinstance(out.get("_usage"), dict):
-        usage = dict(out.pop("_usage"))
-    return out, usage
+    usage: dict[str, int] = {}
+    if isinstance(out, dict):
+        if isinstance(out.get("_usage"), dict):
+            usage = dict(out.pop("_usage"))
+        mf = out.pop("_meta_flags", None)
+        if isinstance(mf, list):
+            extra_flags.extend(str(x) for x in mf)
+    return out, usage, extra_flags
 
 
 def _is_quota_exhausted(exc: Exception) -> bool:
@@ -251,14 +321,22 @@ def _is_quota_exhausted(exc: Exception) -> bool:
     return "quota_exhausted" in msg
 
 
+def _is_empty_output(exc: Exception) -> bool:
+    if getattr(exc, "empty_output", False):
+        return True
+    return "llm_empty_output" in str(exc)
+
+
 def _is_retryable(exc: Exception) -> bool:
-    """Chỉ backoff cho rate-limit từng phút / 5xx / timeout — không cho quota."""
+    """Chỉ backoff cho rate-limit từng phút / 5xx / timeout — không cho quota/empty (đã retry trong provider)."""
     if _is_quota_exhausted(exc):
+        return False
+    if _is_empty_output(exc):
+        # gemini_rest đã retry ×2 tokens; không backoff thêm trên cùng model
         return False
     code = getattr(exc, "status_code", None)
     msg = str(exc)
     if code in _RETRYABLE_STATUS:
-        # 429 quota đã bị loại ở trên
         return True
     if msg == "timeout" or "rate_limited" in msg:
         return True
@@ -274,15 +352,37 @@ def _is_retryable(exc: Exception) -> bool:
 def _reason_tag(exc: Exception) -> str:
     if _is_quota_exhausted(exc):
         return "quota_exhausted"
+    if _is_empty_output(exc):
+        return "llm_empty_output"
     msg = str(exc)
     if "rate_limited" in msg:
         return "rate_limited"
     if msg == "timeout":
         return "timeout"
+    if "max_live_calls_reached" in msg:
+        return "max_live_calls"
     code = getattr(exc, "status_code", None)
     if isinstance(code, int):
         return f"http_{code}"
     return (msg.split(":", 1)[0] or "error")[:40]
+
+
+def _persist_quota_block(provider: str, model: str, exc: Exception, debate: dict) -> None:
+    body = getattr(exc, "body", "") or ""
+    code_1113 = bool(getattr(exc, "code_1113", False))
+    if not code_1113 and provider == "glm":
+        from stockai.llm.quota_state import looks_like_code_1113
+
+        code_1113 = looks_like_code_1113(body)
+    until = mark_blocked(
+        provider,
+        model,
+        body=body,
+        code_1113=code_1113,
+        default_hours=6.0,
+        path=_quota_path(debate),
+    )
+    print(f"quota_block: {provider}/{model} đến {format_blocked_until(until)}")
 
 
 def generate_json(
@@ -297,7 +397,8 @@ def generate_json(
     """Gọi LLM theo thứ tự provider → model; parse JSON object.
 
     Retry rate-limit 429/500/502/503/504 + timeout trên cùng model (backoff 2/4/8s, max 3).
-    Quota exhausted → không backoff; skip model/provider ngay + flag ``llm_quota_exhausted:<provider>``.
+    Quota exhausted → ghi ``_quota_state.json``, skip model (không backoff); lần sau bỏ qua ngay.
+    Empty MAX_TOKENS → gemini_rest retry ×2 tokens; vẫn fail → model tiếp.
     Circuit breaker: cùng provider/model lỗi liên tiếp N lần → bỏ qua cooldown phút.
     Meta gắn ``_meta``: provider, model, flags, cache_hit, usage, cost_usd.
     """
@@ -308,7 +409,6 @@ def generate_json(
     if provider_filter:
         providers = [p for p in providers if p == provider_filter]
     temperature = float(debate.get("temperature", 0))
-    timeout_sec = float(debate.get("timeout_sec", 45))
     max_retries = int(debate.get("max_retries_per_call", 3))
     max_retries = max(1, min(max_retries, 3))
     rpm = int(debate.get("rpm_limit", 30))
@@ -320,6 +420,7 @@ def generate_json(
     as_of = str(parts.get("as_of") or "")
     p_hash = str(parts.get("payload_hash") or "")
     model_for_key = str(parts.get("model") or "debate")
+    qpath = _quota_path(debate)
 
     can_cache = bool(use_cache and ticker and as_of and p_hash)
     key = cache_key(
@@ -355,15 +456,21 @@ def generate_json(
         if not _has_key(provider):
             flags.append(f"llm_missing_key_{provider}")
             continue
-        provider_quota = False
+        timeout_sec = _timeout_for(provider, debate)
         for model in _models_for(provider, debate):
+            blocked, until = is_blocked(provider, model, path=qpath)
+            if blocked and until is not None:
+                msg_until = format_blocked_until(until)
+                print(f"bỏ qua {model} đến {msg_until}")
+                flags.append(f"llm_quota_skip_{provider}_{model}")
+                continue
             if _circuit_is_open(provider, model, debate):
                 flags.append(f"llm_circuit_open_{provider}_{model}")
                 continue
             for attempt in range(max_retries):
                 try:
                     _wait_rpm(rpm)
-                    parsed, usage = _call_provider_model(
+                    parsed, usage, extra_flags = _call_provider_model(
                         provider,
                         prompt,
                         model=model,
@@ -399,7 +506,7 @@ def generate_json(
                                 )
                         except (OSError, ValueError):
                             pass
-                    meta_flags = list(flags)
+                    meta_flags = list(flags) + list(extra_flags)
                     if attempt > 0:
                         meta_flags.append(f"llm_retry_ok_{provider}_{model}")
                     parsed["_meta"] = {
@@ -410,9 +517,11 @@ def generate_json(
                         "usage": usage,
                         "cost_usd": cost,
                         "attempts_on_model": attempt + 1,
+                        "network_calls": get_network_call_count(),
                     }
                     return parsed
-                except (gemini_rest.GeminiRestError, glm_rest.GlmRestError, RuntimeError) as e:
+                except (gemini_rest.GeminiRestError, glm_rest.GlmRestError) as e:
+                    # Bắt TRƯỚC RuntimeError vì GeminiRestError/GlmRestError kế thừa RuntimeError
                     last_err = e
                     last_reason = str(e)
                     reason = _reason_tag(e)
@@ -420,24 +529,45 @@ def generate_json(
                     if opened:
                         flags.append(f"llm_circuit_open_{provider}_{model}")
 
+                    if _is_empty_output(e):
+                        flags.append("llm_empty_output")
+                        flags.append(f"llm_model_exhausted_{provider}_{model}")
+                        break
+
                     if _is_quota_exhausted(e):
-                        # Không backoff — bỏ toàn bộ model còn lại của provider
+                        try:
+                            _persist_quota_block(provider, model, e, debate)
+                        except OSError:
+                            pass
                         flag = f"llm_quota_exhausted:{provider}"
                         if flag not in flags:
                             flags.append(flag)
-                        provider_quota = True
                         flags.append(f"llm_model_exhausted_{provider}_{model}")
+                        # Chỉ bỏ model này — thử model khác cùng provider (quota per-model)
                         break
 
                     if _is_retryable(e) and attempt + 1 < max_retries:
                         sleep_for = _BACKOFF_SEC[min(attempt, len(_BACKOFF_SEC) - 1)]
                         time.sleep(sleep_for)
                         continue
-                    # hết retry trên model này → model tiếp theo
                     flags.append(f"llm_model_exhausted_{provider}_{model}")
                     break
-            if provider_quota:
-                break
+                except RuntimeError as e:
+                    if "max_live_calls_reached" in str(e):
+                        last_err = e
+                        last_reason = str(e)
+                        flags.append("llm_max_live_calls")
+                        err = RuntimeError(f"all_providers_failed:{last_err}")
+                        setattr(err, "flags", flags + [f"debate_llm_final_reason:{last_reason}"])
+                        raise err from e
+                    last_err = e
+                    last_reason = str(e)
+                    reason = _reason_tag(e)
+                    opened = _circuit_record_failure(provider, model, reason, debate)
+                    if opened:
+                        flags.append(f"llm_circuit_open_{provider}_{model}")
+                    flags.append(f"llm_model_exhausted_{provider}_{model}")
+                    break
             # next model
         flags.append(f"llm_provider_exhausted_{provider}")
     err = RuntimeError(f"all_providers_failed:{last_err}")

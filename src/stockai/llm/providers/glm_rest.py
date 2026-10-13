@@ -7,8 +7,9 @@ from typing import Any
 
 import requests
 
-DEFAULT_MODEL = "glm-5.3-flash"
+DEFAULT_MODEL = "glm-4.7-flash"
 DEFAULT_BASE_URL = "https://api.z.ai/api/paas/v4/"
+DEFAULT_TIMEOUT_SEC = 120.0
 
 
 class GlmRestError(RuntimeError):
@@ -20,11 +21,13 @@ class GlmRestError(RuntimeError):
         *,
         status_code: int | None = None,
         quota_exhausted: bool = False,
+        code_1113: bool = False,
         body: str = "",
     ):
         super().__init__(message)
         self.status_code = status_code
         self.quota_exhausted = quota_exhausted
+        self.code_1113 = code_1113
         self.body = body
 
 
@@ -35,14 +38,22 @@ def _api_key() -> str | None:
     return None
 
 
+def looks_like_code_1113(body: str) -> bool:
+    """Z.AI code 1113 Insufficient balance — block paid model, không retry."""
+    b = body or ""
+    compact = b.replace(" ", "")
+    if '"code":1113' in compact or "'code':1113" in compact:
+        return True
+    bl = b.lower()
+    return "1113" in b and ("insufficient" in bl or "balance" in bl)
+
+
 def looks_like_quota_exhausted(status_code: int | None, body: str) -> bool:
     """Hết hạn mức / số dư — không backoff; failover ngay."""
+    if looks_like_code_1113(body):
+        return True
     b = (body or "").lower()
     if "insufficient balance" in b or "insufficient_balance" in b:
-        return True
-    if "1113" in b and ("balance" in b or "insufficient" in b or "code" in b):
-        return True
-    if '"code":1113' in b.replace(" ", "") or '"code": 1113' in b:
         return True
     if "resource_exhausted" in b:
         return True
@@ -61,7 +72,7 @@ def chat_completions_json(
     model: str = DEFAULT_MODEL,
     base_url: str = DEFAULT_BASE_URL,
     temperature: float = 0.0,
-    timeout_sec: float = 45.0,
+    timeout_sec: float = DEFAULT_TIMEOUT_SEC,
 ) -> dict:
     """POST {base_url}/chat/completions; parse JSON object từ message content.
 
@@ -88,6 +99,12 @@ def chat_completions_json(
         "Authorization": f"Bearer {key}",
     }
     try:
+        from stockai.llm.netcount import bump_network_call
+
+        bump_network_call()
+    except RuntimeError:
+        raise
+    try:
         resp = requests.post(url, headers=headers, json=body, timeout=timeout_sec)
     except requests.Timeout as e:
         raise GlmRestError("timeout") from e
@@ -101,20 +118,22 @@ def chat_completions_json(
         raw_body = ""
 
     if resp.status_code >= 400:
+        code_1113 = looks_like_code_1113(raw_body)
         quota = looks_like_quota_exhausted(resp.status_code, raw_body)
         if quota:
             raise GlmRestError(
                 "quota_exhausted",
                 status_code=resp.status_code,
                 quota_exhausted=True,
-                body=raw_body[:500],
+                code_1113=code_1113,
+                body=raw_body[:800],
             )
         if resp.status_code == 429:
-            raise GlmRestError("rate_limited", status_code=429, body=raw_body[:500])
+            raise GlmRestError("rate_limited", status_code=429, body=raw_body[:800])
         raise GlmRestError(
             f"http_{resp.status_code}",
             status_code=resp.status_code,
-            body=raw_body[:500],
+            body=raw_body[:800],
         )
 
     try:
