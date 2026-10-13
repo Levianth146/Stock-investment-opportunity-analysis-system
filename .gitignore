@@ -26,3 +26,6 @@ data/cache/news_portals/
 
 # cache disk LLM debate (M7) — không commit
 data/llm_cache/
+
+# cache API M2–M8 (feature 011) — không commit
+data/api_cache/

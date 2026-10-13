@@ -150,6 +150,24 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
     gen = _generate_fn or generate_json
     cost_usd = 0.0
 
+    # mode: llm (mặc định CLI) | template (API list) | cache_only (chỉ đọc cache)
+    mode = str(debate_cfg.get("mode") or "llm").strip().lower()
+    if mode not in ("llm", "template", "cache_only"):
+        mode = "llm"
+        flags.append("debate_mode_invalid_default_llm")
+
+    if mode == "template":
+        flags.append("debate_mode_template")
+        bull_t, bear_t, tflags = build_template_debate(payload, cfg=cfg_for_payload)
+        flags.extend(tflags)
+        uniq: list[str] = []
+        for f in flags:
+            if f not in uniq:
+                uniq.append(f)
+        _merge_flags(cfg, uniq)
+        cfg["_debate_cost_usd"] = 0.0
+        return bull_t, bear_t
+
     # Không có khóa và không mock → bỏ vòng LLM (tránh timeout khi chỉ fallback)
     import os as _os
 
@@ -158,7 +176,15 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
         or _os.environ.get("ZAI_API_KEY", "").strip()
     )
     _using_mock = _generate_fn is not None
-    if not _any_key and not _using_mock:
+    if mode == "cache_only":
+        # Chỉ đọc cache disk; providers rỗng → không gọi mạng khi miss
+        flags.append("debate_mode_cache_only")
+        attempts = 1
+        llm_cfg = copy.deepcopy(llm_cfg)
+        dsec = llm_cfg.setdefault("debate", {})
+        if isinstance(dsec, dict):
+            dsec["providers"] = []
+    elif not _any_key and not _using_mock:
         flags.append("debate_llm_unavailable")
         flags.append("llm_missing_key_gemini")
         flags.append("llm_missing_key_glm")
