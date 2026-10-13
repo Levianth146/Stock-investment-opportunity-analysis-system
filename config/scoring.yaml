@@ -1,5 +1,8 @@
-# Sở hữu: N5 (M7). Giá trị lấy từ sheet 08_QUY_UOC_SCORE của nhóm - minh họa, CHƯA hiệu chỉnh/kiểm định.
-# Score = clamp( w_F*F + w_T*T + w_V*V + w_S*S - lambda*R , 0, 100 )
+# Sở hữu: N5 (M7). Trọng số minh họa, CHƯA hiệu chỉnh/kiểm định (illustrative, not validated).
+# Feature 010 — công thức v2 (centered, mức trung tính = 50):
+#   Score = clamp( 50 + Σ w_k·(X_k − 50) − λ_R·(R − R_ref) , 0, 100 )
+# với R_ref = risk_reference. Khi Σw=1 tương đương công thức cũ + λ_R·R_ref (thứ hạng giữ nguyên).
+# Lưu ý 010: S phân tán thấp (std≈5, ~126/235 S=null) — chưa xử lý trong feature này.
 profiles:
   long_term:
     weights: {F: 0.30, T: 0.10, V: 0.35, S: 0.25}
@@ -7,6 +10,9 @@ profiles:
   swing:
     weights: {F: 0.15, T: 0.45, V: 0.20, S: 0.20}
     lambda_R: 0.30
+
+# Điểm rủi ro tham chiếu (trung tính) trong hạng penalty −λ_R·(R − R_ref)
+risk_reference: 50
 
 # 5 mức: lấy mức đầu tiên có score >= min
 ratings:

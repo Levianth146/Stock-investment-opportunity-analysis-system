@@ -10,7 +10,7 @@ Mã + as_of + profile
    ├─► M4 Định giá → V + giá mục tiêu
    ├─► M5 Tin tức  → S       └─► M6 Rủi ro   → R (penalty)
    ▼
-[M7] Score = Σ w·(F,T,V,S) − λ·R → 5 mức + Bull/Bear
+[M7] Score = clamp(50 + Σ w·(X−50) − λ·(R−R_ref), 0, 100) → 5 mức + Bull/Bear (50 = trung tính)
    ▼
 [M8 Kiểm chứng số liệu] ──► [M9 Xuất PDF]
 ```

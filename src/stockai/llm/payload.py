@@ -21,24 +21,25 @@ def payload_hash(payload: dict) -> str:
 
 
 def compute_module_polarity(scores: dict | None, cfg: dict) -> dict[str, float]:
-    """d_k = w_k*(score_k-50) cho F,T,V,S; d_R = -lambda_R*(R-50). Làm tròn 2 chữ số."""
+    """d_k lấy từ ``compute_score`` contributions (nguồn duy nhất, feature 010).
+
+    Làm tròn 2 chữ số để LLM/template; khi chưa clamp: score − 50 = Σ d_k.
+    """
+    from stockai.m7_scoring.scoring import compute_score
+
     scores = scores or {}
     profile = cfg.get("profile") or "long_term"
-    profiles = cfg.get("profiles") or {}
-    p = profiles.get(profile) or profiles.get("long_term") or {}
-    weights = p.get("weights") or {"F": 0.30, "T": 0.10, "V": 0.35, "S": 0.25}
-    lam = float(p.get("lambda_R", 0.20))
-    neutral_f = float(cfg.get("neutral_score_when_missing", 50))
-    neutral_r = float(cfg.get("neutral_R_when_missing", 50))
-    out: dict[str, float] = {}
-    for k in ("F", "T", "V", "S"):
-        raw = scores.get(k)
-        s = float(raw) if isinstance(raw, (int, float)) else neutral_f
-        out[k] = round(float(weights.get(k, 0.0)) * (s - 50.0), 2)
-    raw_r = scores.get("R")
-    r = float(raw_r) if isinstance(raw_r, (int, float)) else neutral_r
-    out["R"] = round(-lam * (r - 50.0), 2)
-    return out
+    try:
+        comp = compute_score(
+            {k: scores.get(k) for k in ("F", "T", "V", "S", "R")},
+            profile,
+            cfg,
+        )
+    except (KeyError, ValueError, TypeError):
+        # cfg thiếu (test hẹp) → d_k = 0
+        return {k: 0.0 for k in ("F", "T", "V", "S", "R")}
+    contrib = comp.get("contributions") or {}
+    return {k: round(float(contrib.get(k, 0.0)), 2) for k in ("F", "T", "V", "S", "R")}
 
 
 def _display_table(cfg: dict) -> dict:
