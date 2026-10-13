@@ -15,4 +15,21 @@ jobs:
         run: >-
           python -m pip install pytest jsonschema pyyaml numpy pandas reportlab
           matplotlib jinja2 xhtml2pdf pypdf streamlit
-      - run: pytest -q          # test dùng fixture offline, không gọi mạng
+      - name: Run offline tests
+        run: python -m pytest -q --junitxml=.pytest_cache/ci-results.xml
+      - name: Annotate test failures
+        if: failure()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          report = Path('.pytest_cache/ci-results.xml')
+          if report.exists():
+              for case in ET.parse(report).iter('testcase'):
+                  for tag in ('failure', 'error'):
+                      for error in case.findall(tag):
+                          message = f"{case.get('classname')}.{case.get('name')}: {error.text or error.get('message', '')}"
+                          message = message[:6000].replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+                          print(f'::error::{message}')
+          PY
