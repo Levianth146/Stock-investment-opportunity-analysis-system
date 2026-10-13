@@ -1,4 +1,5 @@
 import sys
+import shutil
 from pathlib import Path
 
 from pypdf import PdfReader
@@ -7,8 +8,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from stockai.m8_validate.validator import validate_quantitative_data
 from stockai.m9_report.report_generator import generate_pdf_report
+from stockai.m9_report import report_generator
 
-def test_m8_and_m9_flow():
+def test_m8_and_m9_flow(tmp_path, monkeypatch):
+    # Simulate CI fonts installed outside the project's HTML resource directory.
+    external_fonts = {}
+    for uri, font_path in report_generator._pdf_font_paths().items():
+        copied_font = tmp_path / font_path.name
+        shutil.copy2(font_path, copied_font)
+        external_fonts[uri] = copied_font
+    monkeypatch.setattr(report_generator, "_pdf_font_paths", lambda: external_fonts)
     mock_snap = {"ticker": "HPG"}
     mock_result = {
         "ticker": "HPG",
@@ -27,7 +36,7 @@ def test_m8_and_m9_flow():
     assert val_report["is_passed"] is True
 
     # Test M9 PDF Generator
-    output_pdf = "tests/test_output.pdf"
+    output_pdf = str(tmp_path / "test_output.pdf")
     success = generate_pdf_report(mock_result, output_pdf, val_report)
     assert success is True
     reader = PdfReader(output_pdf)
@@ -39,7 +48,3 @@ def test_m8_and_m9_flow():
     }
     assert "Tăng trưởng" in extracted_text
     assert any("DejaVuSans" in str(font_name) for font_name in font_names)
-    print("\nM8 validation passed and tests/test_output.pdf was generated.")
-
-if __name__ == "__main__":
-    test_m8_and_m9_flow()

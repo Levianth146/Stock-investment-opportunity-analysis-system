@@ -3,6 +3,7 @@ M9 - PDF Report Generator (N6-08 & N6-09)
 Biên dịch dữ liệu đầu ra thành file PDF kèm nguồn trích dẫn (provenance).
 """
 import os
+import base64
 from pathlib import Path
 from typing import Dict, Any
 from jinja2 import Environment, FileSystemLoader
@@ -23,7 +24,12 @@ def _pdf_font_paths() -> dict[str, Path]:
 
 def _font_link_callback(uri: str, _rel: str) -> str:
     font_path = _pdf_font_paths().get(uri)
-    return str(font_path) if font_path else uri
+    if font_path is None:
+        return uri
+    # Installed fonts can live outside the HTML resource directory (e.g. on CI).
+    # Embed these known font files directly instead of relying on local-path access.
+    encoded_font = base64.b64encode(font_path.read_bytes()).decode("ascii")
+    return f"data:font/ttf;base64,{encoded_font}"
 
 
 def generate_pdf_report(payload: Dict[str, Any], output_path: str, m8_validation: Dict[str, Any]) -> bool:
