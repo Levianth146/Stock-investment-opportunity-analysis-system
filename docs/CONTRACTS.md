@@ -20,6 +20,8 @@ Luồng: **M1 → snapshot → M2…M6 → M7 → M8 → M9**. Mọi module có 
 
 - `limited` / `full` / thiếu tier (legacy → `absent`) → vẫn chấm điểm; `limited` phải lộ `reasons` trên `flags` / `quality_gate`.
 - `score` kiểu `number | null`; thêm enum rating `"Không xếp hạng"`.
+- Mỗi luận điểm `bull`/`bear` (nhánh scored) có `text` và `refs` (mảng chuỗi): metric `mN.name` (vd. `m4.pe`), tin `nK` (vd. `n12`) — convention docs, không đổi JSON Schema.
+- Ánh xạ `nK` (ổn định, 1-based): rebuild từ `upstream["m5"]["evidence"]` có `news_id` (đã lọc polarity / tối đa 6 tin trong compact payload) — **không** lấy 12 tin đầu `snapshot.news`. Validator và M8 `_check_debate_grounding` resolve qua `news_ref_map` do `build_debate_payload` tạo lại cùng quy tắc. Payload còn có `module_polarity` `{F,T,V,S,R}` = độ lệch điểm trụ (`d_k`) để LLM/template không đảo Bull/Bear.
 
 ## Quy tắc bất biến
 - `as_of`: không dùng dữ liệu có `published_at`/`date` > `as_of`. Báo cáo tài chính tính theo **ngày công bố**.

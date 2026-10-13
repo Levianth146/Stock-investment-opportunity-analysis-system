@@ -10,6 +10,8 @@ from __future__ import annotations
 import math
 
 from stockai.contracts.helpers import check_no_lookahead
+from stockai.llm.payload import build_debate_payload
+from stockai.m7_scoring.debate_validate import ungrounded_refs_in_item
 
 RATING_ORDER = ["Bán", "Giảm tỷ trọng", "Nắm giữ", "Mua", "Mua mạnh"]
 
@@ -120,12 +122,61 @@ def _check_m7(upstream: dict, cfg: dict, issues: list, counter: list) -> None:
         issues.append(_issue("warn", "quality_gate không xếp hạng nhưng target không null", "m7.target"))
 
 
+def _check_debate_grounding(snapshot: dict, upstream: dict, cfg: dict, issues: list, counter: list) -> None:
+    """Warn ``debate_ungrounded`` khi refs thiếu / sai regex / không resolve (Q2:B).
+
+    Bỏ qua khi ``quality_gate.scored == false`` (nhánh insufficient không bắt refs).
+    Không đổi ngưỡng fatal công thức điểm / rating / target.
+    """
+    r = upstream.get("m7")
+    counter[0] += 1
+    if not isinstance(r, dict):
+        return
+    qg = r.get("quality_gate") or {}
+    if qg.get("scored") is False:
+        return
+    # Rebuild map/allow-list cùng quy tắc payload
+    try:
+        payload = build_debate_payload(snapshot, upstream, cfg)
+    except Exception:
+        payload = {"metrics_allowed": [], "news_ref_map": {}}
+    metrics_allowed = payload.get("metrics_allowed") or []
+    news_ref_map = payload.get("news_ref_map") or {}
+    for side in ("bull", "bear"):
+        items = r.get(side) or []
+        if not isinstance(items, list):
+            continue
+        for i, item in enumerate(items):
+            counter[0] += 1
+            if not isinstance(item, dict):
+                issues.append(
+                    _issue("warn", f"debate_ungrounded: item không phải object", f"m7.{side}[{i}]")
+                )
+                continue
+            bad = ungrounded_refs_in_item(
+                item,
+                metrics_allowed=metrics_allowed,
+                news_ref_map=news_ref_map,
+                upstream=upstream,
+            )
+            if bad:
+                detail = ", ".join(bad[:5])
+                issues.append(
+                    _issue(
+                        "warn",
+                        f"debate_ungrounded: refs không grounded ({detail})",
+                        f"m7.{side}[{i}]",
+                    )
+                )
+
+
 def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
     issues: list[dict] = []
     counter = [0]
     _check_data(snapshot, issues, counter)
     _check_modules(snapshot, upstream, issues, counter)
     _check_m7(upstream, cfg, issues, counter)
+    _check_debate_grounding(snapshot, upstream, cfg, issues, counter)
     if any(i["severity"] == "fatal" for i in issues):
         status = "fail"
     elif any(i["severity"] == "warn" for i in issues):
