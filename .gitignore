@@ -23,3 +23,6 @@ data/raw_ext/
 
 # cache HTML cổng tin M1 (nếu đặt ngoài data/raw/)
 data/cache/news_portals/
+
+# cache disk LLM debate (M7) — không commit
+data/llm_cache/

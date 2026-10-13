@@ -50,7 +50,8 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
     comp = compute_score({"F": sc("m2"), "T": sc("m3"), "V": sc("m4"), "S": sc("m5"), "R": sc("m6")}, profile, cfg)
     rating, rflags = to_rating(comp["score"], comp["scores"]["R"], cfg)
     bull, bear = run_debate(snapshot, upstream, cfg)
-    flags = comp["flags"] + rflags + [f for o in upstream.values() for f in o.get("flags", [])] + qflags
+    debate_flags = list(cfg.pop("_debate_flags", []) or [])
+    flags = comp["flags"] + rflags + [f for o in upstream.values() for f in o.get("flags", [])] + qflags + debate_flags
     if rating not in _TRADE_RATINGS:
         flags.append("m7_unexpected_rating")
     return {
