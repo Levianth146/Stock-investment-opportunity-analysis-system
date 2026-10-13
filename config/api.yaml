@@ -1,0 +1,14 @@
+# Feature 011 — FastAPI layer (web demo). Chỉ đọc kết quả pipeline; LLM theo yêu cầu.
+snapshots_dir: data/snapshots_ext
+asof: auto                    # auto = ngày mới nhất có snapshot; hoặc YYYY-MM-DD
+default_profile: long_term
+host: 127.0.0.1
+port: 8000
+cors_origins: []              # ví dụ: ["http://localhost:5173"]
+docs_enabled: true            # false → tắt /docs, /redoc, /openapi.json
+trust_proxy_headers: false    # true chỉ khi đứng sau proxy tin cậy (Cloudflare tunnel…)
+proxy_ip_header: CF-Connecting-IP
+debate_live_max_per_hour: 10
+debate_live_max_per_ip_per_hour: 3
+debate_live_max_per_day: 15   # trần UTC/ngày, lưu data/api_cache/_debate_budget.json
+cache_dir: data/api_cache

@@ -10,6 +10,8 @@ max_news_items: 30
 
 # --- Feature 009: M7 debate Bull/Bear ---
 debate:
+  # mode: llm (mặc định CLI) | template (API rankings/cache) | cache_only (chỉ đọc cache rồi template)
+  mode: llm
   providers: [gemini, glm]   # thứ tự thử; thiếu key → skip + flag
   temperature: 0
   timeout_sec: 90            # fallback nếu provider không có timeout_sec riêng
