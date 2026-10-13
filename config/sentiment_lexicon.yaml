@@ -1,0 +1,228 @@
+# Lexicon cụm từ M5 — khóa CÓ DẤU (NFC). Khớp sau normalize giữ dấu + đ.
+# KHÔNG dùng đơn từ mơ hồ: tăng, giảm, mua, bán, lãi, lỗ đứng một mình.
+# Nhóm flow: code nhân flow_weight_multiplier (mặc định 0.5).
+# Nhóm announcements: nguồn vnstock/VCI chỉ lấy hướng từ đây; còn lại trung tính.
+# force_neutral: ép polarity 0 khi khớp (vd phát hành cổ phiếu thưởng).
+
+positive:
+  tăng trưởng: 1.0
+  tăng mạnh: 1.0
+  bứt phá: 1.3
+  lập kỷ lục: 1.4
+  lợi nhuận tăng: 1.3
+  doanh thu tăng: 1.1
+  lãi ròng tăng: 1.3
+  vượt kế hoạch: 1.3
+  vượt kỳ vọng: 1.3
+  vượt dự báo: 1.2
+  trúng thầu: 1.1
+  hợp đồng mới: 0.8
+  ký hợp đồng: 0.8
+  mở rộng thị trường: 0.8
+  được nâng hạng: 1.2
+  nâng khuyến nghị: 1.0
+  tăng tỷ trọng: 0.8
+  phục hồi: 0.8
+  phục hồi mạnh: 1.0
+  hồi phục mạnh: 1.0
+  khởi sắc: 0.8
+  cải thiện: 0.6
+  giảm chi phí: 0.7
+  giảm nợ: 0.7
+  tăng cổ tức: 0.6
+  tăng trần: 0.9
+  bắt đáy: 0.7
+  dương giá: 0.6
+  đạt đỉnh: 0.7
+  kỳ vọng tăng: 0.8
+  nâng mục tiêu: 1.0
+  nâng dự báo: 0.9
+  lãi kỷ lục: 1.2
+  cổ tức cao: 0.7
+  room ngoại: 0.5
+  lãi ròng: 0.7
+  doanh thu kỷ lục: 1.2
+  lợi nhuận kỷ lục: 1.3
+  tăng vốn thành công: 0.8
+  được khuyến nghị mua: 0.8
+  khuyến nghị mua: 0.7
+  khuyến nghị tích cực: 0.7
+  tín hiệu tích cực: 0.6
+  chia cổ tức bằng tiền: 0.6
+  trả cổ tức bằng tiền: 0.6
+  chi trả cổ tức: 0.5
+  trả cổ tức: 0.5
+  đăng ký mua: 0.5
+  dòng tiền dương: 0.7
+  thanh khoản cải thiện: 0.6
+  hoàn tất góp vốn: 0.7
+  sở hữu chiến lược: 0.6
+  gom cổ phiếu: 0.5
+  nâng sở hữu: 0.5
+  ra khỏi diện cảnh báo: 0.6
+  ngược dòng: 0.7
+  kịch biên độ: 0.9
+  kịch trần: 0.9
+  hit the ceiling: 0.9
+  surged: 0.8
+
+negative:
+  thua lỗ: -1.4
+  lỗ ròng: -1.4
+  lỗ sau thuế: -1.3
+  lợi nhuận giảm: -1.2
+  doanh thu giảm: -1.0
+  sụt giảm: -0.8
+  suy giảm: -1.0
+  giảm mạnh: -1.0
+  lao dốc: -1.3
+  bán tháo: -1.4
+  giảm sàn: -1.0
+  giảm điểm: -0.7
+  đổ lửa: -1.0
+  nợ xấu tăng: -1.3
+  nợ quá hạn: -1.0
+  vi phạm: -1.2
+  bị xử phạt: -1.3
+  khởi tố: -1.5
+  điều tra: -0.9
+  thanh tra: -0.8
+  căng thẳng: -0.6
+  rung lắc: -0.6
+  rủi ro: -0.5
+  áp lực bán: -0.8
+  hạ khuyến nghị: -1.0
+  hạ mục tiêu: -0.8
+  cắt giảm: -0.6
+  mất giá: -0.8
+  giải chấp: -1.1
+  bị bán tháo: -1.3
+  âm thầm bán: -0.9
+  cắt lỗ: -1.0
+  phá sản: -1.5
+  nợ xấu: -1.0
+  âm vốn: -1.2
+  âm dòng: -0.8
+  giảm liên tiếp: -1.0
+  kỷ lục buồn: -1.2
+  chuỗi phiên giảm: -1.1
+  chuỗi ngày giảm: -1.1
+  bị loại khỏi rổ: -0.9
+  nguy cơ bị loại: -0.8
+  bốc hơi: -0.9
+  đỏ lửa: -0.8
+  thua lỗ nặng: -1.4
+  lỗ kỷ lục: -1.4
+  cảnh báo rủi ro: -0.9
+  bị phạt: -1.2
+  chậm tiến độ: -0.6
+  hủy hợp đồng: -1.0
+  giải thể: -0.9
+  khuyến nghị bán: -0.7
+  tín hiệu tiêu cực: -0.6
+  đăng ký bán: -0.5
+  nhắc nhở chậm: -0.5
+  vào diện cảnh báo: -0.6
+  dư bán sàn: -1.0
+  hụt hơi: -0.7
+  plunged: -1.0
+
+# Đối tượng đảo chiều: cụm tiêu cực (vd giảm mạnh) gần flip_object trong ±3 token → dương.
+# Ví dụ: "nợ vay giảm mạnh" → tích cực.
+flip_objects:
+  - nợ vay
+  - nợ
+  - chi phí
+  - lỗ
+  - nợ xấu
+  # Không gồm "áp lực" — tránh đảo "giảm sàn giữa áp lực giải chấp".
+
+# Công bố / filing — nguồn vnstock/VCI chỉ lấy hướng từ nhóm này.
+announcements_positive:
+  tăng vốn thành công: 0.8
+  trả cổ tức: 0.6
+  tạm ứng cổ tức: 0.6
+  chia cổ tức: 0.6
+  trúng thầu: 1.0
+  nhận hợp đồng: 0.8
+  hoàn tất góp vốn: 0.7
+  nâng hạng: 0.8
+
+announcements_negative:
+  bị xử phạt: -1.2
+  bị phạt: -1.1
+  vi phạm: -1.1
+  giải thể: -0.9
+  hủy hợp đồng: -1.0
+  chậm nộp: -0.7
+  đính chính báo cáo: -0.5
+  không còn là cổ đông lớn: -0.4
+
+# Dòng vốn / tự doanh — nhân thêm flow_weight_multiplier trong code.
+flow_positive:
+  khối ngoại mua ròng: 0.8
+  tự doanh mua ròng: 0.7
+  mua ròng: 0.6
+
+flow_negative:
+  khối ngoại bán ròng: -0.8
+  tự doanh bán ròng: -0.7
+  bán ròng: -0.6
+
+# Ép trung tính khi khớp (không hard-code trong _classify_title).
+force_neutral:
+  - phát hành cổ phiếu thưởng
+  - phát hành cổ phiếu để trả cổ tức
+  - phát hành cổ phiếu trả cổ tức
+  - phát hành cp để trả cổ tức
+  - phát hành cp trả cổ tức
+  - cổ phiếu để trả cổ tức
+  - cổ phiếu trả cổ tức
+  - cổ tức bằng cổ phiếu
+  - cổ tức bằng cp
+  - phcp để trả cổ tức
+  - đính chính
+  - quản trị rủi ro
+  - giải trình
+
+# Phủ định trong cửa sổ token trước cụm hướng (config negation_window_tokens).
+negation_phrases:
+  - chấm dứt
+  - thoát khỏi
+  - không còn
+  - thoát
+  - hết
+  - chưa
+  - không
+  - tránh
+
+# Dấu hiệu tiêu đề tóm tắt thị trường → weight 0 trừ khi mã dẫn "X:".
+market_summary_markers:
+  - vn-index
+  - vnindex
+  - phiên ngày
+  - thị trường chứng khoán ngày
+
+# Cụm hành động giá gắn mã trong market summary → weight 0.6 (không 0).
+# Khớp trong cửa sổ token quanh mã (market_summary_ticker_action_window).
+market_summary_ticker_action_phrases:
+  - ngược dòng
+  - tăng trần
+  - giảm sàn
+  - dư bán sàn
+  - kịch biên độ
+  - kịch trần
+  - tăng mạnh
+  - giảm mạnh
+  - hụt hơi
+  - lao dốc
+  - hit the ceiling
+  - surged
+  - plunged
+
+# Issuer báo cáo / CTCK — không phải chủ thể → weight 0.
+research_issuer_markers:
+  - research
+  - securities
+  - chứng khoán
+  - dự báo của
