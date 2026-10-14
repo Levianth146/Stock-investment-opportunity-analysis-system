@@ -1,0 +1,19 @@
+requests>=2.31
+beautifulsoup4>=4.12
+pdfplumber>=0.11
+pymupdf>=1.24
+pandas>=2.0
+openpyxl>=3.1
+matplotlib>=3.8
+pyyaml>=6.0
+google-play-scraper>=1.2
+# Tùy chọn:
+# playwright>=1.45        (trang JavaScript, chụp màn hình bằng chứng)  -> sau đó chạy: playwright install chromium
+# pytesseract>=0.3        (OCR khi PDF là ảnh/lỗi font)  -> cần cài Tesseract + gói ngôn ngữ 'vie'
+
+# Text mining nâng cao (script 08, 09)
+scikit-learn
+# Chỉ cần cho script 09 (PhoBERT) và tùy chọn --segment của 08:
+# torch
+# transformers
+# pyvi

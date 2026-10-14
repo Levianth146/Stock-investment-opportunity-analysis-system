@@ -1,0 +1,4 @@
+﻿bank,year,variable,kind,message
+agribank,2021,customer_deposits/total_assets,TY_SO,"tiền gửi KH / tài sản (%) = 91.2 ngoài [40, 90] (customer_deposits=1,545,474,063, total_assets=1,694,320,049)"
+bidv,2022,net_profit,BIEN_DONG,"net_profit đổi +72% so với 2021 (10,540,138 -> 18,158,502)"
+mb,2025,total_assets,BIEN_DONG,"total_assets đổi +43% so với 2024 (1,128,801,062 -> 1,615,763,927)"

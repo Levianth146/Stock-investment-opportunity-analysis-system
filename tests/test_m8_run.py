@@ -52,6 +52,16 @@ def test_stub_modules_warn_not_fail():
     assert out["status"] == "warn" and any("M4" in i["message"] for i in out["issues"])
 
 
+def test_partial_modules_warn_and_tampered_score_still_fails():
+    snap, up, cfg = _setup()
+    up["m2"]["status"] = "partial"
+    out = run(snap, up, cfg)
+    assert out["status"] == "warn"
+    assert any("M2" in i["message"] and "chưa đầy đủ" in i["message"] for i in out["issues"])
+    up["m7"]["score"] += 10
+    assert run(snap, up, cfg)["status"] == "fail"
+
+
 def test_quality_gate_unscored_skips_formula_and_rating_checks():
     """FR-008: khi quality_gate.scored is False, không fail vì công thức điểm / ngưỡng khuyến nghị."""
     snap, up, cfg = _setup()

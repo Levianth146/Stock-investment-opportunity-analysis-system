@@ -1,0 +1,9 @@
+---
+description: Quy tắc cho script thu thập và trích xuất (01–06)
+globs: scripts/0[1-6]_*.py,scripts/common.py
+alwaysApply: false
+---
+- Không đổi `compile_kw`, `squeeze`, danh sách `BCTC_LABELS` nếu chưa có PDF thật chứng minh lỗi; khi sửa, thêm trường hợp vào `tests/smoke_test.py`.
+- Mọi request mạng: kiểm tra robots.txt, `time.sleep(3)`, User-Agent nêu rõ mục đích nghiên cứu, không retry dồn dập.
+- Số liệu BCTC đơn vị là triệu đồng hay đồng: kiểm tra và ghi cột `unit`; không nhân/chia ngầm.
+- Kết quả ứng viên luôn kèm `file`, `page`, `snippet`; không ghi đè `coding_sheet.xlsx`.

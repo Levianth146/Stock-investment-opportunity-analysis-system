@@ -1,0 +1,43 @@
+# Điền/ xác nhận thủ công. Các URL dưới đây là trang chủ; chưa kiểm tra từng đường dẫn con.
+banks:
+  agribank:
+    name: Agribank
+    site: https://www.agribank.com.vn
+    app_search: ["Agribank E-Mobile Banking"]
+    apple_id: "1547213840"   # Agribank Retail eBanking (publisher: AGRIBANK; không dùng Agribank Plus/VNPAY)
+    play_id: "vn.com.agribank.ebanking.ru"
+    probe: []
+  mb:
+    name: MB
+    site: https://www.mbbank.com.vn
+    app_search: ["MB Bank"]
+    apple_id: "1205807363"
+    play_id: "com.mbmobile"
+    probe: []
+  tcb:
+    name: Techcombank
+    site: https://techcombank.com
+    app_search: ["Techcombank Mobile"]
+    apple_id: "1548623362"
+    play_id: "vn.com.techcombank.bb.app"
+    probe: []
+  bidv:
+    name: BIDV
+    site: https://www.bidv.com.vn
+    app_search: ["BIDV SmartBanking"]
+    apple_id: "1061867449"
+    play_id: "com.vnpay.bidv"
+    probe: []
+  vcb:
+    name: Vietcombank
+    site: https://www.vietcombank.com.vn
+    app_search: ["VCB Digibank"]
+    apple_id: "561433133"
+    play_id: "com.VCB"
+    probe: []
+# Ví dụ cho mục probe (script 06): mở thủ công, xác nhận URL rồi dán vào
+#   probe:
+#     - {criterion: T3, url: "https://.../developer", expect: ["API", "sandbox", "tài liệu"]}
+#     - {criterion: D4, url: "https://.../chinh-sach-bao-mat", expect: ["Nghị định 13", "dữ liệu cá nhân", "quyền của chủ thể"]}
+years: [2020, 2021, 2022, 2023, 2024, 2025]
+coding_years: [2020, 2021, 2022, 2023, 2024, 2025]     # năm chấm kép rubric: CHỐT chấm đủ 6 năm (thứ hạng theo từng năm)

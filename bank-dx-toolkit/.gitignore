@@ -1,0 +1,37 @@
+# môi trường
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# dữ liệu nặng / tái tạo được (python scripts/01_download.py tải lại từ config/sources.csv)
+data/raw/
+data/text/
+data/web/
+models/
+
+# out/: chỉ theo dõi sản phẩm cuối, bỏ trung gian và sao lưu
+out/*
+!out/.gitkeep
+!out/dti_inputs.csv
+!out/availability_matrix.csv
+!out/app_ratings.csv
+!out/statement_pages.csv
+!out/dti_check.csv
+!out/coding_sheet.xlsx
+!out/manual_audit.xlsx
+!out/coding_auto.xlsx
+!out/auto_scores.csv
+!out/auto_scoring_manifest.json
+!out/dti_indicators.csv
+!out/scores.csv
+!out/score_summary.csv
+!out/dti_bounds_review_2026-10-12/
+out/dti_bounds_review_2026-10-12/*
+!out/dti_bounds_review_2026-10-12/reference_inputs.csv
+!out/dataset_clean/
+out/dti_inputs.backup_*.csv
+
+# sao lưu script
+scripts/*.backup_*.py

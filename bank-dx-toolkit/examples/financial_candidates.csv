@@ -1,0 +1,11 @@
+bank,year,page,variable,raw_line (+dòng kế),parsed_numbers(first4),n_numbers,where_to_check
+vcb,2025,1,total_assets,Tổng tài sản                   1.850.200.500   1.700.100.000 ⏎ Tiề n gửi của khách hàng       1.300.000.000   1.200.000.000,"1,850,200,500.00 | 1,700,100,000.00",2,"Bảng CĐKT, cột số cuối năm"
+vcb,2025,1,customer_deposits,Tiề n gửi của khách hàng       1.300.000.000   1.200.000.000 ⏎ Vố n chủ sở hữu                140.500.000     125.000.000,"1,300,000,000.00 | 1,200,000,000.00",2,Bảng CĐKT/ thuyết minh
+vcb,2025,1,equity,Vố n chủ sở hữu                140.500.000     125.000.000 ⏎ Phầ n mề m máy tính            2.300.000       1.900.000,"140,500,000.00 | 125,000,000.00",2,"Bảng CĐKT; trùng ở thuyết minh, chọn dòng trong CĐKT"
+vcb,2025,1,software_gross_cost,Phầ n mề m máy tính            2.300.000       1.900.000 ⏎ Tiề n gửi không kỳ hạn         420.000.000     380.000.000,"2,300,000.00 | 1,900,000.00",2,"Thuyết minh TSCĐ vô hình: lấy NGUYÊN GIÁ cuối kỳ, không lấy hao mòn"
+vcb,2025,1,casa_deposits,Tiề n gửi không kỳ hạn         420.000.000     380.000.000 ⏎ I. Thu nhập lãi thuầ n         52.000.000      47.000.000,"420,000,000.00 | 380,000,000.00",2,Thuyết minh Tiền gửi của khách hàng
+vcb,2025,1,net_interest_income,I. Thu nhập lãi thuầ n         52.000.000      47.000.000 ⏎ II. Lãi thuầ n từ hoạt động    6.100.000       5.500.000,"52,000,000.00 | 47,000,000.00",2,KQKD (mục I)
+vcb,2025,1,net_fee_income,II. Lãi thuầ n từ hoạt động    6.100.000       5.500.000 ⏎ dịch vụ,"6,100,000.00 | 5,500,000.00",2,"KQKD: dòng bắt đầu 'Lãi thuần từ hoạt động...' có thể là dịch vụ / kinh doanh ngoại hối / khác; nhãn bị ngắt dòng, xem raw_line"
+vcb,2025,1,opex,VIII. Chi phí hoạt động        (24.000.000)    (22.000.000) ⏎ IX. Lợi nhuận thuầ n từ hoạt   46.000.000      41.000.000,"-24,000,000.00 | -22,000,000.00",2,KQKD: Chi phí hoạt động (mục VIII)
+vcb,2025,1,op_profit_before_provision,IX. Lợi nhuận thuầ n từ hoạt   46.000.000      41.000.000 ⏎ động kinh doanh trước chi,"46,000,000.00 | 41,000,000.00",2,KQKD (mục IX). Tổng thu nhập HĐ = mục IX + mục VIII. Nhãn dài có thể bị ngắt dòng: xem raw_line
+vcb,2025,1,net_profit,Lợi nhuận sau thuế             28.100.000      25.300.000 ⏎ ,"28,100,000.00 | 25,300,000.00",2,Báo cáo KQKD (dùng LNST của cổ đông ngân hàng mẹ nếu có tách)

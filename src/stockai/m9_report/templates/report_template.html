@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Investment Analysis Report</title>
+  {% if not pdf_render %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  {% endif %}
+  <style>
+    {% if pdf_render %}
+    @font-face {
+      font-family: "StockAI-PDF";
+      src: url("stockai-font://regular");
+    }
+    @font-face {
+      font-family: "StockAI-PDF";
+      src: url("stockai-font://bold");
+      font-weight: bold;
+    }
+    {% endif %}
+    @page { size: A4; margin: 15mm; }
+    body { font-family: {% if pdf_render %}"StockAI-PDF"{% else %}"Roboto"{% endif %}, sans-serif; font-size: 11pt; color: #334155; line-height: 1.5; background-color: #ffffff; }
+    .header { border-bottom: 2px solid #5A738E; padding-bottom: 8px; margin-bottom: 16px; }
+    .header h1 { font-size: 18pt; margin: 0; color: #1E293B; }
+    .sub-meta { font-size: 9pt; color: #64748B; margin-top: 4px; }
+    .grid-scores { display: table; width: 100%; margin: 15px 0; }
+    .card { display: table-cell; border: 1px solid #CBD5E1; padding: 10px; text-align: center; border-radius: 4px; background: #F8FAFC; }
+    .card-val { font-size: 14pt; font-weight: bold; color: #5A738E; }
+    .section-title { font-size: 12pt; border-left: 4px solid #5A738E; padding-left: 8px; margin-top: 20px; color: #0F172A; }
+    .debate-box { width: 100%; display: table; margin-top: 8px; }
+    .bull-col, .bear-col { display: table-cell; width: 50%; vertical-align: top; padding: 10px; border: 1px solid #E2E8F0; }
+    .bull-col { background-color: #F0FDF4; border-color: #DCFCE7; }
+    .bear-col { background-color: #FEF2F2; border-color: #FEE2E2; }
+    .provenance-table { width: 100%; font-size: 9pt; margin-top: 10px; }
+    .provenance-table th, .provenance-table td { border: 1px solid #E2E8F0; padding: 6px; text-align: left; }
+    .provenance-table th { background-color: #F1F5F9; }
+    .report-meta { font-size: 8.5pt; color: #64748B; }
+    .disclaimer { font-size: 8pt; color: #64748B; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>BÁO CÁO PHÂN TÍCH CỔ PHIẾU: {{ ticker }}</h1>
+    <div class="sub-meta">Ngày phân tích (as_of): {{ as_of }} | Hồ sơ: {{ profile }} | Nguồn: Dữ liệu chuẩn hóa M1</div>
+  </div>
+
+  <div class="grid-scores">
+    <div class="card"><div>Điểm F (Cơ bản)</div><div class="card-val">{{ scores.F }}</div></div>
+    <div class="card"><div>Điểm T (Kỹ thuật)</div><div class="card-val">{{ scores.T }}</div></div>
+    <div class="card"><div>Điểm V (Định giá)</div><div class="card-val">{{ scores.V }}</div></div>
+    <div class="card"><div>Điểm S (Tâm lý)</div><div class="card-val">{{ scores.S }}</div></div>
+    <div class="card"><div>Phạt R (Rủi ro)</div><div class="card-val">-{{ scores.R }}</div></div>
+    <div class="card" style="background:#EEF2F6;"><div>TỔNG ĐIỂM</div><div class="card-val" style="color:#0F172A;">{{ scores.final }}</div></div>
+  </div>
+
+  <div class="section-title">Khuyến nghị & Định giá</div>
+  <p><b>Khuyến nghị:</b> {{ recommendation }} &nbsp;|&nbsp; <b>Giá mục tiêu:</b> {{ target_price }} VNĐ</p>
+
+  <div class="section-title">Tranh biện hai chiều (Bull / Bear Debate)</div>
+  <div class="debate-box">
+    <div class="bull-col">
+      <b style="color:#166534;">Luận điểm tăng giá (Bullish)</b>
+      <p>{{ debate.bull }}</p>
+    </div>
+    <div class="bear-col">
+      <b style="color:#991B1B;">Rủi ro giảm giá (Bearish)</b>
+      <p>{{ debate.bear }}</p>
+    </div>
+  </div>
+
+  <div class="section-title">Nguồn dữ liệu & Minh chứng (Data Provenance)</div>
+  <p class="report-meta">
+    <b>Snapshot Hash:</b> {{ snapshot_hash | default("Chưa có", true) }} &nbsp;|&nbsp;
+    <b>Ngày chốt (as_of):</b> {{ as_of }} &nbsp;|&nbsp;
+    <b>Thời điểm trích xuất:</b> {{ fetched_at | default("Chưa có", true) }}
+  </p>
+  <table class="provenance-table">
+    <thead>
+      <tr>
+        <th style="width: 25%;">Chỉ tiêu / Dữ liệu</th>
+        <th style="width: 20%;">Giá trị trích xuất</th>
+        <th style="width: 30%;">Nguồn phát hành & Phương pháp</th>
+        <th style="width: 25%;">Ngày công bố (published_at)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in provenance %}
+      <tr>
+        <td><b>{{ item.metric }}</b></td>
+        <td>{{ item.value }}</td>
+        <td>{{ item.source }} ({{ item.method | default("Chưa có", true) }})</td>
+        <td>{{ item.published_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="disclaimer">
+    <i>* Tuyên bố miễn trừ trách nhiệm: Báo cáo được tạo tự động bởi hệ thống phân tích định lượng point-in-time, phục vụ mục đích nghiên cứu, không cấu thành lời mời chào mua/bán cổ phiếu.</i>
+  </p>
+</body>
+</html>

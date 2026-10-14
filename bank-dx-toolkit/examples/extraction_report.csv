@@ -1,0 +1,3 @@
+file,bank,year,doc_type,pages,pages_ocr,avg_chars,avg_junk,engines_used,flag
+2025_bctc.pdf,vcb,2025,bctc,1,0,697,0.1282,"{""pdftotext"": 1}",NGHI LỖI FONT/ẢNH -> chạy lại với --ocr (cần Tesseract + gói 'vie') và kiểm tra tay vài trang
+2025_bctn.pdf,vcb,2025,bctn,1,0,957,0.0459,"{""pdftotext"": 1}",NGHI LỖI FONT/ẢNH -> chạy lại với --ocr (cần Tesseract + gói 'vie') và kiểm tra tay vài trang

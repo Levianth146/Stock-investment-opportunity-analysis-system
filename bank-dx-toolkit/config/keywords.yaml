@@ -1,0 +1,498 @@
+# Từ khóa định vị bằng chứng cho 24 tiêu chí (lấy từ codebook, Phụ lục A).
+# Từ khóa chỉ để TÌM đoạn văn; điểm do người chấm quyết định theo rubric 0-4.
+# Từ viết tắt IN HOA (<=5 ký tự) được khớp phân biệt hoa/thường.
+# Từ khóa gồm CẢ tiếng Việt và tiếng Anh (nhiều BCTN/BCTC là bản tiếng Anh). Điểm số/đối chiếu giữa ngân hàng chỉ nên so sánh khi cùng ngôn ngữ (xem cột lang).
+K1:
+  name: Phủ sóng kênh số và liên thông đa kênh
+  keywords:
+  - omnichannel
+  - đa kênh
+  - ngân hàng số
+  - digital banking
+  - mobile banking
+  - internet banking
+  - kênh số
+  - ứng dụng ngân hàng
+  - omni-channel
+  - multi-channel
+  - digital channels
+  - digital bank
+  - mobile app
+  - mobile application
+  - online banking
+  - digital banking platform
+K2:
+  name: Định danh và xác thực điện tử (eKYC, sinh trắc học)
+  keywords:
+  - eKYC
+  - định danh điện tử
+  - xác thực sinh trắc học
+  - nhận diện khuôn mặt
+  - vân tay
+  - NFC
+  - CCCD gắn chip
+  - VNeID
+  - mở tài khoản trực tuyến
+  - e-KYC
+  - electronic identification
+  - biometric authentication
+  - biometrics
+  - facial recognition
+  - face recognition
+  - fingerprint
+  - chip-based ID
+  - online account opening
+  - remote account opening
+  - digital onboarding
+K3:
+  name: Cá nhân hóa
+  keywords:
+  - cá nhân hóa
+  - personalization
+  - gợi ý sản phẩm
+  - next best action
+  - phân khúc khách hàng
+  - hành vi khách hàng
+  - đề xuất thông minh
+  - ưu đãi riêng
+  - personalisation
+  - personalized
+  - personalised
+  - product recommendation
+  - recommendation engine
+  - customer segmentation
+  - behavioural
+  - behavioral
+  - tailored offers
+  - next best offer
+K4:
+  name: Đo lường trải nghiệm khách hàng
+  keywords:
+  - NPS
+  - CSAT
+  - CES
+  - hài lòng khách hàng
+  - trải nghiệm khách hàng
+  - voice of customer
+  - khiếu nại
+  - phản hồi
+  - tổng đài
+  - Net Promoter Score
+  - customer satisfaction
+  - customer experience
+  - customer feedback
+  - customer complaints
+  - contact centre
+  - contact center
+  - call center
+  - customer journey
+  - CX
+S1:
+  name: Chiến lược chuyển đổi số chính thức
+  keywords:
+  - chiến lược chuyển đổi số
+  - tầm nhìn số
+  - lộ trình chuyển đổi số
+  - ngân hàng số
+  - digital strategy
+  - mục tiêu chuyển đổi số
+  - đến năm 2030
+  - digital transformation strategy
+  - digital transformation roadmap
+  - digital transformation
+  - digital vision
+  - digital roadmap
+  - digital-first
+  - by 2030
+S2:
+  name: Quản trị chuyển đổi số
+  keywords:
+  - ban chỉ đạo chuyển đổi số
+  - ủy ban công nghệ
+  - Chief Digital Officer
+  - CDO
+  - CIO
+  - CTO
+  - khối chuyển đổi số
+  - giám đốc khối công nghệ
+  - KPI chuyển đổi số
+  - steering committee
+  - technology committee
+  - Chief Information Officer
+  - Chief Technology Officer
+  - digital transformation division
+  - digital transformation committee
+  - head of digital
+  - digital governance
+  - digital KPI
+S3:
+  name: Cam kết nguồn lực cho chuyển đổi số
+  keywords:
+  - ngân sách chuyển đổi số
+  - đầu tư công nghệ
+  - đầu tư CNTT
+  - chi đầu tư
+  - kế hoạch đầu tư công nghệ
+  - digital transformation budget
+  - technology investment
+  - IT investment
+  - investment in technology
+  - investment in digital
+  - technology spending
+  - technology capex
+  - IT budget
+  - digital investment
+S4:
+  name: Hợp tác hệ sinh thái và fintech
+  keywords:
+  - fintech
+  - hệ sinh thái
+  - ecosystem
+  - đối tác chiến lược
+  - liên minh
+  - API đối tác
+  - ví điện tử
+  - siêu ứng dụng
+  - fintechs
+  - partner ecosystem
+  - open ecosystem
+  - strategic partner
+  - strategic partners
+  - strategic partnership
+  - alliance
+  - e-wallet
+  - super app
+  - partnership
+T1:
+  name: Hạ tầng và kiến trúc công nghệ
+  keywords:
+  - core banking
+  - hệ thống lõi
+  - điện toán đám mây
+  - cloud
+  - hybrid cloud
+  - trung tâm dữ liệu
+  - data center
+  - dự phòng thảm họa
+  - DR
+  - microservices
+  - Tier III
+  - core system
+  - private cloud
+  - public cloud
+  - cloud-native
+  - data centre
+  - disaster recovery
+  - technology infrastructure
+  - technology architecture
+  - IT infrastructure
+  - Kubernetes
+  - containerization
+T2:
+  name: An toàn thông tin
+  keywords:
+  - ISO 27001
+  - PCI DSS
+  - an toàn thông tin
+  - an ninh mạng
+  - SOC
+  - Security Operations Center
+  - Smart OTP
+  - xác thực đa yếu tố
+  - MFA
+  - sinh trắc học
+  - information security
+  - cybersecurity
+  - cyber security
+  - security operations centre
+  - multi-factor authentication
+  - two-factor authentication
+  - penetration testing
+  - cyber resilience
+  - ISO/IEC 27001
+T3:
+  name: Open API và tích hợp đối tác
+  keywords:
+  - open API
+  - API mở
+  - cổng developer
+  - developer portal
+  - open banking
+  - API banking
+  - tích hợp đối tác
+  - SDK
+  - APIs
+  - API platform
+  - API gateway
+  - partner integration
+  - third-party integration
+  - sandbox
+T4:
+  name: Công nghệ mới ở mức use-case
+  keywords:
+  - trí tuệ nhân tạo
+  - AI tạo sinh
+  - GenAI
+  - chatbot
+  - trợ lý ảo
+  - OCR
+  - blockchain
+  - IoT
+  - artificial intelligence
+  - generative AI
+  - AI
+  - chatbots
+  - virtual assistant
+  - robo-advisor
+  - large language model
+  - LLM
+  - AI-powered
+  - machine vision
+O1:
+  name: Tự động hóa quy trình
+  keywords:
+  - RPA
+  - tự động hóa
+  - automation
+  - robot
+  - quy trình tự động
+  - workflow
+  - giờ công tiết kiệm
+  - robotic process automation
+  - process automation
+  - intelligent automation
+  - straight-through processing
+  - STP
+  - bots
+  - workflow automation
+  - hours saved
+  - man-hours saved
+  - FTE
+O2:
+  name: Số hóa quy trình tín dụng và hậu trường
+  keywords:
+  - phê duyệt tín dụng tự động
+  - hợp đồng điện tử
+  - chữ ký số
+  - paperless
+  - không giấy tờ
+  - hồ sơ điện tử
+  - quy trình số
+  - thời gian xử lý
+  - thời gian giải ngân
+  - e-contract
+  - electronic contract
+  - digital signature
+  - e-signature
+  - digitised
+  - digitized
+  - digitalised
+  - digitalized
+  - end-to-end digital
+  - automated credit approval
+  - loan origination
+  - turnaround time
+  - time to disbursement
+  - digital lending
+  - electronic documents
+O3:
+  name: Quản trị rủi ro và tuân thủ số
+  keywords:
+  - giám sát giao dịch
+  - phát hiện gian lận
+  - fraud
+  - AML
+  - chống rửa tiền
+  - thời gian thực
+  - real-time
+  - cảnh báo
+  - rủi ro vận hành
+  - KRI
+  - fraud detection
+  - fraud prevention
+  - transaction monitoring
+  - anti-money laundering
+  - real-time monitoring
+  - early warning
+  - key risk indicators
+  - operational risk
+  - KYC
+O4:
+  name: Vận hành linh hoạt
+  keywords:
+  - Agile
+  - squad
+  - tribe
+  - DevOps
+  - Scrum
+  - vận hành linh hoạt
+  - sprint
+  - squads
+  - tribes
+  - sprints
+  - agile transformation
+  - agile way of working
+  - CI/CD
+C1:
+  name: Lãnh đạo và thông điệp văn hóa số
+  keywords:
+  - chuyển đổi văn hóa
+  - văn hóa số
+  - tư duy số
+  - lãnh đạo số
+  - văn hóa đổi mới
+  - digital mindset
+  - digital culture
+  - cultural transformation
+  - culture transformation
+  - digital leadership
+  - innovation culture
+  - culture of innovation
+  - change management
+  - digital-first mindset
+C2:
+  name: Đào tạo và nâng cao kỹ năng số
+  keywords:
+  - đào tạo số
+  - upskilling
+  - reskilling
+  - học viện
+  - academy
+  - e-learning
+  - kỹ năng số
+  - chứng chỉ công nghệ
+  - giờ đào tạo
+  - digital skills
+  - digital training
+  - training hours
+  - hours of training
+  - technology certification
+  - learning platform
+  - digital capability
+  - talent development
+C3:
+  name: Văn hóa đổi mới sáng tạo
+  keywords:
+  - hackathon
+  - innovation lab
+  - trung tâm đổi mới sáng tạo
+  - sáng kiến
+  - ươm tạo
+  - cuộc thi sáng tạo
+  - intrapreneurship
+  - hackathons
+  - innovation labs
+  - innovation centre
+  - innovation center
+  - incubator
+  - incubation
+  - innovation contest
+  - innovation challenge
+  - innovation initiatives
+C4:
+  name: Môi trường làm việc số
+  keywords:
+  - môi trường làm việc số
+  - làm việc linh hoạt
+  - làm việc từ xa
+  - công cụ cộng tác
+  - văn phòng số
+  - HR tech
+  - nhân sự số
+  - cổng nhân viên
+  - digital workplace
+  - flexible working
+  - remote working
+  - remote work
+  - hybrid working
+  - collaboration tools
+  - Microsoft 365
+  - digital HR
+  - HRIS
+  - employee portal
+  - employee app
+D1:
+  name: Quản trị dữ liệu
+  keywords:
+  - data governance
+  - quản trị dữ liệu
+  - chất lượng dữ liệu
+  - data quality
+  - Chief Data Officer
+  - danh mục dữ liệu
+  - data catalog
+  - master data
+  - data management
+  - data stewardship
+  - data strategy
+  - data ownership
+  - data lineage
+  - data catalogue
+  - metadata
+D2:
+  name: Hạ tầng dữ liệu
+  keywords:
+  - data lake
+  - data warehouse
+  - kho dữ liệu
+  - hồ dữ liệu
+  - big data
+  - dữ liệu lớn
+  - nền tảng dữ liệu
+  - streaming
+  - real-time
+  - data lakehouse
+  - data platform
+  - real-time data
+  - data mart
+  - data hub
+  - data pipeline
+  - ETL
+  - data infrastructure
+D3:
+  name: Phân tích nâng cao và AI/ML ra quyết định
+  keywords:
+  - machine learning
+  - AI/ML
+  - chấm điểm tín dụng
+  - credit scoring
+  - phân tích dữ liệu
+  - dự báo
+  - mô hình rời bỏ
+  - churn
+  - phân tích nâng cao
+  - data analytics
+  - advanced analytics
+  - predictive analytics
+  - predictive model
+  - credit scorecard
+  - churn prediction
+  - forecasting
+  - data-driven
+  - decision engine
+  - behavioural scoring
+  - behavioral scoring
+D4:
+  name: Bảo vệ dữ liệu cá nhân
+  keywords:
+  - bảo vệ dữ liệu cá nhân
+  - Nghị định 13
+  - quyền riêng tư
+  - chính sách bảo mật
+  - đồng ý của chủ thể dữ liệu
+  - DPO
+  - đánh giá tác động xử lý dữ liệu
+  - ISO 27701
+  - personal data protection
+  - data privacy
+  - privacy policy
+  - Decree 13
+  - Decree No. 13
+  - PDPD
+  - data protection officer
+  - consent
+  - data subject
+  - privacy impact assessment
+  - data protection impact assessment
+  - GDPR
+  - privacy

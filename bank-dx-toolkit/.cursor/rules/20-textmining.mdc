@@ -1,0 +1,10 @@
+---
+description: Quy tắc cho text mining (07 BM25, 08 LDA, 09 PhoBERT)
+globs: scripts/0[789]_*.py
+alwaysApply: false
+---
+- Chỉ số text mining là phụ trợ để đối chiếu; không đưa vào công thức điểm DBI.
+- n = 5 ngân hàng: chỉ mô tả, không suy diễn thống kê. Báo Spearman kèm n.
+- LDA: luôn báo stability giữa các seed; chủ đề kém ổn định (Jaccard < 0,4) không diễn giải.
+- PhoBERT: báo macro-F1 CV trước khi dùng để lọc; dưới ~0,6 thì không dùng. Văn bản đưa vào đã tách từ (pyvi).
+- Không commit `models/` hay dữ liệu thô.
