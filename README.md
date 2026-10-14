@@ -46,3 +46,28 @@ tests/             test theo module + e2e
 Chính xác dữ liệu (nguồn + ngày công bố cho từng số, chặn look-ahead, M8 đối chiếu) · Đánh giá hợp lý (công thức điểm minh bạch, risk gate, 2 hồ sơ) · Sáng tạo (Bull/Bear, hồ sơ nhà đầu tư, kiểm chứng trong PDF).
 
 > Báo cáo phục vụ học tập/nghiên cứu, không phải lời khuyên đầu tư.
+
+## Chạy web (feature 014)
+
+Layer FastAPI (`src/stockai/api`) phục vụ JSON dưới `/api` và, nếu đã build SPA, trang React tại `/`.
+
+```bash
+# 1) API (cần snapshot trong data/snapshots_ext hoặc cấu hình config/api.yaml)
+pip install -r requirements.txt   # có fastapi, uvicorn, …
+uvicorn stockai.api.app:app --reload --host 127.0.0.1 --port 8000
+
+# 2) Dev SPA (proxy /api → :8000)
+cd web
+npm ci
+# copy phông Noto từ assets/fonts → web/public/fonts (hoặc chạy scripts/build_web.*)
+mkdir -p public/fonts && cp ../assets/fonts/NotoSans-*.ttf public/fonts/
+npm run dev    # http://127.0.0.1:5173
+
+# 3) Build production + để API phục vụ web/dist
+# Windows:  powershell -File scripts/build_web.ps1
+# Unix:     bash scripts/build_web.sh
+uvicorn stockai.api.app:app --host 127.0.0.1 --port 8000
+# mở http://127.0.0.1:8000/
+```
+
+Kiểm thử front: `cd web && npm run test` (vitest). Playwright tuỳ chọn: `npm run test:e2e` (cần API đang chạy).
