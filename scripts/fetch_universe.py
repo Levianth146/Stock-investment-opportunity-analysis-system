@@ -28,6 +28,7 @@ import yaml  # noqa: E402
 from stockai.m1_data.fetch import (  # noqa: E402
     backfill_quarterly,
     fast_mode_enabled,
+    refresh_financials_from_raw,
     refresh_news_prices,
     run_deep_fetch,
 )
@@ -117,6 +118,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--backfill-quarterly", action="store_true",
         help="chỉ bổ sung BCTC quý (3 lệnh/mã) vào snapshot thiếu quý; mutual exclusive với --deep",
     )
+    ap.add_argument(
+        "--from-raw",
+        action="store_true",
+        help="chỉ dựng snapshot từ data/raw* (.pkl) đã có — không gọi mạng; thiếu cache → lỗi mã đó",
+    )
     return ap
 
 
@@ -151,6 +157,28 @@ def main(argv: list[str] | None = None) -> None:
     if err:
         print(err, file=sys.stderr)
         sys.exit(2)
+
+    if a.from_raw:
+        cfg["from_raw"] = True
+        cfg["vnf_enabled"] = False  # offline: không tải Hugging Face
+        cfg.setdefault("news_enabled", False)
+        # Làm mới BCTC từ raw trên snapshot đã có (giữ prices/news/peers)
+        in_dir = out_dir
+        print(
+            f"from-raw: refresh financials {len(tickers)} mã | in={in_dir} -> {out_dir} "
+            f"(cache={cfg.get('cache_dir')})",
+            flush=True,
+        )
+        res = refresh_financials_from_raw(
+            tickers, a.as_of, cfg, in_dir=in_dir, out_dir=out_dir,
+        )
+        print("\n=== TÓM TẮT FROM-RAW ===")
+        ok = sum(1 for r in res.values() if r.get("status") == "ok")
+        div_n = sum(1 for r in res.values() if r.get("dividends_paid"))
+        skip = sum(1 for r in res.values() if r.get("status") == "skipped_no_raw")
+        err = sum(1 for r in res.values() if r.get("status") == "error")
+        print(f"ok={ok} (có dividends_paid={div_n}) skipped_no_raw={skip} error={err}", flush=True)
+        return
 
     if a.deep:
         cfg["_deep"] = True
