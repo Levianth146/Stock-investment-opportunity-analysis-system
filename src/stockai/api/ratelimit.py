@@ -9,6 +9,43 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+class ConnectionLimiter:
+    """Giới hạn số kết nối đồng thời theo khóa (IP) — dùng cho SSE."""
+
+    def __init__(self, *, max_per_key: int = 5, max_tracked: int = 5000) -> None:
+        self.max_per_key = max(1, int(max_per_key))
+        self.max_tracked = max(1, int(max_tracked))
+        self._counts: OrderedDict[str, int] = OrderedDict()
+        self._lock = threading.Lock()
+
+    def try_acquire(self, key: str) -> bool:
+        k = (key or "unknown").strip() or "unknown"
+        with self._lock:
+            cur = int(self._counts.get(k) or 0)
+            if cur >= self.max_per_key:
+                return False
+            if k in self._counts:
+                self._counts.move_to_end(k)
+            self._counts[k] = cur + 1
+            while len(self._counts) > self.max_tracked:
+                self._counts.popitem(last=False)
+            return True
+
+    def release(self, key: str) -> None:
+        k = (key or "unknown").strip() or "unknown"
+        with self._lock:
+            cur = int(self._counts.get(k) or 0)
+            if cur <= 1:
+                self._counts.pop(k, None)
+            else:
+                self._counts[k] = cur - 1
+
+    def count(self, key: str) -> int:
+        k = (key or "unknown").strip() or "unknown"
+        with self._lock:
+            return int(self._counts.get(k) or 0)
+
+
 class SlidingWindowLimiter:
     """Đếm sự kiện trong cửa sổ ``window_sec`` giây."""
 

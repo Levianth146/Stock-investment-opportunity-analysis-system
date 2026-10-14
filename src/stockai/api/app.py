@@ -1,15 +1,18 @@
-"""FastAPI app — rankings / ticker / debate / quotes / PDF / web SPA (011+014)."""
+"""FastAPI app — rankings / ticker / debate / quotes / PDF / web SPA (011+014+017)."""
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
 import re
 import threading
+import time
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncIterator
 
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from stockai.api.debate_service import llm_public_status
 from stockai.api.deps import (
@@ -18,9 +21,12 @@ from stockai.api.deps import (
     get_debate_jobs,
     get_debate_service,
     get_quote_provider,
+    get_realtime_hub,
+    get_sse_limiter,
     get_store,
     init_app_state,
 )
+from stockai.api.insession import build_market_analysis
 from stockai.api.spa import mount_spa, resolve_web_dist
 from stockai.api.store import (
     DISCLAIMER,
@@ -79,17 +85,36 @@ def _err(status: int, message: str, store: ResultStore | None = None) -> JSONRes
     return JSONResponse(status_code=status, content=body)
 
 
+def _read_refreshed_at(store: ResultStore) -> str | None:
+    """Đọc mốc refresh daily từ ``cache_dir/_refreshed_at.json``."""
+    path = Path(store.cache_dir) / "_refreshed_at.json"
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return None
+    if isinstance(data, dict):
+        v = data.get("refreshed_at")
+        return str(v) if v else None
+    return None
+
+
 def create_app(
     *,
     api_cfg: dict | None = None,
     store: ResultStore | None = None,
 ) -> FastAPI:
-    cfg = api_cfg if api_cfg is not None else load_api_cfg()
+    cfg = dict(api_cfg) if api_cfg is not None else load_api_cfg()
+    # TestClient truyền store sẵn → bỏ warmup + không mở DNSE thật
+    if store is not None:
+        cfg.setdefault("skip_warmup", True)
+        cfg.setdefault("skip_realtime_start", True)
     docs_on = bool(cfg["docs_enabled"]) if "docs_enabled" in cfg else True
     app = FastAPI(
         title="StockAI API",
-        version="0.14.0",
-        description="Layer đọc kết quả pipeline + SPA web (feature 011/014).",
+        version="0.17.0",
+        description="Layer đọc kết quả pipeline + SPA web + realtime tạm tính (011/014/017).",
         docs_url="/docs" if docs_on else None,
         redoc_url="/redoc" if docs_on else None,
         openapi_url="/openapi.json" if docs_on else None,
@@ -104,7 +129,6 @@ def create_app(
             allow_headers=["*"],
         )
     init_app_state(app, api_cfg=cfg, store=store)
-    # TestClient truyền store sẵn → bỏ warmup; production warm nền
     skip_warmup = store is not None or bool(cfg.get("skip_warmup"))
     app.state.ready = skip_warmup
 
@@ -147,9 +171,11 @@ def create_app(
             ) or {}
         except Exception:
             scoring_cfg = {}
+        refreshed_at = _read_refreshed_at(store)
         return _envelope(
             {
                 "asof": store.asof,
+                "refreshed_at": refreshed_at,
                 "profiles": list(PROFILES),
                 "default_profile": store.default_profile,
                 "universe_count": universe,
@@ -329,6 +355,25 @@ def create_app(
             return bad
         try:
             return store.financials(sym)
+        except KeyError:
+            return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/income-flow", response_model=None)
+    def ticker_income_flow(
+        request: Request,
+        symbol: str,
+        period: str = Query("TTM"),
+    ) -> Any:
+        """Sankey doanh thu → LNST (tỷ VND). Ngân hàng: supported=false."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return store.income_flow(sym, period=period)
         except KeyError:
             return _err(404, "Không tìm thấy mã", store)
         except Exception:
@@ -542,6 +587,133 @@ def create_app(
         provider = get_quote_provider(request)
         items = provider.get_quotes(clean)
         return _envelope({"items": items}, store)
+
+    @app.get("/api/realtime/status", response_model=None)
+    def realtime_status(request: Request) -> Any:
+        store = get_store(request)
+        hub = get_realtime_hub(request)
+        return _envelope(hub.status(), store)
+
+    @app.get("/api/realtime/market", response_model=None)
+    def realtime_market(request: Request) -> Any:
+        """Breadth / lists / heatmap / valuation tạm tính (nhóm liquid)."""
+        store = get_store(request)
+        hub = get_realtime_hub(request)
+        try:
+            payload = build_market_analysis(hub, store)
+            return _envelope(payload, store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/stream", response_model=None)
+    async def realtime_stream(
+        request: Request,
+        symbols: str = Query(..., description="Tối đa 20 mã, cách nhau bởi dấu phẩy"),
+    ) -> Any:
+        """SSE giá phiên — heartbeat 15s; refcount unsubscribe khi client rời."""
+        store = get_store(request)
+        cfg = get_api_cfg(request)
+        rt = cfg.get("realtime") if isinstance(cfg.get("realtime"), dict) else {}
+        max_sym = int(rt.get("sse_max_symbols") or 20)
+        hb_sec = float(rt.get("sse_heartbeat_sec") or 15)
+
+        raw = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        if not raw:
+            return _err(400, "symbols bắt buộc", store)
+        if len(raw) > max_sym:
+            return _err(400, f"symbols quá nhiều (tối đa {max_sym} mã)", store)
+        clean: list[str] = []
+        for s in raw:
+            if not _SYMBOL_RE.fullmatch(s) or not is_valid_symbol(s):
+                return _err(400, f"Mã không hợp lệ: {s}", store)
+            if not store.has_ticker(s):
+                return _err(400, f"Không tìm thấy mã: {s}", store)
+            clean.append(s)
+
+        ip = client_ip(request)
+        sse_lim = get_sse_limiter(request)
+        if not sse_lim.try_acquire(ip):
+            return _err(429, "Quá nhiều kết nối stream từ IP này", store)
+
+        hub = get_realtime_hub(request)
+        hub.acquire_view(clean)
+        # TestClient: giới hạn số event để không treo generator vô hạn
+        max_events = int(cfg.get("_sse_max_events") or 0)
+
+        async def event_gen() -> AsyncIterator[str]:
+            last_hb = time.monotonic()
+            last_payload: dict[str, Any] = {}
+            sent = 0
+            try:
+                # snapshot đầu
+                items = hub.get_quotes(clean)
+                first = {
+                    "type": "quotes",
+                    "items": items,
+                    "label": "tạm tính",
+                    "asof": store.asof,
+                }
+                last_payload = first
+                yield f"data: {json.dumps(first, ensure_ascii=False)}\n\n"
+                sent += 1
+                if max_events and sent >= max_events:
+                    return
+                loops = 0
+                while True:
+                    if await request.is_disconnected():
+                        break
+                    loops += 1
+                    # Chế độ test: thoát sớm dù chưa đủ event đổi giá
+                    if max_events and loops > 4:
+                        break
+                    await asyncio.sleep(0.05 if max_events else 0.5)
+                    items = hub.get_quotes(clean)
+                    payload = {
+                        "type": "quotes",
+                        "items": items,
+                        "label": "tạm tính",
+                        "asof": store.asof,
+                    }
+                    # chỉ gửi khi đổi giá/state
+                    sig = [(it.get("symbol"), it.get("price"), it.get("state")) for it in items]
+                    prev_sig = [
+                        (it.get("symbol"), it.get("price"), it.get("state"))
+                        for it in (last_payload.get("items") or [])
+                    ]
+                    if sig != prev_sig:
+                        last_payload = payload
+                        yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                        sent += 1
+                        if max_events and sent >= max_events:
+                            break
+                    now = time.monotonic()
+                    if now - last_hb >= hb_sec:
+                        last_hb = now
+                        yield f": heartbeat\n\n"
+                        yield (
+                            "data: "
+                            + json.dumps(
+                                {"type": "heartbeat", "ts": time.time()},
+                                ensure_ascii=False,
+                            )
+                            + "\n\n"
+                        )
+                        sent += 1
+                        if max_events and sent >= max_events:
+                            break
+            finally:
+                hub.release_view(clean)
+                sse_lim.release(ip)
+
+        return StreamingResponse(
+            event_gen(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
 
     @app.get("/api/report/{symbol}.pdf", response_model=None)
     def report_pdf(

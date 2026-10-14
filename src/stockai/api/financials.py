@@ -11,10 +11,11 @@ from typing import Any
 
 # Chia VND thô → tỷ VND
 _VND_TO_BILLION = 1e9
-# Cổ tức bất thường: NI lớn mà tỷ lệ cực nhỏ hoặc payout > 500%
+# Cổ tức bất thường (unit mismatch): |div|/|NI| < 0.0001 khi NI đủ lớn.
+# Payout > 100% KHÔNG gắn cờ — chỉ chú thích "Chi trả vượt LNST năm đó".
 _DIV_NI_MIN_VND = 100e9
 _DIV_RATIO_TOO_SMALL = 0.0001
-_DIV_RATIO_TOO_LARGE = 5.0
+_DIV_PAYOUT_OVER_NOTE = "Chi trả vượt LNST năm đó"
 
 _RAW_KEYS = (
     "revenue",
@@ -83,11 +84,10 @@ def dividends_implausible(
     *,
     ni_min_vnd: float = _DIV_NI_MIN_VND,
     too_small: float = _DIV_RATIO_TOO_SMALL,
-    too_large: float = _DIV_RATIO_TOO_LARGE,
 ) -> bool:
-    """True khi tỷ lệ cổ tức/LNST mẹ bất khả thi (không xóa số gốc).
+    """True chỉ khi nghi lệch đơn vị: |div|/|NI| < 0.0001 (NI đủ lớn).
 
-    ``div == 0`` = không trả cổ tức (hợp lệ), không gắn cờ.
+    Payout > 100% không gắn cờ (dùng ``dividend_notes``). ``div == 0`` hợp lệ.
     """
     div = _num(dividends_paid)
     nip = _num(net_income_parent)
@@ -96,9 +96,21 @@ def dividends_implausible(
     ratio = abs(div) / abs(nip)
     if abs(nip) > ni_min_vnd and ratio < too_small:
         return True
-    if ratio > too_large:
-        return True
     return False
+
+
+def dividend_payout_note(
+    dividends_paid: float | None,
+    net_income_parent: float | None,
+) -> str | None:
+    """Chú thích khi chi trả vượt LNST năm đó (không làm mờ / không gắn cờ)."""
+    div = _num(dividends_paid)
+    nip = _num(net_income_parent)
+    if div is None or nip is None or nip == 0 or div == 0:
+        return None
+    if abs(div) / abs(nip) > 1.0:
+        return _DIV_PAYOUT_OVER_NOTE
+    return None
 
 
 def _period_sort_key(period: Any) -> tuple[int, int, str]:
@@ -161,8 +173,13 @@ def _enrich_series(periods: list[dict], *, kind: str) -> list[dict[str, Any]]:
         raw_billion = {k: _to_billion(_num(items.get(k))) for k in _RAW_KEYS}
         div_raw = _num(items.get("dividends_paid"))
         period_flags: list[str] = []
+        notes: list[str] = []
         if kind == "annual" and dividends_implausible(div_raw, nip):
             period_flags.append("dividends_implausible")
+        if kind == "annual":
+            note = dividend_payout_note(div_raw, nip)
+            if note:
+                notes.append(note)
 
         row: dict[str, Any] = {
             "period": p.get("period"),
@@ -180,6 +197,7 @@ def _enrich_series(periods: list[dict], *, kind: str) -> list[dict[str, Any]]:
             "net_income_yoy": _yoy(ni if ni is not None else nip, prev_ni) if kind == "annual" else None,
             "revenue_qoq": _yoy(rev, prev_rev) if kind == "quarterly" else None,
             "flags": period_flags,
+            "notes": notes,
         }
         out.append(row)
     return out

@@ -867,6 +867,20 @@ class ResultStore:
         payload["symbol"] = symbol
         return payload
 
+    def income_flow(self, symbol: str, *, period: str = "TTM") -> dict[str, Any]:
+        """Sankey P&L (017c). period = năm ``YYYY`` hoặc ``TTM``."""
+        from stockai.api.income_flow import build_income_flow_payload
+
+        snap = self.load_snapshot(symbol)
+        payload = build_income_flow_payload(
+            snap,
+            period=(period or "TTM").strip(),
+            asof=self.asof,
+            disclaimer=DISCLAIMER,
+        )
+        payload["symbol"] = symbol
+        return payload
+
     def peers(self, symbol: str) -> dict[str, Any]:
         """Peers từ snapshot + hàng mã đang xem; median ngành từ valuation_sector_stats."""
         snap = self.load_snapshot(symbol)
