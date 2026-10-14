@@ -1,0 +1,31 @@
+﻿bank,year,bctn,bctc,bcptbv,dti_vars_total,dti_vars_filled,dti_vars_confirmed,dti_vars_pdf_read,dti_vars_not_collected,inputs_coverage,dti_ind_computable,dti_ind_list,dti_ind_used_list,dti_ind_used,dti_ind_retained,scoring_coverage,step0_method,data_conf,in_coding_years,app_rows
+agribank,2020,OK,CẦN KIỂM,chưa tìm thấy,16,12,12,12,1,0.75,1,T-Q1,T-Q1,1,1,0.091,indicator_per_year_v1,0.091,True,2
+agribank,2021,OK,CẦN KIỂM,chưa tìm thấy,16,12,12,12,0,0.75,2,K-Q2;T-Q1,T-Q1,1,1,0.091,indicator_per_year_v1,0.182,True,2
+agribank,2022,OK,OK,tích hợp trong BCTN,16,14,14,14,0,0.875,4,K-Q1;K-Q2;T-Q1;O-Q1,K-Q1;T-Q1;O-Q1,3,3,0.273,indicator_per_year_v1,0.364,True,2
+agribank,2023,OK,OK,tích hợp trong BCTN,16,11,11,11,0,0.688,2,T-Q1;O-Q1,T-Q1;O-Q1,2,4,0.182,indicator_per_year_v1,0.182,True,2
+agribank,2024,OK,OK,tích hợp trong BCTN,16,13,13,13,0,0.812,5,K-Q1;S-Q1;T-Q1;O-Q1;O-Q2,T-Q1;O-Q1;O-Q2,3,4,0.273,indicator_per_year_v1,0.455,True,2
+agribank,2025,OK,CẦN KIỂM,tích hợp trong BCTN,16,12,12,12,0,0.75,7,K-Q1;K-Q3;S-Q1;S-Q2;T-Q1;T-Q2;O-Q1,K-Q1;K-Q3;T-Q1;T-Q2;O-Q1,5,7,0.455,indicator_per_year_v1,0.636,True,2
+mb,2020,OK,CẦN KIỂM,tích hợp trong BCTN,16,13,13,13,1,0.812,3,K-Q1;T-Q1;C-Q2,T-Q1,1,1,0.091,indicator_per_year_v1,0.273,True,2
+mb,2021,OK,CẦN KIỂM,tích hợp trong BCTN,16,14,14,14,1,0.875,3,K-Q1;T-Q1;C-Q2,T-Q1,1,1,0.091,indicator_per_year_v1,0.273,True,2
+mb,2022,OK,OK,tích hợp trong BCTN,16,14,14,14,1,0.875,5,K-Q1;S-Q1;T-Q1;O-Q1;C-Q2,K-Q1;T-Q1;O-Q1,3,3,0.273,indicator_per_year_v1,0.455,True,2
+mb,2023,OK,OK,tích hợp trong BCTN,16,14,14,14,0,0.875,7,K-Q1;K-Q2;S-Q1;T-Q1;O-Q1;O-Q2;C-Q2,T-Q1;O-Q1;O-Q2;C-Q2,4,4,0.364,indicator_per_year_v1,0.636,True,2
+mb,2024,OK,OK,tích hợp trong BCTN,16,14,14,14,1,0.875,6,K-Q1;S-Q1;T-Q1;O-Q1;O-Q2;C-Q2,T-Q1;O-Q1;O-Q2;C-Q2,4,4,0.364,indicator_per_year_v1,0.545,True,2
+mb,2025,OK,CẦN KIỂM,tích hợp trong BCTN,16,14,14,14,0,0.875,9,K-Q1;K-Q3;S-Q1;T-Q1;T-Q2;O-Q1;O-Q2;C-Q1;C-Q2,K-Q1;K-Q3;T-Q1;T-Q2;O-Q1;O-Q2;C-Q2,7,7,0.636,indicator_per_year_v1,0.818,True,2
+tcb,2020,OK,OK,tích hợp trong BCTN,16,14,14,14,0,0.875,3,K-Q2;T-Q1;C-Q2,T-Q1,1,1,0.091,indicator_per_year_v1,0.273,True,2
+tcb,2021,OK,OK,tích hợp trong BCTN,16,13,13,13,0,0.812,2,K-Q1;T-Q1,T-Q1,1,1,0.091,indicator_per_year_v1,0.182,True,2
+tcb,2022,OK,OK,tích hợp trong BCTN,16,15,15,15,0,0.938,6,K-Q1;K-Q2;S-Q1;T-Q1;O-Q1;C-Q2,K-Q1;T-Q1;O-Q1,3,3,0.273,indicator_per_year_v1,0.545,True,2
+tcb,2023,OK,OK,tích hợp trong BCTN,16,14,14,14,0,0.875,5,K-Q1;T-Q1;O-Q1;O-Q2;C-Q2,T-Q1;O-Q1;O-Q2;C-Q2,4,4,0.364,indicator_per_year_v1,0.455,True,2
+tcb,2024,OK,OK,OK,16,14,14,14,0,0.875,6,K-Q1;S-Q1;T-Q1;O-Q1;O-Q2;C-Q2,T-Q1;O-Q1;O-Q2;C-Q2,4,4,0.364,indicator_per_year_v1,0.545,True,2
+tcb,2025,OK,OK,OK,16,14,14,14,0,0.875,8,K-Q1;K-Q3;S-Q1;T-Q1;T-Q2;O-Q1;O-Q2;C-Q2,K-Q1;K-Q3;T-Q1;T-Q2;O-Q1;O-Q2;C-Q2,7,7,0.636,indicator_per_year_v1,0.727,True,2
+bidv,2020,OK,CẦN KIỂM,chưa tìm thấy,16,12,12,12,1,0.75,3,K-Q1;T-Q1;C-Q2,T-Q1,1,1,0.091,indicator_per_year_v1,0.273,True,2
+bidv,2021,OK,CẦN KIỂM,chưa tìm thấy,16,13,13,13,1,0.812,3,K-Q1;T-Q1;C-Q2,T-Q1,1,1,0.091,indicator_per_year_v1,0.273,True,2
+bidv,2022,OK,OK,chưa tìm thấy,16,14,14,14,1,0.875,5,K-Q1;S-Q1;T-Q1;O-Q1;C-Q2,K-Q1;T-Q1;O-Q1,3,3,0.273,indicator_per_year_v1,0.455,True,2
+bidv,2023,OK,OK,OK,16,15,15,15,0,0.938,6,K-Q1;K-Q2;T-Q1;O-Q1;O-Q2;C-Q2,T-Q1;O-Q1;O-Q2;C-Q2,4,4,0.364,indicator_per_year_v1,0.545,True,2
+bidv,2024,OK,OK,OK,16,12,12,12,1,0.75,4,T-Q1;O-Q1;O-Q2;C-Q2,T-Q1;O-Q1;O-Q2;C-Q2,4,4,0.364,indicator_per_year_v1,0.364,True,2
+bidv,2025,CẦN KIỂM,CẦN KIỂM,CẦN KIỂM,16,11,11,11,0,0.688,6,K-Q3;T-Q1;T-Q2;O-Q1;O-Q2;C-Q2,K-Q3;T-Q1;T-Q2;O-Q1;O-Q2;C-Q2,6,7,0.545,indicator_per_year_v1,0.545,True,2
+vcb,2020,OK,CẦN KIỂM,tích hợp trong BCTN,16,10,10,10,1,0.625,0,,,0,1,0.0,indicator_per_year_v1,0.0,True,2
+vcb,2021,OK,CẦN KIỂM,tích hợp trong BCTN,16,10,10,10,1,0.625,0,,,0,1,0.0,indicator_per_year_v1,0.0,True,2
+vcb,2022,OK,OK,tích hợp trong BCTN,16,10,10,10,1,0.625,1,O-Q1,O-Q1,1,3,0.091,indicator_per_year_v1,0.091,True,2
+vcb,2023,OK,OK,tích hợp trong BCTN,16,11,11,11,0,0.688,3,O-Q1;O-Q2;C-Q2,O-Q1;O-Q2;C-Q2,3,4,0.273,indicator_per_year_v1,0.273,True,2
+vcb,2024,OK,OK,OK,16,11,11,11,1,0.688,3,O-Q1;O-Q2;C-Q2,O-Q1;O-Q2;C-Q2,3,4,0.273,indicator_per_year_v1,0.273,True,2
+vcb,2025,OK,CẦN KIỂM,OK,16,13,13,13,0,0.812,6,K-Q1;K-Q3;T-Q2;O-Q1;O-Q2;C-Q2,K-Q1;K-Q3;T-Q2;O-Q1;O-Q2;C-Q2,6,7,0.545,indicator_per_year_v1,0.545,True,2

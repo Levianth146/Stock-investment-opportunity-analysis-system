@@ -1,0 +1,8 @@
+---
+description: Bối cảnh và luật cứng của dự án chấm chuyển đổi số ngân hàng (DBI/DTI)
+alwaysApply: true
+---
+Đọc `AGENTS.md` ở gốc repo trước khi sửa code. Điểm chính do người chấm rubric 0–4; script chỉ đề xuất bằng chứng.
+Chỉ dữ liệu công khai, tôn trọng robots.txt, delay ≥ 3 giây, không đăng nhập. Không điền 0 cho dữ liệu không công bố.
+Chạy `python ../tests/smoke_test.py` (từ `scripts/`) sau khi sửa common.py, 02, 03, 04 hoặc 07.
+Với việc lớn: dùng quy trình Spec Kit trong `specs/001-bank-dx-assessment/` (spec → plan → tasks) thay vì sửa tự do.

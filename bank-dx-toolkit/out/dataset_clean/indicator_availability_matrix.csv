@@ -1,0 +1,331 @@
+﻿bank,year,indicator,x,L,U,direction,z_before_step0,note,n_banks,n_missing,missing_banks,retained,step0_reason,step0_method,z,included_in_score,status
+agribank,2020,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,4,agribank;mb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,T-Q1,0.08710092204125063,0.0,0.303798,higher_better,28.670669998239166,dùng số cuối kỳ (thiếu năm trước),5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,28.670669998239166,True,có dữ liệu
+agribank,2020,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2020,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,K-Q1,85.0,0.0,90.0,higher_better,94.44444444444444,định nghĩa: all_txn,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,4,agribank;mb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,T-Q1,0.23626851425809564,0.0,0.303798,higher_better,77.77158317635259,dùng số cuối kỳ (thiếu năm trước),5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,77.77158317635259,True,có dữ liệu
+mb,2020,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2020,C-Q2,30.0,0.0,38.7,higher_better,77.51937984496124,định nghĩa: avg_hours,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,K-Q2,46.42857142857143,0.0,100.0,higher_better,46.42857142857143,digital_customers/total_customers (registered/total),5,4,agribank;mb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,S-Q2,,0.0,24.455463,higher_better,,không có mốc đầu kỳ cùng định nghĩa cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,T-Q1,0.29485654045897824,0.0,0.303798,higher_better,97.05677471839125,dùng số cuối kỳ (thiếu năm trước),5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,97.05677471839125,True,có dữ liệu
+tcb,2020,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2020,C-Q2,71.0,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,K-Q1,53.0,0.0,90.0,higher_better,58.88888888888889,định nghĩa: all_txn,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,4,agribank;mb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,T-Q1,0.10910823428393976,0.0,0.303798,higher_better,35.914730934351034,dùng số cuối kỳ (thiếu năm trước),5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,35.914730934351034,True,có dữ liệu
+bidv,2020,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2020,C-Q2,59.0,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,4,agribank;mb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,T-Q1,,0.0,0.303798,higher_better,,thiếu nguyên giá phần mềm hoặc tổng tài sản,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+vcb,2020,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2020,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,K-Q2,32.72186415468518,0.0,100.0,higher_better,32.72186415468518,digital_customers/total_customers (registered/depositors),5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,S-Q2,,0.0,24.455463,higher_better,,không có mốc đầu kỳ cùng định nghĩa cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,T-Q1,0.08422831181646041,0.0,0.303798,higher_better,27.72510412065267,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,27.72510412065267,True,có dữ liệu
+agribank,2021,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,O-Q2,,0.0,1.18425,higher_better,,thiếu TOI hoặc CBNV,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2021,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,K-Q1,92.3,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,T-Q1,0.32867922883071754,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2021,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2021,C-Q2,43.0,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,K-Q1,81.0,0.0,90.0,higher_better,90.0,định nghĩa: remit_domestic,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,T-Q1,0.3781873869399407,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2021,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2021,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,K-Q1,66.9,0.0,90.0,higher_better,74.33333333333334,định nghĩa: all_txn,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,T-Q1,0.11845747650972595,0.0,0.303798,higher_better,38.99218444812867,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,38.99218444812867,True,có dữ liệu
+bidv,2021,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2021,C-Q2,16.2,0.0,38.7,higher_better,41.860465116279066,định nghĩa: days_x6h,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,T-Q1,,0.0,0.303798,higher_better,,thiếu nguyên giá phần mềm hoặc tổng tài sản,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+vcb,2021,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,O-Q1,,-0.584529,0.0,lower_better,,không có năm đầu kỳ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2021,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2022,K-Q1,91.0,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+agribank,2022,K-Q2,72.5,0.0,100.0,higher_better,72.5,digital_customers/total_customers (registered/lower_bound_or_accounts),5,3,mb;bidv;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2022,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2022,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2022,S-Q2,,0.0,24.455463,higher_better,,không có mốc đầu kỳ cùng định nghĩa cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2022,T-Q1,0.0774775903050695,0.0,0.303798,higher_better,25.50299551184323,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,25.50299551184323,True,có dữ liệu
+agribank,2022,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2022,O-Q1,-4.122457575800773,-0.584529,0.0,lower_better,100.0,ΔCIR 2021->2022 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+agribank,2022,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2022,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2022,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2022,K-Q1,95.0,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2022,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,3,mb;bidv;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2022,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2022,S-Q1,2.700000000000003,0.0,18.0,higher_better,15.000000000000016,"2021->2022, quy về điểm %/năm",5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2022,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2022,T-Q1,0.3652658068069713,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2022,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2022,O-Q1,-1.0155172407415947,-0.584529,0.0,lower_better,100.0,ΔCIR 2021->2022 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2022,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2022,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2022,C-Q2,35.0,0.0,38.7,higher_better,90.43927648578811,định nghĩa: avg_hours,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2022,K-Q1,86.0,0.0,90.0,higher_better,95.55555555555556,định nghĩa: remit_domestic,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,95.55555555555556,True,có dữ liệu
+tcb,2022,K-Q2,57.407407407407405,0.0,100.0,higher_better,57.407407407407405,digital_customers/total_customers (registered/total),5,3,mb;bidv;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2022,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2022,S-Q1,5.0,0.0,18.0,higher_better,27.77777777777778,"2021->2022, quy về điểm %/năm",5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2022,S-Q2,,0.0,24.455463,higher_better,,không có mốc đầu kỳ cùng định nghĩa cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2022,T-Q1,0.5152259341298467,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2022,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2022,O-Q1,2.6200979632595143,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2022 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+tcb,2022,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2022,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2022,C-Q2,70.0,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2022,K-Q1,75.9,0.0,90.0,higher_better,84.33333333333334,định nghĩa: all_txn,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,84.33333333333334,True,có dữ liệu
+bidv,2022,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,3,mb;bidv;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2022,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2022,S-Q1,9.0,0.0,18.0,higher_better,50.0,"2021->2022, quy về điểm %/năm",5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2022,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2022,T-Q1,0.11260825210305414,0.0,0.303798,higher_better,37.06681811699028,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,37.06681811699028,True,có dữ liệu
+bidv,2022,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2022,O-Q1,1.270781956425406,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2022 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+bidv,2022,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2022,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2022,C-Q2,87.12,0.0,38.7,higher_better,100.0,định nghĩa: days_x6h,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2022,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+vcb,2022,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,3,mb;bidv;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2022,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2022,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2022,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2022,T-Q1,,0.0,0.303798,higher_better,,thiếu nguyên giá phần mềm hoặc tổng tài sản,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+vcb,2022,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2022,O-Q1,0.12901153612723348,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2022 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+vcb,2022,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2022,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2022,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2023,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2023,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2023,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2023,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2023,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2023,T-Q1,0.08401311604842085,0.0,0.303798,higher_better,27.654268970967827,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,27.654268970967827,True,có dữ liệu
+agribank,2023,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2023,O-Q1,0.31330772620641767,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2023 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+agribank,2023,O-Q2,,0.0,1.18425,higher_better,,không có mốc đầu kỳ cách >= 2 năm,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+agribank,2023,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2023,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+mb,2023,K-Q1,96.7,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2023,K-Q2,86.0,0.0,100.0,higher_better,86.0,KH số/tổng KH do NH công bố,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2023,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2023,S-Q1,2.200000000000003,0.0,18.0,higher_better,12.22222222222224,"2021->2023, quy về điểm %/năm",5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2023,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2023,T-Q1,0.36093184843368037,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2023,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2023,O-Q1,-0.9934044102662831,-0.584529,0.0,lower_better,100.0,ΔCIR 2021->2023 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2023,O-Q2,9.694865231163607,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2023,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2023,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2023,C-Q2,51.22,0.0,38.7,higher_better,100.0,định nghĩa: incl_new_hire,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2023,K-Q1,94.0,0.0,90.0,higher_better,100.0,định nghĩa: retail,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2023,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2023,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2023,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2023,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2023,T-Q1,0.5873825315207434,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2023,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2023,O-Q1,1.4713710409683625,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2023 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+tcb,2023,O-Q2,4.800113248491944,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2023,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2023,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2023,C-Q2,82.0,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+bidv,2023,K-Q1,93.0,0.0,90.0,higher_better,100.0,định nghĩa: full_line,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2023,K-Q2,77.19941122582372,0.0,100.0,higher_better,77.19941122582372,digital_customers/total_customers (transacting/retail+corporate),5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2023,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2023,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2023,S-Q2,,0.0,24.455463,higher_better,,không có mốc đầu kỳ cùng định nghĩa cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2023,T-Q1,0.10412210313798338,0.0,0.303798,higher_better,34.27346563768799,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,34.27346563768799,True,có dữ liệu
+bidv,2023,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2023,O-Q1,1.6016496011294006,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2023 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+bidv,2023,O-Q2,3.884874900185631,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2023,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+bidv,2023,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2023,C-Q2,98.7,0.0,38.7,higher_better,100.0,định nghĩa: days_x6h,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+vcb,2023,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,2,agribank;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2023,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,3,agribank;tcb;vcb,False,thiếu ở 3/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2023,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2023,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2023,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2023,T-Q1,,0.0,0.303798,higher_better,,thiếu nguyên giá phần mềm hoặc tổng tài sản,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+vcb,2023,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2023,O-Q1,0.6378320255797902,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2023 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+vcb,2023,O-Q2,4.13274631468783,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2023,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+vcb,2023,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2023,C-Q2,41.0,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+agribank,2024,K-Q1,96.0,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2024,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2024,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2024,S-Q1,2.5,0.0,18.0,higher_better,13.88888888888889,"2022->2024, quy về điểm %/năm",5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2024,S-Q2,,0.0,24.455463,higher_better,,không có mốc đầu kỳ cùng định nghĩa cách >= 2 năm,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2024,T-Q1,0.07816625620370936,0.0,0.303798,higher_better,25.729680973445962,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,25.729680973445962,True,có dữ liệu
+agribank,2024,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2024,O-Q1,-1.0803169219194284,-0.584529,0.0,lower_better,100.0,ΔCIR 2021->2024 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+agribank,2024,O-Q2,3.8210853707213888,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2022->2024,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+agribank,2024,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2024,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+mb,2024,K-Q1,98.6,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2024,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2024,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2024,S-Q1,2.099999999999999,0.0,18.0,higher_better,11.666666666666663,"2021->2024, quy về điểm %/năm",5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2024,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2024,T-Q1,0.3663544194823482,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2024,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2024,O-Q1,-0.9398343043429627,-0.584529,0.0,lower_better,100.0,ΔCIR 2021->2024 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2024,O-Q2,9.372346896041295,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2024,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2024,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2024,C-Q2,70.73,0.0,38.7,higher_better,100.0,định nghĩa: incl_new_hire,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2024,K-Q1,91.0,0.0,90.0,higher_better,100.0,định nghĩa: retail,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2024,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2024,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2024,S-Q1,-3.0,0.0,18.0,higher_better,0.0,"2023->2024, quy về điểm %/năm",5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2024,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2024,T-Q1,0.7126073687986885,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2024,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2024,O-Q1,0.857340113813418,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2024 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+tcb,2024,O-Q2,9.504594947940358,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2024,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2024,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2024,C-Q2,54.7,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+bidv,2024,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2024,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2024,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2024,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2024,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2024,T-Q1,0.125185715188676,0.0,0.303798,higher_better,41.20689247087736,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,41.20689247087736,True,có dữ liệu
+bidv,2024,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2024,O-Q1,1.1178167727532664,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2024 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+bidv,2024,O-Q2,5.8726322916924145,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2024,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+bidv,2024,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2024,C-Q2,59.0,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+vcb,2024,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2024,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2024,K-Q3,,1.0,5.0,higher_better,,chỉ có ảnh chụp tại ngày thu thập (áp cho năm 2025),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2024,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2024,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2024,T-Q1,,0.0,0.303798,higher_better,,thiếu nguyên giá phần mềm hoặc tổng tài sản,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+vcb,2024,T-Q2,,0.0,100.0,higher_better,,chưa kiểm kê đủ 8 nền tảng (manual_audit.xlsx),5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2024,O-Q1,0.8314615298674989,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2024 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+vcb,2024,O-Q2,1.9242479731499396,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2024,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+vcb,2024,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2024,C-Q2,36.1,0.0,38.7,higher_better,93.28165374677002,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,93.28165374677002,True,có dữ liệu
+agribank,2025,K-Q1,97.0,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,1,bidv,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+agribank,2025,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2025,K-Q3,3.799749065420561,1.0,5.0,higher_better,69.99372663551402,"điểm app gộp theo lượt đánh giá, ngày 2026-10-08",5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,69.99372663551402,True,có dữ liệu
+agribank,2025,S-Q1,2.0,0.0,18.0,higher_better,11.11111111111111,"2022->2025, quy về điểm %/năm",5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2025,S-Q2,30.428457427983236,0.0,24.455463,higher_better,100.0,CAGR 2021->2025,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2025,T-Q1,0.0662704617516018,0.0,0.303798,higher_better,21.81398881875516,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,21.81398881875516,True,có dữ liệu
+agribank,2025,T-Q2,100.0,0.0,100.0,higher_better,100.0,số nền tảng đạt / 8 x 100,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+agribank,2025,O-Q1,-1.2427015184425674,-0.584529,0.0,lower_better,100.0,ΔCIR 2021->2025 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+agribank,2025,O-Q2,,0.0,1.18425,higher_better,,thiếu TOI hoặc CBNV,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+agribank,2025,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+agribank,2025,C-Q2,,0.0,38.7,higher_better,,thiếu giờ đào tạo,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+mb,2025,K-Q1,98.8,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,1,bidv,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2025,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2025,K-Q3,4.7456748783439044,1.0,5.0,higher_better,93.6418719585976,"điểm app gộp theo lượt đánh giá, ngày 2026-10-08",5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,93.6418719585976,True,có dữ liệu
+mb,2025,S-Q1,1.625,0.0,18.0,higher_better,9.027777777777777,"2021->2025, quy về điểm %/năm",5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2025,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2025,T-Q1,0.3260002235640265,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2025,T-Q2,100.0,0.0,100.0,higher_better,100.0,số nền tảng đạt / 8 x 100,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2025,O-Q1,-1.109264587257126,-0.584529,0.0,lower_better,100.0,ΔCIR 2021->2025 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2025,O-Q2,9.119292878372875,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2025,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+mb,2025,C-Q1,12.092483312373028,0.0,100.0,higher_better,12.092483312373028,,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+mb,2025,C-Q2,82.91,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2025,K-Q1,86.0,0.0,90.0,higher_better,95.55555555555556,định nghĩa: retail,5,1,bidv,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,95.55555555555556,True,có dữ liệu
+tcb,2025,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2025,K-Q3,4.757872872125536,1.0,5.0,higher_better,93.9468218031384,"điểm app gộp theo lượt đánh giá, ngày 2026-10-08",5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,93.9468218031384,True,có dữ liệu
+tcb,2025,S-Q1,-4.0,0.0,18.0,higher_better,0.0,"2023->2025, quy về điểm %/năm",5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2025,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2025,T-Q1,0.6965156227415263,0.0,0.303798,higher_better,100.0,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2025,T-Q2,100.0,0.0,100.0,higher_better,100.0,số nền tảng đạt / 8 x 100,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2025,O-Q1,0.16030926836068105,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2025 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+tcb,2025,O-Q2,9.270860571656513,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2025,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+tcb,2025,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+tcb,2025,C-Q2,53.6,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+bidv,2025,K-Q1,,0.0,90.0,higher_better,,thiếu digital_txn_share,5,1,bidv,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+bidv,2025,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2025,K-Q3,3.9684325539153655,1.0,5.0,higher_better,74.21081384788414,"điểm app gộp theo lượt đánh giá, ngày 2026-10-08",5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,74.21081384788414,True,có dữ liệu
+bidv,2025,S-Q1,,0.0,18.0,higher_better,,thiếu digital_txn_share năm cuối,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2025,S-Q2,,0.0,24.455463,higher_better,,thiếu digital_customers năm cuối,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2025,T-Q1,0.11306415605268264,0.0,0.303798,higher_better,37.21688623779045,,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,37.21688623779045,True,có dữ liệu
+bidv,2025,T-Q2,100.0,0.0,100.0,higher_better,100.0,số nền tảng đạt / 8 x 100,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+bidv,2025,O-Q1,0.5527770247039507,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2025 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+bidv,2025,O-Q2,7.830334243570269,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2025,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+bidv,2025,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+bidv,2025,C-Q2,60.0,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+vcb,2025,K-Q1,91.4,0.0,90.0,higher_better,100.0,định nghĩa: all_txn,5,1,bidv,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+vcb,2025,K-Q2,,0.0,100.0,higher_better,,thiếu số KH số hoặc tổng KH,5,5,agribank;mb;tcb;bidv;vcb,False,thiếu ở 5/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2025,K-Q3,3.8171989683409273,1.0,5.0,higher_better,70.42997420852318,"điểm app gộp theo lượt đánh giá, ngày 2026-10-08",5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,70.42997420852318,True,có dữ liệu
+vcb,2025,S-Q1,,0.0,18.0,higher_better,,không có năm đầu kỳ cùng định nghĩa,5,2,bidv;vcb,False,thiếu ở 2/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2025,S-Q2,,0.0,24.455463,higher_better,,không có mốc đầu kỳ cùng định nghĩa cách >= 2 năm,5,4,mb;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2025,T-Q1,,0.0,0.303798,higher_better,,thiếu nguyên giá phần mềm hoặc tổng tài sản,5,1,vcb,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,thiếu dữ liệu
+vcb,2025,T-Q2,100.0,0.0,100.0,higher_better,100.0,số nền tảng đạt / 8 x 100,5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+vcb,2025,O-Q1,0.9389335657608804,-0.584529,0.0,lower_better,0.0,ΔCIR 2021->2025 (điểm %/năm; âm = cải thiện),5,0,,True,thiếu ở 0/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,0.0,True,có dữ liệu
+vcb,2025,O-Q2,2.8668341329044944,0.0,1.18425,higher_better,100.0,CAGR TOI/CBNV bình quân 2021->2025,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
+vcb,2025,C-Q1,,0.0,100.0,higher_better,,không công bố nhân sự công nghệ,5,4,agribank;tcb;bidv;vcb,False,thiếu ở 4/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,,False,loại bởi bước 0
+vcb,2025,C-Q2,48.96,0.0,38.7,higher_better,100.0,định nghĩa: avg_hours,5,1,agribank,True,thiếu ở 1/5 ngân hàng; ngưỡng loại >=2,indicator_per_year_v1,100.0,True,có dữ liệu
