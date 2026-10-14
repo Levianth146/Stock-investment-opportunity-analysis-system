@@ -28,6 +28,32 @@ export function pct(
   return `${num(x, digits)}%`;
 }
 
+/** % thay đổi phiên: null → "—"; kèm nhãn khi chưa có giá tham chiếu. */
+export function changePctLabel(
+  changePct: number | null | undefined,
+  opts?: { prevCloseSource?: string | null; refLabel?: string | null },
+): { text: string; note: string | null } {
+  const missingRef =
+    opts?.prevCloseSource === "none" ||
+    opts?.refLabel === "chưa có giá tham chiếu";
+  if (
+    missingRef ||
+    changePct === null ||
+    changePct === undefined ||
+    Number.isNaN(changePct)
+  ) {
+    return {
+      text: "—",
+      note: missingRef ? "chưa có giá tham chiếu" : null,
+    };
+  }
+  const up = changePct >= 0;
+  return {
+    text: `${up ? "+" : ""}${num(changePct, 2)}%`,
+    note: null,
+  };
+}
+
 export function vnd(v: number | null | undefined): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
   return nb0.format(v);

@@ -359,6 +359,50 @@ export interface FinancialsResponse extends ApiEnvelope {
   quarterly: FinancialPeriod[];
 }
 
+/** GET /api/tickers/{symbol}/income-flow (017c). */
+export interface IncomeFlowNode {
+  id: string;
+  label: string;
+  kind: string;
+  derived?: boolean;
+  value: number;
+  pct_revenue: number | null;
+}
+
+export interface IncomeFlowLink {
+  source: string;
+  target: string;
+  value: number;
+  pct_revenue: number | null;
+}
+
+export interface IncomeFlowSummary {
+  gross_margin: number | null;
+  net_margin: number | null;
+  expense_to_revenue: number | null;
+  gross_margin_prior: number | null;
+  net_margin_prior: number | null;
+  expense_to_revenue_prior: number | null;
+  prior_label?: string;
+}
+
+export interface IncomeFlowResponse extends ApiEnvelope {
+  symbol: string;
+  period: string;
+  unit?: string;
+  supported: boolean;
+  message?: string;
+  revenue?: number;
+  npat?: number;
+  loss?: boolean;
+  nodes: IncomeFlowNode[];
+  links: IncomeFlowLink[];
+  notes: string[];
+  conservation_ok?: boolean;
+  available_periods: string[];
+  summary?: IncomeFlowSummary | null;
+}
+
 export interface PeerRow {
   ticker: string;
   is_self?: boolean;

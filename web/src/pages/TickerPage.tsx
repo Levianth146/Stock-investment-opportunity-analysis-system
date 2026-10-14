@@ -15,9 +15,15 @@ import { OverviewPriceChart } from "../charts/OverviewPriceChart";
 import { TechnicalChart } from "../charts/TechnicalChart";
 import { DividendPanel } from "../charts/DividendCharts";
 import { AnnualFinCharts, QuarterlyFinCharts } from "../charts/FinCharts";
+import { IncomeFlowPanel } from "../charts/IncomeSankey";
 import { ValuationCharts } from "../charts/ValuationCharts";
 import { buildConclusion } from "../conclusion";
 import { cleanDebateItems } from "../debateText";
+import {
+  debateFailLine,
+  debateSourceLabel,
+  viJobFailReason,
+} from "../debateUi";
 import { compactBillions, dateVi, num, pct, score, vnd } from "../fmt";
 import { FIN_UNIT_ROE_NOTE } from "../finNotes";
 import { rankAmongScored } from "../rank";
@@ -27,31 +33,6 @@ import { buildRiskOpportunity } from "../riskOpportunity";
 import { sectorVi } from "../sectors";
 import { showToast } from "../toast";
 import { buildIncomeBridge, sumPeriodItems } from "../waterfall";
-
-function viJobFailReason(code: string, retryAfter?: number): string | null {
-  if (!code) return "AI không tạo được lần này — đang hiện luận điểm từ chỉ số.";
-  if (code === "circuit_open") {
-    return retryAfter
-      ? `AI tạm nghỉ do lỗi liên tiếp — thử lại sau khoảng ${retryAfter} giây.`
-      : "AI tạm nghỉ do lỗi liên tiếp — thử lại sau ít phút.";
-  }
-  if (code === "quota_blocked" || code === "quota_or_missing_key") {
-    return "Hết hạn mức AI hôm nay — dùng luận điểm từ chỉ số.";
-  }
-  if (code.includes("rate_limit") || code === "refresh_denied_no_budget") {
-    return retryAfter
-      ? `Đã hết lượt gọi AI — thử lại sau khoảng ${retryAfter} giây.`
-      : "Đã hết lượt gọi AI trong giờ này — thử lại sau.";
-  }
-  if (
-    code === "all_providers_failed" ||
-    code === "llm_fallback_template" ||
-    code.startsWith("llm_error")
-  ) {
-    return "AI không tạo được lần này — đang hiện luận điểm từ chỉ số.";
-  }
-  return "AI không tạo được lần này — đang hiện luận điểm từ chỉ số.";
-}
 
 type Tab =
   | "overview"
@@ -508,7 +489,6 @@ function OverviewTab({
   });
   const llm = llmStatusQ.data || metaQ.data?.llm;
   const llmState = String(llm?.state || (llm?.key_configured === false ? "no_key" : "ok"));
-  const src = String(debate?.source || "").toUpperCase();
   const aiAttempt = (debate?.ai_attempt || {}) as {
     state?: string;
     reason_code?: string;
@@ -585,8 +565,11 @@ function OverviewTab({
 
   const startAiJob = async () => {
     setClickedAi(true);
+    // Xóa ngay thông báo lỗi lần trước trước khi POST job mới
     setJobError(null);
+    setJobRetryAfter(null);
     setLiveResult(null);
+    setJobId(null);
     setJobCreating(true);
     setCountdown(120);
     try {
@@ -605,28 +588,25 @@ function OverviewTab({
     }
   };
 
-  const sourceLabel = (() => {
-    if (src === "LLM" || src === "LIVE" || src === "CACHE") {
-      const model = debate?.model || llm?.model || "";
-      const whenRaw = debate?.created_at || debate?.asof;
-      const when = whenRaw ? dateVi(String(whenRaw)) : "";
-      return `AI${model ? ` · ${model}` : ""}${when ? ` · ${when}` : ""}`;
-    }
-    if (clickedAi && (aiAttempt.state === "failed" || aiAttempt.state === "skipped" || jobError)) {
-      return "Chỉ số — AI không tạo được lần này";
-    }
-    return "Tự động từ chỉ số — chưa dùng AI";
-  })();
+  const sourceLabel = debateSourceLabel({
+    isCreating,
+    source: debate?.source,
+    model: debate?.model || llm?.model,
+    createdAt: debate?.created_at,
+    asof: debate?.asof,
+    formatWhen: dateVi,
+  });
 
-  const aiFailLine = (() => {
-    if (isCreating) return null;
-    if (jobError) return jobError;
-    if (!clickedAi) return null;
-    const code = String(aiAttempt.reason_code || debate?.reason || "");
-    const ra = aiAttempt.retry_after ?? jobRetryAfter ?? undefined;
-    if (aiAttempt.state === "ok") return null;
-    return viJobFailReason(code, ra ?? undefined);
-  })();
+  const aiFailLine = debateFailLine({
+    isCreating,
+    jobError,
+    clickedAi,
+    aiAttemptState: aiAttempt.state,
+    reasonCode: aiAttempt.reason_code,
+    debateReason: debate?.reason,
+    retryAfter: aiAttempt.retry_after ?? jobRetryAfter,
+    viReason: viJobFailReason,
+  });
 
   const blockedUntilLabel = useMemo(() => {
     const iso = llm?.blocked_until;
@@ -898,7 +878,9 @@ function OverviewTab({
         Luận điểm thuận / nghịch
       </h2>
       <div style={{ marginBottom: 8, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <span className="badge">Nguồn: {sourceLabel}</span>
+        <span className="badge" data-testid="debate-source-label">
+          Nguồn: {sourceLabel}
+        </span>
         {llmState === "no_key" && (
           <span className="muted" style={{ fontSize: "var(--fs-xs)" }}>
             Chưa cấu hình AI
@@ -919,7 +901,7 @@ function OverviewTab({
             <button type="button" disabled>
               Tạo lại bằng AI
             </button>
-            <span className="muted" style={{ fontSize: "var(--fs-xs)" }}>
+            <span className="muted" style={{ fontSize: "var(--fs-xs)" }} data-testid="circuit-retry">
               AI tạm nghỉ do lỗi liên tiếp
               {typeof llm?.retry_after === "number"
                 ? ` — thử lại sau khoảng ${llm.retry_after} giây`
@@ -933,17 +915,16 @@ function OverviewTab({
               type="button"
               onClick={() => void startAiJob()}
               disabled={isCreating || (jobRetryAfter != null && jobRetryAfter > 0)}
+              data-testid="debate-ai-btn"
             >
-              {isCreating
-                ? `Đang tạo… (thường 30–120 giây)`
-                : "Tạo lại bằng AI"}
+              {isCreating ? "Đang tạo…" : "Tạo lại bằng AI"}
             </button>
             {isCreating && (
               <span className="muted tabular" style={{ fontSize: "var(--fs-xs)" }}>
                 Còn khoảng {countdown} giây
               </span>
             )}
-            {!isCreating && (
+            {!isCreating && !aiFailLine && (
               <span className="muted" style={{ fontSize: "var(--fs-xs)" }}>
                 Dùng lượt gọi AI, có giới hạn
                 {typeof debate?.quota_remaining === "number"
@@ -955,9 +936,14 @@ function OverviewTab({
         )}
       </div>
       {aiFailLine && (
-        <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "0 0 8px" }} role="status">
+        <p
+          className="muted"
+          style={{ fontSize: "var(--fs-xs)", margin: "0 0 8px" }}
+          role="status"
+          data-testid="debate-fail-line"
+        >
           {aiFailLine}
-          {jobError && !isCreating && llmState === "ok" && (
+          {!isCreating && llmState === "ok" && (
             <>
               {" "}
               <button
@@ -967,6 +953,7 @@ function OverviewTab({
                   void startAiJob();
                 }}
                 disabled={!!(jobRetryAfter && jobRetryAfter > 0)}
+                data-testid="debate-retry-btn"
               >
                 Thử lại
               </button>
@@ -1065,12 +1052,15 @@ function FinancialsTab({
 
   return (
     <section>
+      {mode === "growth" && (
+        <IncomeFlowPanel symbol={symbol} isBank={isBank} />
+      )}
       <p className="muted" style={{ fontSize: "var(--fs-xs)", maxWidth: "70ch" }}>
         {FIN_UNIT_ROE_NOTE}
       </p>
       {mode === "growth" && !isBank && (yearBridge || ttmBridge) && (
         <div className="waterfall-block">
-          <h3>Từ doanh thu đến lợi nhuận</h3>
+          <h3>Từ doanh thu đến lợi nhuận (cầu)</h3>
           {yearBridge && (
             <>
               <p className="muted" style={{ fontSize: "var(--fs-xs)" }}>

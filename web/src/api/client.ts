@@ -8,6 +8,7 @@ import type {
   DebateResponse,
   FinancialsResponse,
   HealthResponse,
+  IncomeFlowResponse,
   LlmStatus,
   MarketResponse,
   MetaResponse,
@@ -160,6 +161,12 @@ export const api = {
   financials: (symbol: string) =>
     request<FinancialsResponse>(
       `/api/tickers/${encodeURIComponent(symbol)}/financials`,
+    ),
+
+  incomeFlow: (symbol: string, period?: string) =>
+    request<IncomeFlowResponse>(
+      `/api/tickers/${encodeURIComponent(symbol)}/income-flow`,
+      { searchParams: { period: period || "TTM" } },
     ),
 
   peers: (symbol: string) =>

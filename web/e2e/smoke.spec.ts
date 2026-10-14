@@ -67,7 +67,9 @@ const PVT_TABS = [
   "Tin tức",
 ] as const;
 
-test.describe("014g screenshots", () => {
+test.describe("014g screenshots @slow", () => {
+  // Suite ảnh đầy đủ — chạy tay khi cần; mặc định vẫn chạy trong test:e2e
+  // nhưng timeout dài. Giữ trong default để không mất coverage ảnh.
   test("home, PVT every tab, VCB overview+valuation light/dark 1280/360", async ({
     page,
   }) => {
