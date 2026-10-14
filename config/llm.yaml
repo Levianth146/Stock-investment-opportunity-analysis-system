@@ -1,5 +1,96 @@
 # Sở hữu: N5 (M5, M7 debate)
-provider: anthropic        # anthropic | openai
-model: ""                  # điền tên model nhóm có key
+# Bí mật chỉ qua env (không ghi giá trị vào file):
+#   GEMINI_API_KEY  — Google Gemini REST
+#   ZAI_API_KEY     — Z.AI GLM REST
+
+provider: anthropic        # legacy M5 (anthropic | openai) — không dùng cho debate 009
+model: ""                  # điền tên model nhóm có key (M5)
 temperature: 0
 max_news_items: 30
+
+# --- Feature 009: M7 debate Bull/Bear ---
+debate:
+  # mode: llm (mặc định CLI) | template (API rankings/cache) | cache_only (chỉ đọc cache rồi template)
+  mode: llm
+  providers: [gemini, glm]   # thứ tự thử; thiếu key → skip + flag
+  temperature: 0
+  timeout_sec: 90            # fallback nếu provider không có timeout_sec riêng
+  max_retries_per_call: 3    # retry HTTP 429/phút + 5xx trên cùng model (backoff 2s,4s,8s)
+  max_llm_attempts: 3        # tổng lần gọi LLM debate trước template fallback
+  max_seconds_per_ticker: 200 # trần wall-clock mỗi mã (≥ gemini 90s / glm 120s)
+  rpm_limit: 30              # giới hạn gọi/phút (best-effort, local)
+  cache_dir: data/llm_cache
+  prompt_version: "v1"
+  max_output_tokens: 2048    # Gemini generationConfig.maxOutputTokens (tối thiểu)
+  thinking_level: lowest     # → thinkingConfig.thinkingLevel MINIMAL (hoặc LOW nếu model không hỗ trợ)
+  # Cùng provider/model lỗi liên tiếp → bỏ qua N phút (batch / generate)
+  circuit_breaker:
+    consecutive_failures: 3
+    cooldown_minutes: 15
+  gemini:
+    model: gemini-3.8-flash
+    models: [gemini-3.8-flash, gemini-3.6-flash, gemini-3.7-flash, gemini-3.1-flash-lite]
+    timeout_sec: 90
+    max_output_tokens: 2048
+    thinking_level: lowest
+    # POST …/v1beta/models/{model}:generateContent
+    # auth header: x-goog-api-key ← GEMINI_API_KEY
+  glm:
+    model: glm-4.7-flash
+    models: [glm-4.7-flash]
+    paid_models: [glm-5.3-flash]   # chỉ khi use_paid_models: true
+    use_paid_models: false
+    timeout_sec: 120
+    base_url: https://api.z.ai/api/paas/v4/
+    # POST {base_url}/chat/completions ; Bearer ← ZAI_API_KEY
+  # Bảng giá tham khảo (USD / 1M token) — báo cáo ops / batch estimate
+  # Lưu ý: giá Gemini Flash tăng từ 01/01/2027 (cập nhật bảng khi tới hạn).
+  pricing:
+    gemini-3.8-flash: {input: 0.75, output: 3.75}
+    gemini-3.6-flash: {input: 0.50, output: 3.00}
+    gemini-3.7-flash: {input: 0.50, output: 3.00}
+    gemini-3.1-flash-lite: {input: 0.10, output: 0.40}
+    glm-5.3-flash: {input: 0.15, output: 0.50}
+    glm-4.7-flash: {input: 0, output: 0}
+  # Tên hiển thị tiếng Việt + đơn vị khi template/LLM diễn giải metric
+  # format: pct = nhân 100 nếu |value|<=1 và unit ratio; x = "Nx"; number = số thường
+  display_metrics:
+    m2.roe: {name: "ROE", format: "pct", decimals: 1}
+    m2.roa: {name: "ROA", format: "pct", decimals: 1}
+    m2.net_income_growth: {name: "Tăng trưởng lợi nhuận", format: "pct", decimals: 1}
+    m2.revenue_growth: {name: "Tăng trưởng doanh thu", format: "pct", decimals: 1}
+    m2.gross_margin: {name: "Biên gộp", format: "pct", decimals: 1}
+    m2.debt_to_equity: {name: "Nợ/VCSH", format: "x", decimals: 1}
+    m2.debt_to_assets: {name: "Nợ/Tài sản", format: "pct", decimals: 1}
+    m2.interest_coverage: {name: "Khả năng trả lãi", format: "x", decimals: 1}
+    m2.current_ratio: {name: "Thanh khoản hiện hành", format: "x", decimals: 1}
+    m2.cfo_to_net_income: {name: "CFO/LN", format: "x", decimals: 1}
+    m3.rsi14: {name: "RSI", format: "number", decimals: 1}
+    m3.rsi_14: {name: "RSI", format: "number", decimals: 1}
+    m3.close: {name: "Giá đóng cửa", format: "number", decimals: 1}
+    m3.ma20: {name: "MA20", format: "number", decimals: 1}
+    m3.ma50: {name: "MA50", format: "number", decimals: 1}
+    m3.volume_ratio_20: {name: "Tỷ lệ khối lượng/MA20", format: "x", decimals: 1}
+    m3.macd: {name: "MACD", format: "number", decimals: 2}
+    m3.atr_pct: {name: "ATR %", format: "pct", decimals: 1}
+    m4.pe: {name: "P/E", format: "x", decimals: 1}
+    m4.pb: {name: "P/B", format: "x", decimals: 1}
+    m4.price_close: {name: "Giá đóng cửa", format: "number", decimals: 1}
+    m4.eps_used: {name: "EPS dùng", format: "number", decimals: 1}
+    m4.sector_median_pe: {name: "P/E trung vị ngành", format: "x", decimals: 1}
+    m4.sector_median_pb: {name: "P/B trung vị ngành", format: "x", decimals: 1}
+    m4.score_V: {name: "Điểm định giá", format: "number", decimals: 1}
+    m5.sentiment_polarity: {name: "Độ phân cực tin", format: "number", decimals: 2}
+    m5.sentiment_score: {name: "Điểm tin", format: "number", decimals: 1}
+    m5.sentiment_confidence: {name: "Độ tin cậy tin", format: "number", decimals: 2}
+    m5.sentiment: {name: "Độ phân cực tin", format: "number", decimals: 2}
+    m5.news_positive_count: {name: "Số tin tích cực", format: "number", decimals: 0}
+    m5.news_negative_count: {name: "Số tin tiêu cực", format: "number", decimals: 0}
+    m5.news_directional_count: {name: "Số tin có hướng", format: "number", decimals: 0}
+    m6.beta: {name: "Beta", format: "number", decimals: 2}
+    m6.vol_20d: {name: "Biến động 20 phiên", format: "pct", decimals: 1}
+    m6.volatility: {name: "Biến động", format: "pct", decimals: 1}
+    m6.annualized_volatility: {name: "Biến động năm hóa", format: "pct", decimals: 1}
+    m6.max_drawdown: {name: "Sụt giảm tối đa", format: "pct", decimals: 1}
+    m6.var_95: {name: "VaR 95%", format: "pct", decimals: 1}
+    m6.cvar_95: {name: "CVaR 95%", format: "pct", decimals: 1}

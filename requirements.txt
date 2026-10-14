@@ -13,8 +13,13 @@ matplotlib
 jinja2
 xhtml2pdf
 pypdf
+pymupdf
 streamlit
 pytest
 # LLM (chọn 1 provider ở config/llm.yaml)
 anthropic
 openai
+# Feature 011: FastAPI layer (web demo)
+fastapi
+uvicorn
+httpx

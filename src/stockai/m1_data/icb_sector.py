@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[3]
 _DEFAULT_MAP = ROOT / "config" / "icb_sector_map.yaml"
 
 COL_TICKER = "Mã CK"
+COL_NAME = "Tên Doanh Nghiệp"
 COL_EXCHANGE = "Sàn giao dịch"
 COL_L1 = "Ngành ICB Cấp 1 (Industry)"
 COL_L2 = "Ngành ICB Cấp 2 (Supersector)"
@@ -62,6 +63,7 @@ def load_listing(map_path: str | None = None) -> dict[str, dict]:
             if parent_en is None and sector_en:
                 parent_en = parent_map.get(sector_en)
             out[t] = {
+                "name": (row.get(COL_NAME) or "").strip() or None,
                 "l2_vi": l2,
                 "l1_vi": l1,
                 "sector_en": sector_en,

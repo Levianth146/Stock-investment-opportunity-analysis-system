@@ -4,6 +4,8 @@
 
 # Run and deploy your AI Studio app
 
+For the integrated StockAI frontend, follow [FASTAPI_FRONTEND.md](../docs/FASTAPI_FRONTEND.md) and run `scripts/run_api.py` from the repository root. FastAPI serves the committed `dist` build, including the full snapshot ticker picker and backend analysis panels. The React source retained from `main` does not yet include all of those integrations; port the adapters into `src` before rebuilding `dist`.
+
 This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/b0deeb6d-f839-496d-9f69-0aea8b4790f4

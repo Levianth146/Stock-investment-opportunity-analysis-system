@@ -10,7 +10,8 @@
    "prices_scaled_x1000_to_VND",
    "news_urls_partly_google_redirect",
    "universe_membership_current_not_point_in_time",
-   "vnf_crosscheck_ok:2025"
+   "vnf_crosscheck_ok:2025",
+   "quality_tier_full"
   ],
   "data_status": {
    "prices": "ok",
@@ -15651,6 +15652,110 @@
    "pb": 3.5092,
    "roe": 0.2729,
    "market_cap": 121008420265500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "SBT",
+   "pe": 28.8245,
+   "pb": 1.7452,
+   "roe": 0.0605,
+   "market_cap": 21309658734000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "HAG",
+   "pe": 8.6575,
+   "pb": 1.2958,
+   "roe": 0.1497,
+   "market_cap": 18378285231500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "MCH",
+   "pe": 28.1398,
+   "pb": 10.0531,
+   "roe": 0.3573,
+   "market_cap": 187612610181500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "KDC",
+   "pe": 28.1794,
+   "pb": 1.9026,
+   "roe": 0.0675,
+   "market_cap": 14722160852800.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "BAF",
+   "pe": 90.6147,
+   "pb": 2.8232,
+   "roe": 0.0312,
+   "market_cap": 11473743293700.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "VHC",
+   "pe": 7.8272,
+   "pb": 1.1051,
+   "roe": 0.1412,
+   "market_cap": 11101017427000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "DBC",
+   "pe": 4.4484,
+   "pb": 0.8307,
+   "roe": 0.1867,
+   "market_cap": 6702773059450.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "ANV",
+   "pe": 4.9759,
+   "pb": 1.4101,
+   "roe": 0.2834,
+   "market_cap": 4973348875000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "PAN",
+   "pe": 7.2895,
+   "pb": 0.5402,
+   "roe": 0.0741,
+   "market_cap": 4903386924000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "NAF",
+   "pe": 20.1924,
+   "pb": 3.7412,
+   "roe": 0.1853,
+   "market_cap": 2933679489300.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "ASM",
+   "pe": 53.0154,
+   "pb": 0.2434,
+   "roe": 0.0046,
+   "market_cap": 1999323438530.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "IDI",
+   "pe": 10.3047,
+   "pb": 0.3627,
+   "roe": 0.0352,
+   "market_cap": 1319423986440.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "TCO",
+   "pe": 16.1204,
+   "pb": 1.6187,
+   "roe": 0.1004,
+   "market_cap": 604732562100.0,
    "source_id": "src_universe_calc"
   }
  ],

@@ -1,0 +1,98 @@
+# Sở hữu N3 (M4 valuation). Ngưỡng nghiệp vụ đọc từ đây — không hard-code chỉ trong Python.
+#
+# Equity / P/B:
+# - Hiện dùng financials.*.items.total_equity (gồm lợi ích cổ đông thiểu số).
+# - Khi M1 có parent_equity (vốn CSH công ty mẹ), chuyển book_ps sang parent_equity/shares.
+# - Flag runtime m4_pb_uses_total_equity khi |NI_parent - NI|/|NI| > 5% (minority đáng kể).
+#
+# EPS TTM:
+# - sum(net_income_parent|net_income của đúng 4 quý liên tiếp) / shares_outstanding
+# - KHÔNG cộng items.eps quý (thường 0 hoặc mang EPS năm)
+# - Fallback: items.eps năm ≠ 0 + flag m4_eps_ttm_fallback_annual; eps_source=ttm_ni|annual
+#
+# Scoring:
+# - Percentile inverted trong pe_sorted/pb_sorted của sector stats (không quét lại snapshot)
+# - Sector n < min_sector_n → median/phân phối thị trường; chỉ chân PE; m4_pb_leg_dropped
+m4:
+  sector_stats_path: data/valuation_sector_stats.json
+  stale_calendar_days: 7
+  stale_financials_days: 200
+  pe_max_exclude: 100          # loại PE > ngưỡng khi build median (null = tắt)
+  winsor:
+    low_pct: 0.05
+    high_pct: 0.95
+  min_sector_n: 5
+  # Trọng số theo company.sector (is_bank vẫn ép bank). default = 0.5/0.5
+  weights:
+    bank:
+      pe: 0.0
+      pb: 1.0
+    default:
+      pe: 0.5
+      pb: 0.5
+    by_sector:
+      # Growth / consumer-ish — nghiêng PE
+      Technology:
+        pe: 0.7
+        pb: 0.3
+      Retail:
+        pe: 0.7
+        pb: 0.3
+      Health Care:
+        pe: 0.7
+        pb: 0.3
+      Food & Beverage:
+        pe: 0.7
+        pb: 0.3
+      Personal & Household Goods:
+        pe: 0.7
+        pb: 0.3
+      Automobiles & Parts:
+        pe: 0.7
+        pb: 0.3
+      # Asset-heavy — nghiêng PB
+      Real Estate:
+        pe: 0.4
+        pb: 0.6
+      Basic Resources:
+        pe: 0.4
+        pb: 0.6
+      Utilities:
+        pe: 0.4
+        pb: 0.6
+      Construction & Materials:
+        pe: 0.4
+        pb: 0.6
+      Oil & Gas:
+        pe: 0.4
+        pb: 0.6
+      # Financial non-bank
+      Financial Services:
+        pe: 0.4
+        pb: 0.6
+      Insurance:
+        pe: 0.4
+        pb: 0.6
+      # Banks: dùng weights.bank (is_bank) — pe 0 / pb 1
+      Banks:
+        pe: 0.0
+        pb: 1.0
+      # Cân bằng PE/PB 0.5/0.5 — map tường minh (không cờ m4_sector_weight_default)
+      Industrial Goods & Services:
+        pe: 0.5
+        pb: 0.5
+      Chemicals:
+        pe: 0.5
+        pb: 0.5
+      Media:
+        pe: 0.5
+        pb: 0.5
+      Travel & Leisure:
+        pe: 0.5
+        pb: 0.5
+      # Ngành không có trong by_sector → weights.default + flag m4_sector_weight_default
+  scoring: percentile_inverted
+  target_bands:
+    bull_mult: 1.15
+    bear_mult: 0.85
+  enable_dcf: false

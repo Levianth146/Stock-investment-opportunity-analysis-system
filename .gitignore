@@ -4,6 +4,7 @@ __pycache__/
 .env
 *.egg-info/
 .pytest_cache/
+node_modules/
 .DS_Store
 reports/*
 !reports/.gitkeep
@@ -18,7 +19,16 @@ data/raw/*/*
 
 # universe rộng (VN100/HOSE/HNX/UpCom): dữ liệu lớn, không commit
 data/snapshots_ext/
+data/export_csv/
 data/raw_ext/
 
 # cache HTML cổng tin M1 (nếu đặt ngoài data/raw/)
 data/cache/news_portals/
+
+# cache disk LLM debate (M7) — không commit
+data/llm_cache/
+
+# cache API M2–M8 (feature 011) — không commit
+data/api_cache/
+# bản xem trước PDF M9 (scripts/dev_/_m9_preview.py)
+data/reports_preview/

@@ -9,9 +9,10 @@
   "flags": [
    "prices_scaled_x1000_to_VND",
    "news_urls_partly_google_redirect",
-   "peers_cross_sector_vn30_nonbank_fallback",
    "universe_membership_current_not_point_in_time",
-   "vnf_crosscheck_ok:2025"
+   "vnf_crosscheck_ok:2025",
+   "sector_small_group",
+   "quality_tier_full"
   ],
   "data_status": {
    "prices": "ok",
@@ -15557,86 +15558,6 @@
  },
  "peers": [
   {
-   "ticker": "BCM",
-   "pe": 11.5743,
-   "pb": 1.7337,
-   "roe": 0.1498,
-   "market_cap": 40520250000000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "FPT",
-   "pe": 10.9155,
-   "pb": 2.3394,
-   "roe": 0.2143,
-   "market_cap": 102345287393400.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "GAS",
-   "pe": 17.3345,
-   "pb": 2.9246,
-   "roe": 0.1687,
-   "market_cap": 197861879992000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "GVR",
-   "pe": 25.4581,
-   "pb": 2.1768,
-   "roe": 0.0855,
-   "market_cap": 135400000000000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "HPG",
-   "pe": 11.0091,
-   "pb": 1.2965,
-   "roe": 0.1178,
-   "market_cap": 170125735078000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "MSN",
-   "pe": 26.3758,
-   "pb": 2.4038,
-   "roe": 0.0911,
-   "market_cap": 108359796136200.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "MWG",
-   "pe": 15.9805,
-   "pb": 3.3881,
-   "roe": 0.212,
-   "market_cap": 112402385873400.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "PLX",
-   "pe": 18.1851,
-   "pb": 1.6457,
-   "roe": 0.0905,
-   "market_cap": 48649815845600.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "POW",
-   "pe": 15.8028,
-   "pb": 1.0304,
-   "roe": 0.0652,
-   "market_cap": 38348071100000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "SAB",
-   "pe": 12.4674,
-   "pb": 2.3979,
-   "roe": 0.1923,
-   "market_cap": 55150181996000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
    "ticker": "SSI",
    "pe": 13.9336,
    "pb": 1.7842,
@@ -15645,43 +15566,115 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VHM",
-   "pe": 12.8825,
-   "pb": 2.1656,
-   "roe": 0.1681,
-   "market_cap": 539713937325600.0,
+   "ticker": "SSB",
+   "pe": 10.642,
+   "pb": 1.4523,
+   "roe": 0.1365,
+   "market_cap": 58632480000000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VIC",
-   "pe": 155.9285,
-   "pb": 11.6826,
-   "roe": 0.0749,
-   "market_cap": 1769778505812000.0,
+   "ticker": "MSB",
+   "pe": 9.8115,
+   "pb": 1.301,
+   "roe": 0.1326,
+   "market_cap": 55224000000000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VJC",
-   "pe": 46.5615,
-   "pb": 3.9835,
-   "roe": 0.0856,
-   "market_cap": 98828445488500.0,
+   "ticker": "NVB",
+   "pe": 623135.2162,
+   "pb": 3.5757,
+   "roe": 0.0,
+   "market_cap": 48604546866600.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VNM",
-   "pe": 12.8593,
-   "pb": 3.5092,
-   "roe": 0.2729,
-   "market_cap": 121008420265500.0,
+   "ticker": "VIB",
+   "pe": 6.4478,
+   "pb": 1.0015,
+   "roe": 0.1553,
+   "market_cap": 46975278798000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VRE",
-   "pe": 8.3457,
-   "pb": 1.1122,
-   "roe": 0.1333,
-   "market_cap": 53795705271000.0,
+   "ticker": "SHB",
+   "pe": 3.8604,
+   "pb": 0.6777,
+   "roe": 0.1755,
+   "market_cap": 46171710241200.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "TPB",
+   "pe": 4.3473,
+   "pb": 0.6988,
+   "roe": 0.1607,
+   "market_cap": 32178943726800.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "HDB",
+   "pe": 6.5245,
+   "pb": 1.3772,
+   "roe": 0.2111,
+   "market_cap": 107813651997420.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "OCB",
+   "pe": 7.6065,
+   "pb": 0.8991,
+   "roe": 0.1182,
+   "market_cap": 30502600854960.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "EIB",
+   "pe": 26.4639,
+   "pb": 1.1569,
+   "roe": 0.0437,
+   "market_cap": 30087850772700.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "VIX",
+   "pe": 5.3738,
+   "pb": 1.3551,
+   "roe": 0.2522,
+   "market_cap": 29072510422900.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "ACB",
+   "pe": 7.5598,
+   "pb": 1.2497,
+   "roe": 0.1653,
+   "market_cap": 118119986824950.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "LPB",
+   "pe": 10.6311,
+   "pb": 2.5731,
+   "roe": 0.242,
+   "market_cap": 121433017365000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "STB",
+   "pe": 21.3626,
+   "pb": 2.1193,
+   "roe": 0.0992,
+   "market_cap": 126875017686800.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "HCM",
+   "pe": 21.6413,
+   "pb": 1.7539,
+   "roe": 0.081,
+   "market_cap": 25506811300400.0,
    "source_id": "src_universe_calc"
   }
  ],

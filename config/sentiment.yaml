@@ -1,0 +1,59 @@
+# Sở hữu: N5 (M5 sentiment). Ngưỡng sẵn sàng và công thức S.
+# llm_enabled MUST false — polarity chỉ từ lexicon tiêu đề.
+
+m5:
+  llm_enabled: false
+  lookback_days: 60
+  half_life_days: 14
+  min_relevant_news: 3
+  min_directional_news: 2
+  # Seed đã duyệt 2026-10-13 — MUST NOT tự thêm mã từ scan.
+  ambiguous_tickers:
+    - CEO
+    - HCM
+    - VND
+    - AAA
+  # CTCK: tiêu đề báo chí chủ đề thị trường chung (không tên/alias công ty) → weight 0.
+  brokerage_tickers:
+    - SSI
+    - VND
+    - HCM
+    - VCI
+    - MBS
+    - SHS
+    - BSI
+    - FTS
+    - CTS
+    - VIX
+    - ORS
+    - BVS
+    - TVS
+    - AGR
+    - APS
+    - BSC
+    - VDS
+  brokerage_market_themes:
+    - chứng khoán
+    - thị trường
+    - vn-index
+    - vnindex
+    - rung lắc
+    - nghỉ lễ
+  score:
+    base: 50
+    scale: 35
+    conf_dir_cap: 12
+    conf_coverage_ref: 0.35
+  evidence_max_headlines: 6
+  multi_ticker_threshold: 3
+  multi_ticker_weight: 0.3
+  weak_subject_weight: 0.3
+  flow_weight_multiplier: 0.5
+  story_jaccard_threshold: 0.6
+  story_window_days: 3
+  news_stale_days: 14
+  subject_lead_tokens: 6
+  negation_window_tokens: 3
+  # Market summary + cụm hành động gần mã → weight này thay vì 0.
+  market_summary_ticker_action_weight: 0.6
+  market_summary_ticker_action_window: 4

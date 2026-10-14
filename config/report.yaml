@@ -1,0 +1,85 @@
+# Sở hữu: N6 (M9). Token thiết kế báo cáo PDF (feature 012); web dùng lại cùng bộ token.
+cover: true                 # true = thêm trang bìa trước 4 trang nội dung
+out_dir: reports
+
+colors:
+  paper: "#FFFFFF"
+  ink: "#14233A"            # mực chính
+  ink_2: "#4F5B6B"          # mực phụ
+  ink_3: "#6B7684"          # mực mờ: nguồn, chú thích
+  rule: "#DADFE5"           # đường kẻ 0,5pt
+  axis: "#B8C0CA"           # trục, đường cơ sở, cột khối lượng
+  panel: "#F4F6F8"          # chỉ dùng cho khung kiểm chứng M8
+  series_1: "#2A78D6"       # màu chủ đạo, chuỗi giá
+  accent: "#184F95"         # chữ nhấn, viền tiêu đề
+  series_2: "#EB6834"       # MA20
+  series_3: "#1BAF7A"       # MA50 (bắt buộc nhãn trực tiếp)
+  up: "#006300"             # tăng (quy ước VN)
+  down: "#C62F2F"           # giảm
+  contrib_pos: "#2A78D6"
+  contrib_neg: "#E34948"
+  contrib_mid: "#F0EFEC"
+  rating_buy: "#2A78D6"     # ô vuông Mua / Mua mạnh
+  rating_hold: "#8A939E"    # ô vuông Nắm giữ
+  rating_sell: "#C62F2F"    # ô vuông Giảm tỷ trọng / Bán
+
+fonts:
+  dir: assets/fonts
+  sans: NotoSans-Regular.ttf
+  sans_semibold: NotoSans-SemiBold.ttf
+  sans_bold: NotoSans-Bold.ttf
+  serif: NotoSerif-Regular.ttf
+  serif_semibold: NotoSerif-SemiBold.ttf
+  symbols: NotoSansSymbols2-Regular.ttf   # ▲ ▼ ■ (Noto Sans không có)
+
+sizes:                      # pt; cặp [cỡ, khoảng dòng]
+  cover_ticker: [64, 68]
+  cover_company: [20, 25]
+  page_title: [17, 21]
+  section: [11, 14]
+  body: [9.5, 14]
+  table: [8.5, 12]
+  caption: [7.5, 10]
+
+layout:
+  margin_mm: 18
+  columns: 12
+  gutter_mm: 6
+  rule_pt: 0.5
+
+charts:
+  dpi: 300
+  line_pt: 1.5
+  price_days: 252           # 1 năm giao dịch cho biểu đồ giá
+
+# Tên ngành ICB (tiếng Anh trong snapshot) sang câu tiếng Việt
+sectors:
+  Banks: Ngân hàng
+  Basic Resources: Tài nguyên cơ bản
+  Construction & Materials: Xây dựng và vật liệu
+  Real Estate: Bất động sản
+  Industrial Goods & Services: Hàng hóa và dịch vụ công nghiệp
+  Food & Beverage: Thực phẩm và đồ uống
+  Utilities: Tiện ích
+  Chemicals: Hóa chất
+  Financial Services: Dịch vụ tài chính
+  Personal & Household Goods: Hàng cá nhân và gia dụng
+  Health Care: Y tế
+  Media: Truyền thông
+  Retail: Bán lẻ
+  Automobiles & Parts: Ô tô và phụ tùng
+  Technology: Công nghệ thông tin
+  Travel & Leisure: Du lịch và giải trí
+  Insurance: Bảo hiểm
+  Oil & Gas: Dầu khí
+  Telecommunications: Viễn thông
+
+exchanges:
+  HSX: HOSE
+  HOSE: HOSE
+  HNX: HNX
+  UPCOM: UPCoM
+
+profiles:
+  long_term: dài hạn
+  swing: lướt sóng

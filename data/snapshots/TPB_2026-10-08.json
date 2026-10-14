@@ -12,7 +12,8 @@
    "bank_npl_car_not_in_statements",
    "news_urls_partly_google_redirect",
    "universe_membership_current_not_point_in_time",
-   "vnf_crosscheck_ok:2025"
+   "vnf_crosscheck_ok:2025",
+   "quality_tier_full"
   ],
   "data_status": {
    "prices": "ok",
@@ -15517,43 +15518,27 @@
  },
  "peers": [
   {
-   "ticker": "ACB",
-   "pe": 7.5598,
-   "pb": 1.2497,
-   "roe": 0.1653,
-   "market_cap": 118119986824950.0,
+   "ticker": "OCB",
+   "pe": 7.6065,
+   "pb": 0.8991,
+   "roe": 0.1182,
+   "market_cap": 30502600854960.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "BID",
-   "pe": 8.8175,
-   "pb": 1.5193,
-   "roe": 0.1723,
-   "market_cap": 263681979134700.0,
+   "ticker": "EIB",
+   "pe": 26.4639,
+   "pb": 1.1569,
+   "roe": 0.0437,
+   "market_cap": 30087850772700.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "CTG",
-   "pe": 6.5539,
-   "pb": 1.2624,
-   "roe": 0.1926,
-   "market_cap": 226794783400400.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "HDB",
-   "pe": 6.5245,
-   "pb": 1.3772,
-   "roe": 0.2111,
-   "market_cap": 107813651997420.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "MBB",
-   "pe": 6.5378,
-   "pb": 1.2327,
-   "roe": 0.1886,
-   "market_cap": 175075423015500.0,
+   "ticker": "NAB",
+   "pe": 6.0796,
+   "pb": 1.0852,
+   "roe": 0.1785,
+   "market_cap": 25426455182700.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15565,11 +15550,75 @@
    "source_id": "src_universe_calc"
   },
   {
+   "ticker": "VIB",
+   "pe": 6.4478,
+   "pb": 1.0015,
+   "roe": 0.1553,
+   "market_cap": 46975278798000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "NVB",
+   "pe": 623135.2162,
+   "pb": 3.5757,
+   "roe": 0.0,
+   "market_cap": 48604546866600.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "MSB",
+   "pe": 9.8115,
+   "pb": 1.301,
+   "roe": 0.1326,
+   "market_cap": 55224000000000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
    "ticker": "SSB",
    "pe": 10.642,
    "pb": 1.4523,
    "roe": 0.1365,
    "market_cap": 58632480000000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "VBB",
+   "pe": 11.9478,
+   "pb": 1.1625,
+   "roe": 0.0973,
+   "market_cap": 14451956568800.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "HDB",
+   "pe": 6.5245,
+   "pb": 1.3772,
+   "roe": 0.2111,
+   "market_cap": 107813651997420.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "ACB",
+   "pe": 7.5598,
+   "pb": 1.2497,
+   "roe": 0.1653,
+   "market_cap": 118119986824950.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "LPB",
+   "pe": 10.6311,
+   "pb": 2.5731,
+   "roe": 0.242,
+   "market_cap": 121433017365000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "KLB",
+   "pe": 4.5017,
+   "pb": 0.9928,
+   "roe": 0.2205,
+   "market_cap": 8355950540700.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15581,35 +15630,11 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "TCB",
-   "pe": 8.9383,
-   "pb": 1.2593,
-   "roe": 0.1409,
-   "market_cap": 226051069206600.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VCB",
-   "pe": 13.4441,
-   "pb": 2.106,
-   "roe": 0.1567,
-   "market_cap": 472931210320400.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VIB",
-   "pe": 6.4478,
-   "pb": 1.0015,
-   "roe": 0.1553,
-   "market_cap": 46975278798000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VPB",
-   "pe": 7.7554,
-   "pb": 1.032,
-   "roe": 0.1331,
-   "market_cap": 186050508443450.0,
+   "ticker": "VAB",
+   "pe": 6.1505,
+   "pb": 0.7995,
+   "roe": 0.13,
+   "market_cap": 8118675369000.0,
    "source_id": "src_universe_calc"
   }
  ],

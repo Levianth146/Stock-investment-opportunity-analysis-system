@@ -22,7 +22,9 @@ def test_analysis_modules_calculate_from_normalized_snapshot():
     outputs = {
         "m2": run_m2(snapshot, {}, {}),
         "m3": run_m3(snapshot, {}, {}),
-        "m4": run_m4(snapshot, {}, {}),
+        "m4": run_m4(snapshot, {}, {"m4": {
+            "sector_stats_path": str(Path(__file__).parent / "fixtures/m4_sector_stats_mini.json"),
+        }}),
         "m5": run_m5(snapshot, {}, {}),
         "m6": run_m6(snapshot, {}, {}),
     }
@@ -32,13 +34,17 @@ def test_analysis_modules_calculate_from_normalized_snapshot():
         if output["score"] is not None:
             assert 0 <= output["score"] <= 100
         assert validate(output, "module_out") == []
-    assert all(outputs[name]["score"] is not None for name in ("m2", "m3", "m4", "m6"))
+    assert all(outputs[name]["score"] is not None for name in ("m2", "m3", "m4"))
+    # DEMO is explicitly synthetic: M6 computes metrics but withholds a risk score.
+    assert outputs["m6"]["score"] is None
+    assert "m6_synthetic_data" in outputs["m6"]["flags"]
+    assert outputs["m6"]["metrics"]["annualized_volatility"]["value"] is not None
     assert outputs["m4"]["target"]["base"] is not None
     # M2 on main exposes profitability as a ratio, rather than a percentage.
     assert outputs["m2"]["metrics"]["roe"]["unit"] == "ratio"
     assert outputs["m2"]["metrics"]["roe"]["value"] > 0
 
-    bull, bear = run_debate(snapshot, outputs, {})
+    bull, bear = run_debate(snapshot, outputs, {"debate": {"mode": "template"}})
     assert all(not claim["text"].startswith("[stub]") for claim in bull + bear)
 
 
@@ -81,4 +87,4 @@ def test_neutral_news_does_not_create_a_neutral_sentiment_score():
 
     assert output["status"] == "partial"
     assert output["score"] is None
-    assert output["metrics"]["classifiable_articles"]["value"] == 0
+    assert output["metrics"]["news_directional_count"]["value"] == 0

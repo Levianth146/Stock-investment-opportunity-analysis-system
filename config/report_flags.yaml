@@ -1,0 +1,102 @@
+# Sở hữu: N6 (M9). Từ điển cờ (flags) sang câu tiếng Việt cho báo cáo PDF.
+# Khóa so khớp nguyên văn; cờ dạng "tên:giá_trị" so khớp phần trước dấu hai chấm.
+# Cờ không có trong từ điển chỉ xuất hiện ở phụ lục "Chi tiết kỹ thuật".
+flags:
+  # Cổng chất lượng dữ liệu (M1 gắn trên snapshot)
+  quality_tier_full: Dữ liệu đủ điều kiện xếp hạng đầy đủ.
+  quality_tier_limited: Dữ liệu chỉ đủ để chấm điểm có giới hạn.
+  quality_tier_insufficient: Dữ liệu chưa đủ để chấm điểm và xếp hạng.
+  quality_illiquid: Thanh khoản quá thấp so với ngưỡng xếp hạng.
+  quality_low_liquidity: Thanh khoản thấp, kết quả kém tin cậy hơn.
+  quality_prices_lt_750: Lịch sử giá ngắn hơn 750 phiên.
+  quality_news_few: Có quá ít tin tức để đánh giá tâm lý.
+  quality_annual_lt_3: Có ít hơn 3 năm báo cáo tài chính.
+  quality_annual_lt_5: Có ít hơn 5 năm báo cáo tài chính.
+  scoring_skipped_insufficient: Mã chưa được chấm điểm vì dữ liệu chưa đủ.
+  rating_capped_by_risk_gate: Rủi ro R từ 70 trở lên, khuyến nghị bị giới hạn ở mức Nắm giữ.
+  S_missing_used_neutral: Thiếu điểm tin tức, mô hình dùng mức trung tính 50.
+  F_missing_used_neutral: Thiếu điểm cơ bản, mô hình dùng mức trung tính 50.
+  T_missing_used_neutral: Thiếu điểm kỹ thuật, mô hình dùng mức trung tính 50.
+  V_missing_used_neutral: Thiếu điểm định giá, mô hình dùng mức trung tính 50.
+  R_missing_used_neutral: Thiếu điểm rủi ro, mô hình dùng mức trung tính 50.
+
+  # Snapshot (M1)
+  prices_scaled_x1000_to_VND: Giá nguồn tính bằng nghìn đồng, đã quy đổi sang đồng.
+  news_urls_partly_google_redirect: Một phần đường dẫn tin đi qua Google News.
+  universe_membership_current_not_point_in_time: Nhóm so sánh lấy theo thành phần hiện hành, không theo thời điểm dữ liệu.
+  bank_nim_cir_derived_approx: NIM và CIR là giá trị tính gần đúng từ báo cáo tài chính.
+  bank_npl_car_not_in_statements: Báo cáo tài chính nguồn không có tỷ lệ nợ xấu và CAR.
+  quarterly_backfilled: Báo cáo quý được bổ sung từ nguồn thứ hai.
+  sector_small_group: Nhóm ngành có ít doanh nghiệp, trung vị ngành kém đại diện.
+  financials_empty: Nguồn không trả về báo cáo tài chính.
+  news_has_no_article_url: Một số tin không có đường dẫn bài gốc.
+  news_url_missing: Một số tin thiếu đường dẫn.
+  suspect_unadjusted_prices: Nghi ngờ có đoạn giá chưa điều chỉnh.
+
+  # M2 cơ bản
+  m2_financials_unavailable: Không có báo cáo tài chính năm hợp lệ, chưa tính được điểm cơ bản.
+  m2_missing_npl_ratio: Thiếu tỷ lệ nợ xấu.
+  m2_missing_car: Thiếu hệ số an toàn vốn CAR.
+  m2_missing_current_ratio: Thiếu hệ số thanh toán hiện hành.
+  m2_missing_debt_to_equity: Thiếu tỷ lệ nợ trên vốn chủ sở hữu.
+  m2_missing_gross_margin: Thiếu biên lợi nhuận gộp.
+  m2_missing_interest_coverage: Thiếu hệ số khả năng trả lãi.
+
+  # M3 kỹ thuật
+  m3_insufficient_history_ma200: Lịch sử giá chưa đủ 200 phiên để tính MA200.
+  m3_invalid_price_rows_excluded: Đã loại các dòng giá không hợp lệ.
+  m3_no_valid_price_rows: Không có dòng giá hợp lệ.
+  m3_stale_price_data: Giá gần nhất đã cũ so với ngày dữ liệu.
+  m3_volume_ratio_unavailable: Chưa tính được tỷ lệ khối lượng so với trung bình 20 phiên.
+
+  # M4 định giá
+  m4_bank_primary_pb: Ngân hàng được định giá chủ yếu theo P/B.
+  m4_eps_ttm_fallback_annual: Thiếu EPS 4 quý gần nhất, dùng EPS năm gần nhất.
+  m4_insufficient_for_score: Chưa đủ dữ liệu để tính điểm định giá.
+  m4_missing_equity: Thiếu vốn chủ sở hữu, chưa tính được P/B.
+  m4_missing_shares: Thiếu số cổ phiếu lưu hành.
+  m4_pb_leg_dropped: Bỏ chân P/B khỏi điểm định giá.
+  m4_pb_unavailable: Chưa tính được P/B.
+  m4_pb_uses_total_equity: P/B dùng tổng vốn chủ sở hữu, gồm cả lợi ích cổ đông thiểu số.
+  m4_pe_not_meaningful: P/E không có ý nghĩa do lợi nhuận âm hoặc quá nhỏ.
+  m4_pe_unavailable: Chưa tính được P/E.
+  m4_peer_group_small: Nhóm so sánh nhỏ.
+  m4_sector_fallback: Ngành có ít mẫu, dùng trung vị toàn thị trường.
+  m4_sector_median_unavailable: Không có trung vị ngành.
+  m4_stale_financials: Báo cáo tài chính dùng để định giá đã cũ.
+  m4_stale_price_data: Giá dùng để định giá đã cũ.
+  m4_no_valid_price: Không có giá hợp lệ để định giá.
+
+  # M5 tin tức
+  m5_heuristic_headline_only: Tâm lý tin tức chấm theo từ khóa trên tiêu đề, chưa đọc toàn văn.
+  m5_insufficient_news: Có quá ít tin liên quan để chấm điểm tin tức.
+  m5_low_directional_coverage: Ít tin có hướng rõ ràng, điểm tin tức kém tin cậy.
+  m5_news_stale: Tin gần nhất đã cũ.
+  m5_off_topic_filtered: Đã loại các tin không liên quan đến mã.
+  m5_single_source: Tin chỉ đến từ một nguồn.
+  m5_story_clustered: Các tin cùng sự kiện được gộp thành một câu chuyện.
+
+  # M6 rủi ro
+  m6_historical_risk_estimate: Rủi ro ước tính từ lịch sử giá, không phải giới hạn thua lỗ tối đa.
+  m6_insufficient_aligned_returns: Không đủ phiên trùng khớp với VN-Index để đo rủi ro.
+  m6_insufficient_stock_prices: Không đủ lịch sử giá để đo rủi ro.
+  m6_long_market_gaps_excluded: Đã loại các khoảng nghỉ giao dịch dài khi tính lợi suất.
+  m6_not_ready_for_risk_score: Chưa đủ dữ liệu để chấm điểm rủi ro.
+
+# Lý do của cổng chất lượng (quality_gate.reasons) sang câu ngắn
+reasons:
+  illiquid: thanh khoản quá thấp
+  low_liquidity: thanh khoản thấp
+  prices_lt_750: lịch sử giá dưới 750 phiên
+  news_few: quá ít tin tức
+  annual_lt_3: dưới 3 năm báo cáo tài chính
+  annual_lt_5: dưới 5 năm báo cáo tài chính
+
+# Thay thế cụm tiếng Anh / khóa kỹ thuật trong thông điệp kiểm tra dữ liệu
+m8_messages:
+  "No eligible annual financial statements are available.": không có báo cáo tài chính năm hợp lệ.
+  "Peers": "Nhóm so sánh"
+  "peers": "nhóm so sánh"
+  "as_of": "ngày dữ liệu"
+  "Missing required": "Thiếu"
+  "news": "tin tức"

@@ -1,0 +1,69 @@
+# Alias / từ khóa lọc tin M5. Sở hữu N5.
+# Khóa khớp sau normalize giữ dấu tiếng Việt.
+
+finance_keywords:
+  - cổ phiếu
+  - chứng khoán
+  - tài chính
+  - doanh thu
+  - lợi nhuận
+  - lãi ròng
+  - thua lỗ
+  - báo cáo
+  - bctc
+  - eps
+  - roe
+  - vốn hóa
+  - thị giá
+  - giao dịch
+  - cổ đông
+  - phát hành
+  - tăng vốn
+  - cổ tức
+  - khuyến nghị
+  - định giá
+  - khối ngoại
+  - mua ròng
+  - bán ròng
+  - niêm yết
+  - hose
+  - hnx
+  - upcom
+  - ctck
+  - trái phiếu
+  - hợp đồng
+  - trúng thầu
+  - vốn điều lệ
+  - đại hội cổ đông
+  - đhcd
+  - công bố thông tin
+  - ebitda
+  - tự doanh
+  - biến động
+  - khối lượng
+
+cw_patterns:
+  - chứng quyền
+  - chung_quyen
+  - "\\bcw\\b"
+  - warrant
+
+# Tên công ty / alias bổ sung theo mã (identity & ambiguous).
+company_aliases:
+  CEO:
+    - ceo group
+    - tập đoàn ceo
+  HCM:
+    - chứng khoán hcm
+    - chứng khoán hồ chí minh
+    - saigon securities
+  VND:
+    - chứng khoán vndirect
+    - vndirect
+  AAA:
+    - an phát holdings
+    - an phát plastic
+    - an phát
+  VPB:
+    - vpbank
+    - ngân hàng vpbank

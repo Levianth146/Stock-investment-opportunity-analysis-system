@@ -8,6 +8,7 @@ import io
 import json
 import os
 import pickle
+import threading
 import time
 from datetime import date, datetime
 from pathlib import Path
@@ -15,14 +16,17 @@ from pathlib import Path
 import pandas as pd
 
 _last_call = 0.0
+_throttle_lock = threading.Lock()
 
 
 def _throttle(interval: float) -> None:
+    """Giãn cách request; khóa để an toàn khi Google chạy nền (A8)."""
     global _last_call
-    wait = _last_call + interval - time.time()
-    if wait > 0:
-        time.sleep(wait)
-    _last_call = time.time()
+    with _throttle_lock:
+        wait = _last_call + interval - time.time()
+        if wait > 0:
+            time.sleep(wait)
+        _last_call = time.time()
 
 
 def _cache_path(cfg: dict, kind: str, ticker: str, key: str) -> Path:

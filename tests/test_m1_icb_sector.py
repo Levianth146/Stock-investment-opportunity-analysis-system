@@ -246,9 +246,13 @@ def test_peer_order_via_closest_helper_deterministic():
 
 
 def test_vn30_peer_lists_preserved_with_cascade_off():
-    """use_icb_peer_cascade=False → peers khớp đúng từng phần tử và thứ tự snapshot VN30."""
+    """Enabling ICB alone preserves the legacy VN30 peer membership and ordering."""
     snaps = _vn30_snapshots()
-    baseline = {t: [p["ticker"] for p in s.get("peers") or []] for t, s in snaps.items()}
+    # Committed snapshots can contain peers from the wider HOSE/HNX universe.
+    # Compare both configurations on the same VN30 input, not against those peers.
+    legacy = {t: copy.deepcopy(s) for t, s in snaps.items()}
+    u.fill_peers(legacy, cfg={"use_icb_peer_cascade": False, "icb_sector_enabled": False})
+    baseline = {t: [p["ticker"] for p in s.get("peers") or []] for t, s in legacy.items()}
     work = {t: copy.deepcopy(s) for t, s in snaps.items()}
     u.fill_peers(work, cfg={"use_icb_peer_cascade": False, "icb_sector_enabled": True})
     for t in UNIVERSE:

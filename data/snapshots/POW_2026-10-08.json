@@ -10,14 +10,15 @@
    "prices_scaled_x1000_to_VND",
    "news_urls_partly_google_redirect",
    "universe_membership_current_not_point_in_time",
-   "vnf_crosscheck_ok:2025"
+   "vnf_crosscheck_ok:2025",
+   "quality_tier_full"
   ],
   "data_status": {
    "prices": "ok",
    "index": "ok",
    "financials": "ok",
    "company": "ok",
-   "peers": "partial",
+   "peers": "ok",
    "news": "ok"
   }
  },
@@ -15638,11 +15639,83 @@
  },
  "peers": [
   {
+   "ticker": "REE",
+   "pe": 11.2152,
+   "pb": 1.1439,
+   "roe": 0.102,
+   "market_cap": 28364656138000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "BWE",
+   "pe": 9.0986,
+   "pb": 1.4337,
+   "roe": 0.1576,
+   "market_cap": 9017074404000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
    "ticker": "GAS",
    "pe": 17.3345,
    "pb": 2.9246,
    "roe": 0.1687,
    "market_cap": 197861879992000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "NT2",
+   "pe": 5.8579,
+   "pb": 1.3625,
+   "roe": 0.2326,
+   "market_cap": 6621148667000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "TDM",
+   "pe": 30.9667,
+   "pb": 2.5144,
+   "roe": 0.0812,
+   "market_cap": 6499350000000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "HDG",
+   "pe": 7.6596,
+   "pb": 0.7026,
+   "roe": 0.0917,
+   "market_cap": 5900881328500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "GEG",
+   "pe": 6.2392,
+   "pb": 0.6803,
+   "roe": 0.109,
+   "market_cap": 4420591168750.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "TTA",
+   "pe": 8.2872,
+   "pb": 0.8115,
+   "roe": 0.0979,
+   "market_cap": 1919510185250.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "ASP",
+   "pe": 43.0799,
+   "pb": 1.8228,
+   "roe": 0.0423,
+   "market_cap": 601172856900.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "PPT",
+   "pe": 63.6636,
+   "pb": 1.4596,
+   "roe": 0.0229,
+   "market_cap": 294673845000.0,
    "source_id": "src_universe_calc"
   }
  ],
