@@ -10,7 +10,8 @@
    "prices_scaled_x1000_to_VND",
    "news_urls_partly_google_redirect",
    "universe_membership_current_not_point_in_time",
-   "vnf_crosscheck_ok:2025"
+   "vnf_crosscheck_ok:2025",
+   "quality_tier_full"
   ],
   "data_status": {
    "prices": "ok",
@@ -15638,6 +15639,14 @@
  },
  "peers": [
   {
+   "ticker": "KSF",
+   "pe": 7.9797,
+   "pb": 3.4155,
+   "roe": 0.428,
+   "market_cap": 67843963023200.0,
+   "source_id": "src_universe_calc"
+  },
+  {
    "ticker": "BCM",
    "pe": 11.5743,
    "pb": 1.7337,
@@ -15646,19 +15655,107 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VHM",
-   "pe": 12.8825,
-   "pb": 2.1656,
-   "roe": 0.1681,
-   "market_cap": 539713937325600.0,
+   "ticker": "THD",
+   "pe": 309.9824,
+   "pb": 7.0647,
+   "roe": 0.0228,
+   "market_cap": 31184997732000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VIC",
-   "pe": 155.9285,
-   "pb": 11.6826,
-   "roe": 0.0749,
-   "market_cap": 1769778505812000.0,
+   "ticker": "NVL",
+   "pe": 14.1198,
+   "pb": 0.4181,
+   "roe": 0.0296,
+   "market_cap": 24621196713000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "KBC",
+   "pe": 11.3711,
+   "pb": 0.895,
+   "roe": 0.0787,
+   "market_cap": 23920570878600.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "VPI",
+   "pe": 51.0088,
+   "pb": 3.6399,
+   "roe": 0.0714,
+   "market_cap": 19926277568400.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "SJS",
+   "pe": 42.5645,
+   "pb": 4.4638,
+   "roe": 0.1049,
+   "market_cap": 15379448607600.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "KDH",
+   "pe": 14.2226,
+   "pb": 0.7026,
+   "roe": 0.0494,
+   "market_cap": 14869347411750.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "IDC",
+   "pe": 7.5417,
+   "pb": 1.7631,
+   "roe": 0.2338,
+   "market_cap": 14568895553600.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "DXG",
+   "pe": 52.8553,
+   "pb": 0.5844,
+   "roe": 0.0111,
+   "market_cap": 12203282054110.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "SIP",
+   "pe": 8.9772,
+   "pb": 2.0426,
+   "roe": 0.2275,
+   "market_cap": 11875639854150.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "PDR",
+   "pe": 21.5033,
+   "pb": 0.8915,
+   "roe": 0.0415,
+   "market_cap": 11075684106900.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "NLG",
+   "pe": 15.1815,
+   "pb": 0.7183,
+   "roe": 0.0473,
+   "market_cap": 10647887556850.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "TCH",
+   "pe": 33.1083,
+   "pb": 0.7382,
+   "roe": 0.0223,
+   "market_cap": 10534784484000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "DIG",
+   "pe": 12.1446,
+   "pb": 0.7831,
+   "roe": 0.0645,
+   "market_cap": 7850992695900.0,
    "source_id": "src_universe_calc"
   }
  ],

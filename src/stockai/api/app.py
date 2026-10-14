@@ -8,7 +8,9 @@ from typing import Any
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
+from stockai.api.analysis import AnalyzeRequest, analyze_snapshot
 from stockai.api.debate_service import llm_public_status
 from stockai.api.deps import (
     client_ip,
@@ -117,6 +119,17 @@ def create_app(
             store,
         )
 
+    @app.post("/api/analyze", response_model=None)
+    def analyze(request: Request, payload: AnalyzeRequest) -> Any:
+        store = get_store(request)
+        bad = _require_symbol(store, payload.ticker)
+        if bad:
+            return bad
+        # Never label a cached result with a date different from its snapshot.
+        if payload.as_of is not None and payload.as_of.isoformat() != store.asof:
+            return _err(409, f"Snapshot hiện có ngày {store.asof}; bỏ as_of để dùng ngày này", store)
+        return _envelope(analyze_snapshot(store, payload.ticker, payload.profile), store)
+
     @app.get("/api/rankings", response_model=None)
     def rankings(
         request: Request,
@@ -153,6 +166,12 @@ def create_app(
     @app.get("/api/sectors", response_model=None)
     def sectors(request: Request) -> dict:
         return get_store(request).sectors()
+
+    @app.get("/api/tickers", response_model=None)
+    def ticker_catalog(request: Request) -> dict:
+        store = get_store(request)
+        items = store.ticker_catalog()
+        return _envelope({"items": items, "total": len(items)}, store)
 
     def _require_symbol(store: ResultStore, symbol: str) -> JSONResponse | None:
         sym = (symbol or "").strip().upper()
@@ -342,6 +361,24 @@ def create_app(
             return _err(404, "Không tìm thấy mã", store)
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
+
+    # Register the build after API routes so unknown /api paths remain JSON 404s.
+    frontend_dir = Path(str(cfg.get("frontend_dir") or "frontend/dist"))
+    if not frontend_dir.is_absolute():
+        frontend_dir = repo_root() / frontend_dir
+    if (frontend_dir / "index.html").is_file():
+        assets_dir = frontend_dir / "assets"
+        if assets_dir.is_dir():
+            app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend-assets")
+
+        @app.get("/", include_in_schema=False)
+        def frontend_index():
+            return FileResponse(frontend_dir / "index.html")
+
+        if (frontend_dir / "api-client.js").is_file():
+            @app.get("/api-client.js", include_in_schema=False)
+            def frontend_client():
+                return FileResponse(frontend_dir / "api-client.js", media_type="text/javascript")
 
     return app
 

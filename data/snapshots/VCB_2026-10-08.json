@@ -12,7 +12,8 @@
    "bank_npl_car_not_in_statements",
    "news_urls_partly_google_redirect",
    "universe_membership_current_not_point_in_time",
-   "vnf_crosscheck_ok:2025"
+   "vnf_crosscheck_ok:2025",
+   "quality_tier_full"
   ],
   "data_status": {
    "prices": "ok",
@@ -15514,14 +15515,6 @@
  },
  "peers": [
   {
-   "ticker": "ACB",
-   "pe": 7.5598,
-   "pb": 1.2497,
-   "roe": 0.1653,
-   "market_cap": 118119986824950.0,
-   "source_id": "src_universe_calc"
-  },
-  {
    "ticker": "BID",
    "pe": 8.8175,
    "pb": 1.5193,
@@ -15538,11 +15531,19 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "HDB",
-   "pe": 6.5245,
-   "pb": 1.3772,
-   "roe": 0.2111,
-   "market_cap": 107813651997420.0,
+   "ticker": "TCB",
+   "pe": 8.9383,
+   "pb": 1.2593,
+   "roe": 0.1409,
+   "market_cap": 226051069206600.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "VPB",
+   "pe": 7.7554,
+   "pb": 1.032,
+   "roe": 0.1331,
+   "market_cap": 186050508443450.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15554,11 +15555,35 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "SHB",
-   "pe": 3.8604,
-   "pb": 0.6777,
-   "roe": 0.1755,
-   "market_cap": 46171710241200.0,
+   "ticker": "STB",
+   "pe": 21.3626,
+   "pb": 2.1193,
+   "roe": 0.0992,
+   "market_cap": 126875017686800.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "LPB",
+   "pe": 10.6311,
+   "pb": 2.5731,
+   "roe": 0.242,
+   "market_cap": 121433017365000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "ACB",
+   "pe": 7.5598,
+   "pb": 1.2497,
+   "roe": 0.1653,
+   "market_cap": 118119986824950.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "HDB",
+   "pe": 6.5245,
+   "pb": 1.3772,
+   "roe": 0.2111,
+   "market_cap": 107813651997420.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15570,27 +15595,19 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "STB",
-   "pe": 21.3626,
-   "pb": 2.1193,
-   "roe": 0.0992,
-   "market_cap": 126875017686800.0,
+   "ticker": "MSB",
+   "pe": 9.8115,
+   "pb": 1.301,
+   "roe": 0.1326,
+   "market_cap": 55224000000000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "TCB",
-   "pe": 8.9383,
-   "pb": 1.2593,
-   "roe": 0.1409,
-   "market_cap": 226051069206600.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "TPB",
-   "pe": 4.3473,
-   "pb": 0.6988,
-   "roe": 0.1607,
-   "market_cap": 32178943726800.0,
+   "ticker": "NVB",
+   "pe": 623135.2162,
+   "pb": 3.5757,
+   "roe": 0.0,
+   "market_cap": 48604546866600.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15602,11 +15619,19 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VPB",
-   "pe": 7.7554,
-   "pb": 1.032,
-   "roe": 0.1331,
-   "market_cap": 186050508443450.0,
+   "ticker": "SHB",
+   "pe": 3.8604,
+   "pb": 0.6777,
+   "roe": 0.1755,
+   "market_cap": 46171710241200.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "TPB",
+   "pe": 4.3473,
+   "pb": 0.6988,
+   "roe": 0.1607,
+   "market_cap": 32178943726800.0,
    "source_id": "src_universe_calc"
   }
  ],

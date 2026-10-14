@@ -4,6 +4,7 @@ __pycache__/
 .env
 *.egg-info/
 .pytest_cache/
+node_modules/
 .DS_Store
 reports/*
 !reports/.gitkeep
