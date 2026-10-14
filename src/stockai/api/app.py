@@ -291,8 +291,14 @@ def create_app(
         request: Request,
         symbol: str,
         profile: str | None = None,
+        cover: bool | None = None,
+        technical: bool = False,
     ):
-        """TODO(N6): M9 sẽ làm lại (font tiếng Việt, 10 mục, biểu đồ). Hiện trả stub PDF."""
+        """PDF M9 (feature 012). Debate: bản LLM trong cache API nếu có, ngược lại template.
+
+        Không bao giờ gọi LLM mới khi xuất PDF.
+        ``technical=true``: in phụ lục chi tiết kỹ thuật.
+        """
         store = get_store(request)
         sym = (symbol or "").strip().upper()
         # path param có thể là "HPG.pdf" nếu route bắt nhầm — FastAPI tách {symbol}.pdf
@@ -302,6 +308,8 @@ def create_app(
         if bad:
             return bad
         profile = profile or store.default_profile
+        if profile not in PROFILES:
+            return _err(400, "profile không hợp lệ", store)
         try:
             bundle = store.get_bundle(sym, profile, debate_mode="template")
             snapshot = store.load_snapshot(sym)
@@ -315,7 +323,12 @@ def create_app(
                 "m8": bundle.get("m8"),
             }
             out_dir = str(Path(store.cache_dir) / "reports")
-            cfg = {"profile": profile, "out_dir": out_dir}
+            cfg: dict[str, Any] = {"profile": profile, "out_dir": out_dir}
+            if cover is not None:
+                cfg["cover"] = cover
+            if technical:
+                cfg["technical_appendix"] = True
+            cfg.update(_report_context(request, store, sym, profile))
             m9 = run_m9(snapshot, upstream, cfg)
             pdf_path = Path(m9.get("pdf_path") or "")
             if not pdf_path.is_file():
@@ -331,6 +344,43 @@ def create_app(
             return _err(500, "Lỗi nội bộ", store)
 
     return app
+
+
+def _ranked_scores(store: ResultStore, profile: str) -> list[tuple[str, float]]:
+    rows = store.iter_ranking_rows(profile, include_unranked=False)
+    return [
+        (str(r["ticker"]), float(r["score"]))
+        for r in rows
+        if r.get("ranked") and isinstance(r.get("score"), (int, float))
+    ]
+
+
+def _report_context(request: Request, store: ResultStore, sym: str, profile: str) -> dict[str, Any]:
+    """Ngữ cảnh cho M9: điểm cả universe cùng profile, profile còn lại, debate đã cache (không gọi LLM)."""
+    ctx: dict[str, Any] = {}
+    try:
+        ctx["universe_scores"] = _ranked_scores(store, profile)
+    except Exception:
+        ctx["universe_scores"] = []
+    other = next((p for p in PROFILES if p != profile), None)
+    if other:
+        try:
+            ob = store.get_bundle(sym, other, debate_mode="template")
+            ctx["other_profile"] = {"m7": ob.get("m7"), "universe_scores": _ranked_scores(store, other)}
+        except Exception:
+            pass
+    try:
+        cached = get_debate_service(request).read_cached(sym, profile)
+    except Exception:
+        cached = None
+    if cached:
+        ctx["debate"] = {
+            "source": "CACHE",
+            "bull": list(cached.get("bull") or []),
+            "bear": list(cached.get("bear") or []),
+            "model": cached.get("model"),
+        }
+    return ctx
 
 
 def _module_summary(mod: dict | None) -> dict[str, Any]:

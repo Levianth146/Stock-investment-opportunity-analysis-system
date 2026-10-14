@@ -62,7 +62,9 @@ _SKIP_METRIC_NAMES = {
     "v_pb_leg",
 }
 
-_COMP_VI = {"F": "cơ bản (F)", "T": "kỹ thuật (T)", "V": "định giá (V)", "S": "tin tức (S)", "R": "rủi ro (R)"}
+_COMP_VI = {"F": "Cơ bản", "T": "Kỹ thuật", "V": "Định giá", "S": "Tin tức", "R": "Rủi ro"}
+# Ngân hàng: ưu tiên P/B làm dẫn chứng định giá (không dùng P/E làm lý do V)
+_BANK_PREF_M4 = ["pb", "sector_median_pb", "price_close", "pe", "sector_median_pe"]
 
 # Cụm tiếng Anh máy móc thường gặp trong evidence M4 — nhẹ hóa khi chép vào template
 _EVID_EN_REPLACEMENTS = (
@@ -131,6 +133,10 @@ def _metric_bad_for_bear(name: str, value: Any) -> bool:
     return False
 
 
+def _is_bank(payload: dict) -> bool:
+    return payload.get("is_bank") is True
+
+
 def _pick_metrics_for_module(
     payload: dict,
     mod: str,
@@ -143,14 +149,24 @@ def _pick_metrics_for_module(
     cfg = _cfg_debate(cfg)
     allowed = set(payload.get("metrics_allowed") or [])
     metrics = payload.get("metrics") or {}
-    pref = _PREF_METRICS.get(mod, [])
+    bank = _is_bank(payload)
+    if mod == "m4" and bank:
+        pref = _BANK_PREF_M4
+    else:
+        pref = _PREF_METRICS.get(mod, [])
     ordered: list[str] = []
     for name in pref:
         key = f"{mod}.{name}"
         if key in metrics and key in allowed:
+            # Ngân hàng: không lấy P/E làm dẫn chứng định giá
+            if bank and mod == "m4" and name in ("pe", "sector_median_pe"):
+                continue
             ordered.append(key)
     for key in metrics:
         if isinstance(key, str) and key.startswith(f"{mod}.") and key not in ordered and key in allowed:
+            name = key.split(".", 1)[-1]
+            if bank and mod == "m4" and name in ("pe", "sector_median_pe"):
+                continue
             ordered.append(key)
     out: list[tuple[str, str, str]] = []
     for key in ordered:
@@ -168,6 +184,10 @@ def _pick_metrics_for_module(
         disp = entry.get("display") or format_metric_value(key, val, entry.get("unit"), cfg)
         if not disp:
             continue
+        # Beta: luôn 2 chữ số thập phân, không hậu tố x
+        if name == "beta" and isinstance(val, (int, float)):
+            disp = f"{float(val):.2f}".replace(".", ",")
+        disp = re.sub(r"(\d),(\d+)x\b", r"\1,\2", str(disp))
         dname = entry.get("display_name") or metric_display_name(key, cfg)
         # Nếu display_name vẫn là raw snake/space Anh → lấy lại từ bảng config
         raw_fallback = name.replace("_", " ")
@@ -190,6 +210,7 @@ def _polish_evidence_body(body: str) -> str:
 def _evidence_lines(payload: dict, mod: str, *, for_bull: bool) -> list[str]:
     """Ưu tiên evidence tiếng Việt đã format số (đặc biệt M4)."""
     lines: list[str] = []
+    bank = _is_bank(payload)
     for s in payload.get("evidence_summaries") or []:
         if not isinstance(s, str) or not s.startswith(f"{mod}:"):
             continue
@@ -210,13 +231,22 @@ def _evidence_lines(payload: dict, mod: str, *, for_bull: bool) -> list[str]:
             if (not for_bull) and not (low.startswith("tiêu cực") or "tiêu cực |" in low):
                 if low.startswith("tích cực") or low.startswith("sentiment theo"):
                     continue
-        # M4: evidence “P/E thấp hơn” là tích cực định giá — không dùng cho Bear
+        # M4: ngân hàng chỉ dùng P/B làm lý do định giá; còn lại lọc hướng bull/bear
         if mod == "m4":
+            if bank:
+                # Bỏ dòng lấy P/E làm lý do chính (kể cả khi có chú thích ngân hàng)
+                if re.match(r"^p/e\b", low) or (low.startswith("p/e") and "p/b" not in low[:20]):
+                    continue
+                if "p/e" in low and "p/b" not in low:
+                    continue
             if for_bull and "cao hơn" in low and ("p/e" in low or "p/b" in low):
                 continue
             if (not for_bull) and "thấp hơn" in low and ("p/e" in low or "p/b" in low):
                 continue
         lines.append(_polish_evidence_body(body))
+    # Ngân hàng: ưu tiên dòng P/B lên đầu
+    if mod == "m4" and bank and lines:
+        lines.sort(key=lambda t: (0 if "p/b" in t.lower() else 1))
     return lines
 
 
@@ -282,39 +312,62 @@ def _score_phrase(payload: dict, comps: list[str]) -> str:
     return "; ".join(parts)
 
 
-def _head_phrase(ticker: str, comp: str, d: float, *, for_bull: bool) -> str:
-    """Câu mở: đóng góp ±X,X điểm; trụ R nói rủi ro thấp/cao hơn TB."""
+def _head_phrase(comp: str, d: float, *, for_bull: bool) -> str:
+    """Câu mở không tiền tố mã, không chữ «trụ»: 'Cơ bản hỗ trợ điểm (+3,8):'."""
     label = _COMP_VI.get(comp, comp)
     direction = "hỗ trợ" if for_bull else "gây áp lực lên"
     contrib = format_contribution(d, decimals=1)
     if comp == "R":
         # d_R > 0 ↔ R thấp ↔ rủi ro thấp hơn TB; d_R < 0 ↔ rủi ro cao hơn TB
         risk = "rủi ro thấp hơn mức trung bình" if d > 0 else "rủi ro cao hơn mức trung bình"
-        return f"{ticker}: trụ {label} {direction} điểm ({risk}, đóng góp {contrib} điểm)."
-    return f"{ticker}: trụ {label} {direction} điểm (đóng góp {contrib} điểm)."
+        return f"{label} {direction} điểm ({risk}, {contrib}):"
+    return f"{label} {direction} điểm ({contrib}):"
+
+
+def _capitalize_sentences(text: str) -> str:
+    """Viết hoa đầu câu và sau dấu chấm."""
+    if not text:
+        return text
+    out: list[str] = []
+    cap_next = True
+    for ch in text:
+        if cap_next and ch.isalpha():
+            out.append(ch.upper())
+            cap_next = False
+        else:
+            out.append(ch)
+            if ch in ".!?":
+                cap_next = True
+            elif not ch.isspace():
+                cap_next = False
+    return "".join(out)
 
 
 def _finalize_text(text: str) -> str:
     text = re.sub(r"\bm[0-9]+\.[A-Za-z0-9_]+\b", "", text)
+    text = re.sub(r"\b([A-Z0-9]{1,6}):\s+", "", text)  # bỏ tiền tố TICKER: còn sót
+    text = re.sub(r"\btrụ\s+", "", text, flags=re.I)
+    text = re.sub(r"\bbeta\s+(\d+,\d+)x\b", r"beta \1", text, flags=re.I)
     text = normalize_vi_numbers(text)
     text = re.sub(r"\s{2,}", " ", text).strip()
+    text = re.sub(r"\s+([:,.])", r"\1", text)
+    text = _capitalize_sentences(text)
     return text
 
 
 def _honest_empty(side: str, payload: dict, cfg: dict | None = None) -> dict:
-    """Một luận điểm trung thực khi không có trụ lệch đúng hướng."""
-    scores = payload.get("scores") or {}
+    """Một luận điểm trung thực khi không có nhóm yếu tố lệch đúng hướng."""
     comps = ["F", "T", "V", "S", "R"]
     score_txt = _score_phrase(payload, comps)
     if side == "bull":
         text = (
             f"Không có yếu tố tích cực nổi bật so với mức trung tính: "
-            f"các trụ cột đều kéo điểm xuống hoặc trung tính ({score_txt})."
+            f"các nhóm yếu tố đều kéo điểm xuống hoặc trung tính ({score_txt})."
         )
     else:
         text = (
             f"Không có yếu tố tiêu cực nổi bật: "
-            f"các trụ cột không lệch xuống so với mức trung tính ({score_txt})."
+            f"các nhóm yếu tố không lệch xuống so với mức trung tính ({score_txt})."
         )
     refs: list[str] = []
     allowed = set(payload.get("metrics_allowed") or [])
@@ -359,7 +412,6 @@ def _item_from_component(
     cfg: dict | None,
 ) -> dict | None:
     mod = COMP_TO_MOD[comp]
-    ticker = payload.get("ticker") or "?"
     news = _news_for_side(payload, for_bull=for_bull, limit=1) if comp == "S" else []
     metrics = _pick_metrics_for_module(payload, mod, for_bull=for_bull, limit=2, cfg=cfg)
     evid = _evidence_lines(payload, mod, for_bull=for_bull)
@@ -368,7 +420,7 @@ def _item_from_component(
     parts: list[str] = []
     used_news: list[dict] = []
 
-    head = _head_phrase(ticker, comp, d, for_bull=for_bull)
+    head = _head_phrase(comp, d, for_bull=for_bull)
 
     # S + tin: chỉ in title một lần theo mẫu Tin tích cực/tiêu cực: «…»
     if comp == "S" and news:
@@ -390,10 +442,20 @@ def _item_from_component(
         else:
             parts.append(body)
         for key, dname, dval in metrics:
+            name = key.split(".", 1)[-1]
+            # M4: chỉ neo pe/pb chính (tránh sector_median_* vào refs khi chỉ nhắc «trung vị ngành»)
+            if mod == "m4" and name not in ("pe", "pb", "price_close", "eps_used"):
+                continue
             if dname and dname.lower() in body.lower():
                 metric_refs.append(key)
-            elif dval and dval in body:
+            elif dval and str(dval).rstrip("x") in body:
                 metric_refs.append(key)
+        if mod == "m4" and not metric_refs:
+            for key, dname, dval in metrics:
+                name = key.split(".", 1)[-1]
+                if name in ("pb", "pe") and name in body.lower().replace("p/b", "pb").replace("p/e", "pe"):
+                    metric_refs.append(key)
+                    break
     elif metrics:
         bits = [f"{dname} {dval}" for _, dname, dval in metrics]
         parts.append(", ".join(bits))
@@ -401,7 +463,7 @@ def _item_from_component(
     else:
         return None
 
-    text = head + " " + parts[0]
+    text = f"{head} {parts[0]}"
 
     if comp == "S" and used_news:
         refs = [n["ref"] for n in used_news if isinstance(n.get("ref"), str)]
@@ -472,9 +534,8 @@ def build_template_debate(payload: dict, *, cfg: dict | None = None) -> tuple[li
         extras = _pick_metrics_for_module(payload, mod, for_bull=for_bull, limit=3, cfg=cfg)
         if len(extras) >= 2:
             key, dname, dval = extras[1]
-            ticker = payload.get("ticker") or "?"
             text = _finalize_text(
-                f"{ticker}: thêm dẫn chứng trụ {_COMP_VI.get(comp0, comp0)} — {dname} {dval}."
+                f"Thêm dẫn chứng {_COMP_VI.get(comp0, comp0)}: {dname} {dval}."
             )
             side_items.append({"text": text, "refs": [key]})
         return side_items

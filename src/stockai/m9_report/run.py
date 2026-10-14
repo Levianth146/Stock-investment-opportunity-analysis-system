@@ -1,74 +1,65 @@
-"""M9 - xuất PDF (N6). Stub: PDF 1 trang chữ ASCII để pipeline chạy được end-to-end.
+"""M9 - xuất báo cáo PDF A4 tiếng Việt kiểu báo cáo phân tích của công ty chứng khoán (feature 012).
 
-TODO(N6): font tiếng Việt (đăng ký TTF như DejaVuSans/Roboto qua reportlab.pdfbase.ttfonts),
-bố cục 10 mục, biểu đồ (matplotlib), footnote nguồn từ snapshot["sources"], khung cảnh báo từ validation.
+Bản đầy đủ: trang bìa (tùy chọn) + 4 trang: tóm tắt khuyến nghị, cơ bản và định giá, kỹ thuật và rủi ro,
+tin tức, lưu ý dữ liệu và phụ lục. Mã không xếp hạng (quality_gate.scored = false): 1 trang dữ liệu hiện có,
+không có điểm và khuyến nghị.
+
+Mọi số lấy từ result M7, module_out M2-M6, validation M8 và snapshot. Không gọi LLM, không gọi mạng.
+cfg tùy chọn: out_dir, cover, export_date (YYYY-MM-DD), universe_scores [(mã, điểm)], api_cache_dir,
+other_profile {m7, universe_scores}, debate {source, bull, bear, model}, report_cfg_path.
 """
+from __future__ import annotations
+
+from datetime import date
 from pathlib import Path
 
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+import yaml
+
+from stockai.m9_report.data import build_report_data
+from stockai.m9_report.fmt import parse_date
+from stockai.m9_report.layout import Doc, make_styles, render
+from stockai.m9_report.theme import ROOT, build_theme, load_flag_dict, load_report_cfg
 
 
-def _score_text(result: dict) -> str:
-    sc = result.get("score")
-    if sc is None:
-        return "n/a (not ranked)"
-    return f"{sc:.1f}"
-
-
-def _rating_text(result: dict) -> str:
-    raw = result.get("rating") or "n/a"
-    return raw.encode("ascii", "ignore").decode() or "n/a"
-
-
-def _quality_lines(result: dict) -> list[str]:
-    qg = result.get("quality_gate") or {}
-    tier = qg.get("tier", "absent")
-    reasons = qg.get("reasons") or []
-    reason_s = ", ".join(reasons) if reasons else "(none)"
-    if qg.get("scored") is False:
-        return [
-            f"Quality gate: {tier} - NOT RANKED",
-            f"Exclusion reasons: {reason_s}",
-        ]
-    if tier == "limited":
-        return [
-            f"Quality gate: limited - scored with limitations",
-            f"Limitations: {reason_s}",
-        ]
-    if tier and tier != "absent":
-        return [f"Quality gate: {tier}"]
-    return []
+def _scoring_cfg(cfg: dict) -> dict:
+    if isinstance(cfg.get("ratings"), list):
+        return cfg
+    p = ROOT / "config" / "scoring.yaml"
+    try:
+        raw = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    except OSError:
+        raw = {}
+    return raw if isinstance(raw, dict) else {}
 
 
 def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
-    result, validation = upstream["m7"], upstream["m8"]
-    out = Path(cfg.get("out_dir", "reports")) / f"{result['ticker']}_{result['as_of']}_{result['profile']}.pdf"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    # pageCompression=0: giữ text ASCII trong PDF để test/offline assert được
-    c = canvas.Canvas(str(out), pagesize=A4, pageCompression=0)
-    y = 800
-    # contributions = đóng góp so với mức trung tính 50 (feature 010)
-    contrib = result.get("contributions") or {}
-    contrib_bits = []
-    for k in ("F", "T", "V", "S", "R"):
-        if k in contrib and isinstance(contrib[k], (int, float)):
-            contrib_bits.append(f"{k}={contrib[k]:+.2f}")
-    contrib_line = (
-        "Dong gop so voi muc trung tinh 50: " + ", ".join(contrib_bits)
-        if contrib_bits
-        else "Dong gop so voi muc trung tinh 50: (n/a)"
+    rc = load_report_cfg(cfg.get("report_cfg_path"))
+    theme = build_theme(rc)
+    data = build_report_data(snapshot, upstream, cfg, price_days=int(rc["charts"].get("price_days", 252)))
+    export = parse_date(cfg.get("export_date")) or date.today()
+    tech = bool(cfg.get("technical_appendix") or cfg.get("technical"))
+    doc = Doc(
+        theme=theme,
+        st=make_styles(theme),
+        data=data,
+        rc=rc,
+        flag_dict=load_flag_dict(),
+        scoring_cfg=_scoring_cfg(cfg),
+        export_date=export,
+        technical_appendix=tech,
     )
-    lines = [
-        f"STOCK REPORT (STUB) - {result['ticker']} - as_of {result['as_of']}",
-        f"Profile: {result['profile']}   Score: {_score_text(result)}   Rating(code): {_rating_text(result)}",
-        contrib_line,
-        f"Validation: {validation['status']} ({len(validation['issues'])} issue)",
-        *_quality_lines(result),
-        "TODO: Vietnamese font + full 10-section layout",
-    ]
-    for line in lines:
-        c.drawString(50, y, line)
-        y -= 20
-    c.save()
-    return {"pdf_path": str(out)}
+    cover = bool(cfg["cover"]) if "cover" in cfg else bool(rc.get("cover", True))
+    out_dir = Path(cfg.get("out_dir") or rc.get("out_dir") or "reports")
+    out = out_dir / f"{data.ticker}_{data.as_of}_{data.profile}.pdf"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    # Từ khóa máy đọc trong metadata: trạng thái xếp hạng (không hiển thị trong trang)
+    status = "ranked" if data.scored else "NOT RANKED"
+    keywords = f"stockai, report, {data.ticker}, {data.profile}, ranking_status={status}"
+    pages = render(doc, str(out), cover=cover, keywords=keywords)
+    return {
+        "pdf_path": str(out),
+        "pages": pages,
+        "ranked": data.scored,
+        "debate_source": data.debate_source,
+        "font_source": theme.fonts.source,
+    }
