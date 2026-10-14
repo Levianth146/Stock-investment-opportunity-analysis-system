@@ -96,6 +96,10 @@ def format_metric_value(
         if unit_l == "%":
             pct = v
         return f"{pct:.{decimals}f}%".replace(".", ",")
+    # Beta: luôn số 2 chữ số thập phân, không hậu tố x (kể cả khi unit=times)
+    short = key.split(".", 1)[-1].lower()
+    if short == "beta":
+        return f"{v:.2f}".replace(".", ",")
     if fmt == "x":
         return f"{v:.{decimals}f}x".replace(".", ",")
     # Số lớn nguyên (giá VND): bỏ phần thập phân thừa
@@ -193,20 +197,45 @@ def _news_from_m5_evidence(upstream: dict, *, max_news: int = 6) -> tuple[list[d
     return news_items, news_ref_map
 
 
-def _evidence_summaries(upstream: dict, *, max_per_module: int = 2) -> list[str]:
-    """Tối đa 2 dòng evidence mỗi module M2–M6."""
+def _evidence_summaries(
+    upstream: dict,
+    *,
+    max_per_module: int = 2,
+    is_bank: bool = False,
+) -> list[str]:
+    """Tối đa 2 dòng evidence mỗi module M2–M6.
+
+    Ngân hàng: ưu tiên dòng P/B trước P/E để template/API không lấy P/E làm lý do định giá.
+    """
     out: list[str] = []
     for mod in ("m2", "m3", "m4", "m5", "m6"):
-        n = 0
-        for ev in (upstream.get(mod) or {}).get("evidence") or []:
-            if n >= max_per_module:
-                break
+        raw_ev = (upstream.get(mod) or {}).get("evidence") or []
+        texts: list[str] = []
+        for ev in raw_ev:
             if not isinstance(ev, dict):
                 continue
             t = ev.get("text") or ev.get("claim") or ""
             if isinstance(t, str) and t.strip():
-                out.append(f"{mod}: {t.strip()[:160]}")
-                n += 1
+                texts.append(t.strip()[:160])
+        if mod == "m4" and is_bank and texts:
+            # Đưa P/B lên trước; vẫn giữ P/E ở cuối (tham khảo) nếu còn chỗ
+            texts.sort(
+                key=lambda s: (
+                    0 if re.match(r"^p/b\b", s, re.I) or s.lower().startswith("p/b") else 1,
+                    0 if "p/b" in s.lower() else 1,
+                )
+            )
+        n = 0
+        for t in texts:
+            if n >= max_per_module:
+                break
+            # Ngân hàng: bỏ dòng chỉ nói P/E khỏi tóm tắt (tránh dùng làm lý do V)
+            if mod == "m4" and is_bank:
+                low = t.lower()
+                if re.match(r"^p/e\b", low) and "p/b" not in low:
+                    continue
+            out.append(f"{mod}: {t}")
+            n += 1
     return out
 
 
@@ -306,12 +335,15 @@ def build_debate_payload(
             count += 1
 
     news_items, news_ref_map = _news_from_m5_evidence(upstream, max_news=max_news)
-    evidence_summaries = _evidence_summaries(upstream, max_per_module=2)
+    company = snapshot.get("company") if isinstance(snapshot.get("company"), dict) else {}
+    is_bank = company.get("is_bank") is True
+    evidence_summaries = _evidence_summaries(upstream, max_per_module=2, is_bank=is_bank)
 
     payload = {
         "ticker": ticker,
         "as_of": as_of,
         "profile": profile,
+        "is_bank": is_bank,
         "score": score,
         "rating": rating,
         "scores": scores or {},

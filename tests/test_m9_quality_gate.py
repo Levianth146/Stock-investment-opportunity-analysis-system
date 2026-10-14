@@ -1,7 +1,10 @@
 """M9: PDF phản ánh quality gate (insufficient / limited); không crash khi score is None."""
+from __future__ import annotations
+
 import json
 from pathlib import Path
 
+import pymupdf
 import yaml
 
 from stockai.m7_scoring.run import run as run_m7
@@ -29,8 +32,9 @@ def _snap(extra_flags: list[str]) -> dict:
     return snap
 
 
-def _pdf_bytes(path: str) -> bytes:
-    return Path(path).read_bytes()
+def _pages_text(path: str) -> list[str]:
+    with pymupdf.open(path) as doc:
+        return [p.get_text() for p in doc]
 
 
 def test_m9_insufficient_pdf_not_ranked(tmp_path):
@@ -39,13 +43,16 @@ def test_m9_insufficient_pdf_not_ranked(tmp_path):
     up["m7"] = run_m7(snap, up, CFG)
     assert up["m7"]["score"] is None and up["m7"]["target"] is None
     up["m8"] = {"status": "pass", "checked": 1, "issues": []}
-    cfg = {**CFG, "out_dir": str(tmp_path)}
-    out = run_m9(snap, up, cfg)
-    raw = _pdf_bytes(out["pdf_path"])
-    assert b"NOT RANKED" in raw
-    assert b"illiquid" in raw or b"Exclusion reasons" in raw
-    # ReportLab escapes parentheses in PDF strings: n/a \(not ranked\)
-    assert b"n/a" in raw and b"not ranked" in raw
+    out = run_m9(snap, up, {**CFG, "out_dir": str(tmp_path), "cover": False})
+    assert out["ranked"] is False
+    pages = _pages_text(out["pdf_path"])
+    assert len(pages) == 1
+    txt = pages[0]
+    assert "Chưa đủ dữ liệu để xếp hạng" in txt or "chưa đủ dữ liệu để xếp hạng" in txt
+    assert "thanh khoản quá thấp" in txt
+    assert "điểm trên thang" not in txt and "Khuyến nghị" not in txt
+    with pymupdf.open(out["pdf_path"]) as doc:
+        assert "ranking_status=NOT RANKED" in (doc.metadata.get("keywords") or "")
 
 
 def test_m9_limited_pdf_scored_with_limitations(tmp_path):
@@ -54,8 +61,8 @@ def test_m9_limited_pdf_scored_with_limitations(tmp_path):
     up["m7"] = run_m7(snap, up, CFG)
     assert isinstance(up["m7"]["score"], (int, float))
     up["m8"] = {"status": "pass", "checked": 1, "issues": []}
-    cfg = {**CFG, "out_dir": str(tmp_path)}
-    out = run_m9(snap, up, cfg)
-    raw = _pdf_bytes(out["pdf_path"])
-    assert b"scored with limitations" in raw
-    assert b"news_few" in raw or b"Limitations" in raw
+    out = run_m9(snap, up, {**CFG, "out_dir": str(tmp_path)})
+    assert out["ranked"] is True
+    txt = "\n".join(_pages_text(out["pdf_path"]))
+    assert "chấm điểm có giới hạn" in txt
+    assert "quá ít tin tức" in txt

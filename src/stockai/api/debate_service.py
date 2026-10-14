@@ -140,6 +140,10 @@ class DebateService:
             return None
         return data
 
+    def read_cached(self, symbol: str, profile: str) -> dict | None:
+        """Bản debate LLM đã lưu (nếu có) — chỉ đọc đĩa, không gọi LLM (dùng cho xuất PDF)."""
+        return self._read_cache(symbol, profile)
+
     def _write_cache(self, symbol: str, profile: str, payload: dict) -> None:
         path = self._cache_file(symbol, profile)
         try:
