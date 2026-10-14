@@ -47,6 +47,20 @@ class SlidingWindowLimiter:
                 return False
             return len(self._events) < self.max_events
 
+    def release_one(self) -> bool:
+        """Gỡ sự kiện mới nhất (hoàn ngân sách khi LLM fail)."""
+        with self._lock:
+            self._prune(time.monotonic())
+            if not self._events:
+                return False
+            self._events.pop()
+            return True
+
+    def event_count(self) -> int:
+        with self._lock:
+            self._prune(time.monotonic())
+            return len(self._events)
+
     def is_empty_after_prune(self) -> bool:
         """True nếu không còn sự kiện trong cửa sổ (sau khi dọn)."""
         with self._lock:
@@ -202,3 +216,26 @@ class DebateRateLimiter:
             if not self._daily_record_unlocked():
                 return False, "rate_limit_daily"
             return True, None
+
+    def release(self, client_ip: str) -> None:
+        """Hoàn 1 slot (giờ / IP / ngày) khi LLM không dùng thật (fail → template)."""
+        ip = (client_ip or "unknown").strip() or "unknown"
+        self.global_limiter.release_one()
+        with self._lock:
+            day, count = self._load_daily_unlocked()
+            if count > 0:
+                self._save_daily_unlocked(day, count - 1)
+            lim = self._by_ip.get(ip)
+            if lim is not None:
+                lim.release_one()
+
+    def daily_count(self) -> int:
+        with self._lock:
+            _, count = self._load_daily_unlocked()
+            return int(count)
+
+    def set_daily_count(self, count: int) -> None:
+        """Ghi đè số lượt ngày UTC (ops / reset sau fail click)."""
+        with self._lock:
+            day = self._utc_day()
+            self._save_daily_unlocked(day, max(0, int(count)))

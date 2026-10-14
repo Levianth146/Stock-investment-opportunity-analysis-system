@@ -1,0 +1,367 @@
+# Phép kiểm minh họa (feature 014g) — không thay công thức điểm M7.
+# basis: published | sector_percentile | convention | illustrative | info
+# side: reward | risk | info
+# applies_to: non_bank | bank | all
+
+version: 1
+min_sector_peers: 8
+hide_f_score_if_y_lt: 5
+
+basis_tooltip:
+  published: "Theo Piotroski (2000)"
+  graham: "Theo Graham"
+  sector_percentile: "Phân vị trong ngành"
+  convention: "Quy ước phổ biến"
+  illustrative: "Minh họa"
+  info: "Thông tin"
+
+method_disclaimer: "Ngưỡng chưa được kiểm định trên thị trường Việt Nam."
+
+checks:
+  # --- Piotroski (non-bank) ---
+  - id: roa_positive
+    side: reward
+    label_vi: "ROA dương"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  - id: cfo_positive
+    side: reward
+    label_vi: "Dòng tiền hoạt động dương"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  - id: roa_improving
+    side: reward
+    label_vi: "ROA tăng so với năm trước"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  - id: cfo_exceeds_net_income
+    side: reward
+    label_vi: "CFO lớn hơn LNST"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  - id: leverage_down
+    side: reward
+    label_vi: "Đòn bẩy giảm"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  - id: current_ratio_up
+    side: reward
+    label_vi: "Tỷ số thanh toán hiện hành tăng"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  - id: no_dilution
+    side: reward
+    label_vi: "Không pha loãng cổ phiếu (>2%)"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  - id: gross_margin_up
+    side: reward
+    label_vi: "Biên gộp tăng"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  - id: asset_turnover_up
+    side: reward
+    label_vi: "Vòng quay tài sản tăng"
+    applies_to: non_bank
+    basis: published
+    source: "Piotroski (2000)"
+    family: piotroski
+
+  # --- Graham (non-bank) ---
+  - id: pe_le_15
+    side: reward
+    label_vi: "P/E ≤ 15"
+    applies_to: non_bank
+    basis: published
+    source: "Graham"
+    family: graham
+
+  - id: pb_le_1_5
+    side: reward
+    label_vi: "P/B ≤ 1,5"
+    applies_to: non_bank
+    basis: published
+    source: "Graham"
+    family: graham
+
+  - id: pe_x_pb_le_22_5
+    side: reward
+    label_vi: "P/E × P/B ≤ 22,5"
+    applies_to: non_bank
+    basis: published
+    source: "Graham"
+    family: graham
+
+  - id: current_ratio_ge_2
+    side: reward
+    label_vi: "Thanh toán hiện hành ≥ 2"
+    applies_to: non_bank
+    basis: published
+    source: "Graham"
+    family: graham
+
+  # --- Sector-relative ---
+  - id: roe_top_quartile
+    side: reward
+    label_vi: "ROE thuộc top 25% ngành"
+    applies_to: all
+    basis: sector_percentile
+    source: "Phân vị ngành"
+    family: sector
+
+  - id: pe_bottom_quartile
+    side: reward
+    label_vi: "P/E thuộc 25% thấp nhất ngành"
+    applies_to: non_bank
+    basis: sector_percentile
+    source: "Phân vị ngành"
+    family: sector
+
+  - id: pe_top_quartile
+    side: risk
+    label_vi: "P/E thuộc 25% cao nhất ngành"
+    applies_to: non_bank
+    basis: sector_percentile
+    source: "Phân vị ngành"
+    family: sector
+
+  - id: pb_bottom_quartile
+    side: reward
+    label_vi: "P/B thuộc 25% thấp nhất ngành"
+    applies_to: bank
+    basis: sector_percentile
+    source: "Phân vị ngành"
+    family: sector
+
+  - id: revenue_growth_top_quartile
+    side: reward
+    label_vi: "Tăng trưởng doanh thu thuộc top 25% ngành"
+    applies_to: all
+    basis: sector_percentile
+    source: "Phân vị ngành"
+    family: sector
+
+  - id: volatility_top_quartile
+    side: risk
+    label_vi: "Biến động thuộc 25% cao nhất ngành"
+    applies_to: all
+    basis: sector_percentile
+    source: "Phân vị ngành"
+    family: sector
+
+  # --- Convention / illustrative ---
+  - id: interest_cover_lt_1_5
+    side: risk
+    label_vi: "Khả năng trả lãi < 1,5"
+    applies_to: non_bank
+    basis: convention
+    source: "Quy ước phổ biến"
+    family: convention
+
+  - id: rsi_overbought_gt_70
+    side: info
+    label_vi: "RSI > 70 (quá mua)"
+    applies_to: all
+    basis: info
+    source: "Quy ước phổ biến"
+    family: technical
+
+  - id: rsi_oversold_lt_30
+    side: info
+    label_vi: "RSI < 30 (quá bán)"
+    applies_to: all
+    basis: info
+    source: "Quy ước phổ biến"
+    family: technical
+
+  - id: above_ma200
+    side: reward
+    label_vi: "Giá trên MA200"
+    applies_to: all
+    basis: convention
+    source: "Quy ước phổ biến"
+    family: technical
+
+  - id: below_ma200
+    side: risk
+    label_vi: "Giá dưới MA200"
+    applies_to: all
+    basis: convention
+    source: "Quy ước phổ biến"
+    family: technical
+
+  - id: drawdown_gt_35
+    side: risk
+    label_vi: "Sụt giảm tối đa > 35%"
+    applies_to: all
+    basis: illustrative
+    source: "Minh họa"
+    family: risk
+
+  - id: negative_cfo
+    side: risk
+    label_vi: "Dòng tiền hoạt động âm"
+    applies_to: non_bank
+    basis: convention
+    source: "Quy ước phổ biến"
+    family: convention
+
+  - id: rev_growth_positive
+    side: reward
+    label_vi: "Doanh thu quý tăng so với cùng kỳ"
+    applies_to: bank
+    basis: convention
+    source: "Quy ước phổ biến"
+    family: bank
+
+  - id: profit_growth_positive
+    side: reward
+    label_vi: "LNST quý tăng so với cùng kỳ"
+    applies_to: bank
+    basis: convention
+    source: "Quy ước phổ biến"
+    family: bank
+
+  - id: npl_available
+    side: info
+    label_vi: "Có tỷ lệ nợ xấu (NPL) trong snapshot"
+    applies_to: bank
+    basis: info
+    source: "bank_kpis"
+    family: bank
+    optional: true
+
+  - id: car_available
+    side: info
+    label_vi: "Có hệ số CAR trong snapshot"
+    applies_to: bank
+    basis: info
+    source: "bank_kpis"
+    family: bank
+    optional: true
+
+snapshot_stats:
+  - id: pe
+    label_vi: "P/E"
+    unit: "x"
+    tone: lower_better
+  - id: pb
+    label_vi: "P/B"
+    unit: "x"
+    tone: lower_better
+  - id: eps
+    label_vi: "EPS"
+    unit: "VND"
+    tone: higher_better
+  - id: roe
+    label_vi: "ROE"
+    unit: "%"
+    tone: higher_better
+  - id: roa
+    label_vi: "ROA"
+    unit: "%"
+    tone: higher_better
+  - id: gross_margin
+    label_vi: "Biên gộp"
+    unit: "%"
+    tone: higher_better
+  - id: net_margin
+    label_vi: "Biên ròng"
+    unit: "%"
+    tone: higher_better
+  - id: debt_to_equity
+    label_vi: "Nợ / vốn chủ"
+    unit: "x"
+    tone: lower_better
+  - id: interest_cover
+    label_vi: "Khả năng trả lãi"
+    unit: "x"
+    tone: higher_better
+  - id: current_ratio
+    label_vi: "Thanh toán hiện hành"
+    unit: "x"
+    tone: higher_better
+  - id: revenue_yoy
+    label_vi: "DT YoY"
+    unit: "%"
+    tone: higher_better
+  - id: profit_yoy
+    label_vi: "LNST YoY"
+    unit: "%"
+    tone: higher_better
+  - id: rsi14
+    label_vi: "RSI 14"
+    unit: ""
+    tone: band_30_70
+  - id: dist_ma50_pct
+    label_vi: "Cách MA50"
+    unit: "%"
+    tone: neutral
+  - id: dist_ma200_pct
+    label_vi: "Cách MA200"
+    unit: "%"
+    tone: neutral
+  - id: pct_from_52w_high
+    label_vi: "Cách đỉnh 52 tuần"
+    unit: "%"
+    tone: neutral
+  - id: pct_from_52w_low
+    label_vi: "Cách đáy 52 tuần"
+    unit: "%"
+    tone: neutral
+  - id: beta
+    label_vi: "Beta"
+    unit: ""
+    tone: near_one
+  - id: ann_vol
+    label_vi: "Biến động năm"
+    unit: "%"
+    tone: lower_better
+  - id: max_drawdown
+    label_vi: "Sụt giảm tối đa"
+    unit: "%"
+    tone: lower_abs_better
+  - id: avg_volume_1m
+    label_vi: "KL TB 1 tháng"
+    unit: "cp"
+    tone: neutral
+  - id: avg_traded_value_1m
+    label_vi: "GT GD TB 1 tháng"
+    unit: "VND"
+    tone: neutral
+  - id: market_cap
+    label_vi: "Vốn hoá"
+    unit: "VND"
+    tone: neutral
+  - id: shares_outstanding
+    label_vi: "Số cổ phiếu"
+    unit: "cp"
+    tone: neutral
+  - id: free_float
+    label_vi: "Free float"
+    unit: "%"
+    tone: neutral

@@ -31,3 +31,9 @@ data/llm_cache/
 data/api_cache/
 # bản xem trước PDF M9 (scripts/dev_/_m9_preview.py)
 data/reports_preview/
+
+# Web SPA (feature 014)
+web/node_modules/
+web/dist/
+web/public/fonts/
+data/web_preview/

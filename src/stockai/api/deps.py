@@ -7,6 +7,7 @@ from typing import Any
 
 from fastapi import Request
 
+from stockai.api.debate_jobs import DebateJobManager
 from stockai.api.debate_service import DebateService
 from stockai.api.quotes import QuoteProvider, SnapshotQuoteProvider
 from stockai.api.ratelimit import DebateRateLimiter
@@ -23,10 +24,13 @@ def init_app_state(app: Any, *, api_cfg: dict | None = None, store: ResultStore 
         max_per_day=int(cfg.get("debate_live_max_per_day") or 15),
         budget_path=cache_dir / "_debate_budget.json",
     )
+    debate_svc = DebateService(st, limiter)
+    max_workers = int(cfg.get("debate_job_max_workers") or 2)
     app.state.api_cfg = cfg
     app.state.store = st
     app.state.limiter = limiter
-    app.state.debate_service = DebateService(st, limiter)
+    app.state.debate_service = debate_svc
+    app.state.debate_jobs = DebateJobManager(debate_svc, max_workers=max_workers)
     app.state.quote_provider = SnapshotQuoteProvider(st)
 
 
@@ -36,6 +40,10 @@ def get_store(request: Request) -> ResultStore:
 
 def get_debate_service(request: Request) -> DebateService:
     return request.app.state.debate_service
+
+
+def get_debate_jobs(request: Request) -> DebateJobManager:
+    return request.app.state.debate_jobs
 
 
 def get_quote_provider(request: Request) -> QuoteProvider:

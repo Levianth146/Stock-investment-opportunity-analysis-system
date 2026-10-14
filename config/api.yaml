@@ -11,4 +11,6 @@ proxy_ip_header: CF-Connecting-IP
 debate_live_max_per_hour: 10
 debate_live_max_per_ip_per_hour: 3
 debate_live_max_per_day: 15   # trần UTC/ngày, lưu data/api_cache/_debate_budget.json
+debate_job_max_workers: 2     # pool nền POST /debate/jobs (feature 014j)
 cache_dir: data/api_cache
+web_dist_dir: web/dist        # nếu tồn tại index.html → phục vụ SPA tại / (feature 014)

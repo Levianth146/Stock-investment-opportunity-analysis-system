@@ -52,6 +52,8 @@ def _build_prompt(payload_llm: dict, *, feedback: str | None = None) -> str:
         "Trong text dùng tên tiếng Việt và số đã format (%, x, 1 chữ số thập phân).\n"
         "Không chèn số lạ ngoài giá trị đã format (vd viết RSI chứ không RSI(14); "
         "không bịa số trong ngoặc).\n"
+        "Chỉ nói rẻ/đắt/hấp dẫn/cao hơn đáng kể so ngành khi |P/E hoặc P/B − trung vị|/"
+        "trung vị ≥ 10%; nhỏ hơn thì viết «tương đương mức ngành» hoặc bỏ claim.\n"
         "Quy tắc polarity (refs[0] = luận điểm chính):\n"
         "- Bull: refs[0] phải thuộc trụ có module_polarity d>=0 (thường F/S/R khi d dương).\n"
         "- Bear: refs[0] phải thuộc trụ có d<=0 (thường T/V khi d âm).\n"
@@ -121,7 +123,11 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
     debate_cfg = llm_cfg.get("debate") or {}
     prompt_version = str(debate_cfg.get("prompt_version") or "v1")
     max_attempts = int(debate_cfg.get("max_llm_attempts") or 3)
-    max_seconds = float(debate_cfg.get("max_seconds_per_ticker") or 60)
+    max_seconds = float(debate_cfg.get("max_seconds_per_ticker") or 75)
+    try:
+        min_gap_pct = float(debate_cfg.get("valuation_claim_min_gap_pct") or 0.10)
+    except (TypeError, ValueError):
+        min_gap_pct = 0.10
     t0 = time.monotonic()
 
     # Đưa display_metrics / pricing vào cfg để payload format đúng
@@ -206,7 +212,7 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
             dsec = call_cfg.setdefault("debate", {})
             if isinstance(dsec, dict):
                 cap = max(1.0, remaining - 0.5)
-                base_to = float(dsec.get("timeout_sec") or 90)
+                base_to = float(dsec.get("timeout_sec") or 30)
                 dsec["timeout_sec"] = min(base_to, cap)
                 for pname in ("gemini", "glm"):
                     psec = dsec.get(pname)
@@ -237,6 +243,15 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
                     cost_usd += float(meta.get("cost_usd") or 0.0)
                 except (TypeError, ValueError):
                     pass
+                # Model/provider thật từ provider (không lấy model đầu config)
+                if meta.get("provider"):
+                    cfg["_debate_provider"] = str(meta.get("provider"))
+                if meta.get("model"):
+                    cfg["_debate_model"] = str(meta.get("model"))
+                if meta.get("usage") is not None:
+                    cfg["_debate_usage"] = meta.get("usage")
+                if meta.get("cost_usd") is not None:
+                    cfg["_debate_cost_usd_last"] = meta.get("cost_usd")
             bull = raw.get("bull") if isinstance(raw, dict) else None
             bear = raw.get("bear") if isinstance(raw, dict) else None
             errs = validate_debate_sides(
@@ -249,6 +264,7 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
                 payload_metrics=payload.get("metrics"),
                 scores=scores,
                 news_items=payload.get("news"),
+                min_gap_pct=min_gap_pct,
             )
             if errs:
                 bull, bear, errs = repair_debate_sides(
@@ -261,6 +277,7 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
                     payload_metrics=payload.get("metrics"),
                     scores=scores,
                     news_items=payload.get("news"),
+                    min_gap_pct=min_gap_pct,
                 )
                 if not errs:
                     flags.append("debate_repaired_drop_bad_items")
