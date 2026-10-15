@@ -27,6 +27,8 @@ from stockai.api.deps import (
     init_app_state,
 )
 from stockai.api.insession import build_market_analysis
+from stockai.api.realtime import SSE_COALESCE_SEC
+from stockai.api.watchlist import build_watchlist_summary
 from stockai.api.spa import mount_spa, resolve_web_dist
 from stockai.api.store import (
     DISCLAIMER,
@@ -605,17 +607,47 @@ def create_app(
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
 
+    @app.get("/api/watchlist/summary", response_model=None)
+    def watchlist_summary(
+        request: Request,
+        symbols: str = Query(..., description="Danh sách mã, cách nhau bởi dấu phẩy, tối đa 50"),
+        profile: str = Query("long_term"),
+    ) -> Any:
+        """Tóm tắt danh sách theo dõi — giá live + điểm M7 EOD; không cost basis."""
+        store = get_store(request)
+        raw = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        if not raw:
+            return _err(400, "symbols bắt buộc", store)
+        if len(raw) > 50:
+            return _err(400, "symbols quá nhiều (tối đa 50 mã)", store)
+        clean: list[str] = []
+        for s in raw:
+            if not _SYMBOL_RE.fullmatch(s) or not is_valid_symbol(s):
+                return _err(400, f"Mã không hợp lệ: {s}", store)
+            if not store.has_ticker(s):
+                return _err(400, f"Không tìm thấy mã: {s}", store)
+            clean.append(s)
+        if profile not in PROFILES:
+            return _err(400, "profile không hợp lệ", store)
+        hub = get_realtime_hub(request)
+        try:
+            payload = build_watchlist_summary(hub, store, clean, profile=profile)
+            return _envelope(payload, store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
     @app.get("/api/stream", response_model=None)
     async def realtime_stream(
         request: Request,
         symbols: str = Query(..., description="Tối đa 20 mã, cách nhau bởi dấu phẩy"),
     ) -> Any:
-        """SSE giá phiên — heartbeat 15s; refcount unsubscribe khi client rời."""
+        """SSE giá phiên — coalesce ≤1/s/mã; heartbeat 15s; refcount khi client rời."""
         store = get_store(request)
         cfg = get_api_cfg(request)
         rt = cfg.get("realtime") if isinstance(cfg.get("realtime"), dict) else {}
         max_sym = int(rt.get("sse_max_symbols") or 20)
         hb_sec = float(rt.get("sse_heartbeat_sec") or 15)
+        coalesce_sec = float(rt.get("sse_coalesce_sec") or SSE_COALESCE_SEC)
 
         raw = [s.strip().upper() for s in symbols.split(",") if s.strip()]
         if not raw:
@@ -637,15 +669,15 @@ def create_app(
 
         hub = get_realtime_hub(request)
         hub.acquire_view(clean)
-        # TestClient: giới hạn số event để không treo generator vô hạn
         max_events = int(cfg.get("_sse_max_events") or 0)
 
         async def event_gen() -> AsyncIterator[str]:
             last_hb = time.monotonic()
-            last_payload: dict[str, Any] = {}
+            last_by_sym: dict[str, tuple[Any, Any]] = {}
+            last_sent_mono: dict[str, float] = {}
+            pending: dict[str, dict[str, Any]] = {}
             sent = 0
             try:
-                # snapshot đầu
                 items = hub.get_quotes(clean)
                 first = {
                     "type": "quotes",
@@ -653,7 +685,11 @@ def create_app(
                     "label": "tạm tính",
                     "asof": store.asof,
                 }
-                last_payload = first
+                now0 = time.monotonic()
+                for it in items:
+                    sym = str(it.get("symbol") or "")
+                    last_by_sym[sym] = (it.get("price"), it.get("state"))
+                    last_sent_mono[sym] = now0
                 yield f"data: {json.dumps(first, ensure_ascii=False)}\n\n"
                 sent += 1
                 if max_events and sent >= max_events:
@@ -663,30 +699,36 @@ def create_app(
                     if await request.is_disconnected():
                         break
                     loops += 1
-                    # Chế độ test: thoát sớm dù chưa đủ event đổi giá
                     if max_events and loops > 4:
                         break
-                    await asyncio.sleep(0.05 if max_events else 0.5)
+                    await asyncio.sleep(0.05 if max_events else 0.25)
                     items = hub.get_quotes(clean)
-                    payload = {
-                        "type": "quotes",
-                        "items": items,
-                        "label": "tạm tính",
-                        "asof": store.asof,
-                    }
-                    # chỉ gửi khi đổi giá/state
-                    sig = [(it.get("symbol"), it.get("price"), it.get("state")) for it in items]
-                    prev_sig = [
-                        (it.get("symbol"), it.get("price"), it.get("state"))
-                        for it in (last_payload.get("items") or [])
-                    ]
-                    if sig != prev_sig:
-                        last_payload = payload
+                    now = time.monotonic()
+                    for it in items:
+                        sym = str(it.get("symbol") or "")
+                        sig = (it.get("price"), it.get("state"))
+                        if last_by_sym.get(sym) != sig:
+                            pending[sym] = it
+                            last_by_sym[sym] = sig
+                    ready: list[dict[str, Any]] = []
+                    for sym, it in list(pending.items()):
+                        last_t = last_sent_mono.get(sym, 0.0)
+                        if now - last_t >= coalesce_sec:
+                            ready.append(it)
+                            last_sent_mono[sym] = now
+                            pending.pop(sym, None)
+                    if ready:
+                        payload = {
+                            "type": "quotes",
+                            "items": ready,
+                            "label": "tạm tính",
+                            "asof": store.asof,
+                            "coalesced": True,
+                        }
                         yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
                         sent += 1
                         if max_events and sent >= max_events:
                             break
-                    now = time.monotonic()
                     if now - last_hb >= hb_sec:
                         last_hb = now
                         yield f": heartbeat\n\n"
