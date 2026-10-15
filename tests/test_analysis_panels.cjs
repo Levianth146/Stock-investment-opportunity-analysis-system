@@ -112,6 +112,43 @@ test('technical chart range changes the actual series', () => {
   assert.match(renderToStaticMarkup(api.TechnicalAnalysis(props)), /126 phiên hiển thị/);
 });
 
+test('price chart selects actual sessions with scaled pointer coordinates and keyboard, and clears stale tooltips', () => {
+  const api = adapter(), input = data('AAA');
+  let state = [], cursor = 0;
+  const props = { jsx, compact: true, stock: api.toStock(input, { factors: {} }), react: {
+    useState(initial) {
+      const index = cursor++;
+      if (state[index] === undefined) state[index] = initial;
+      return [state[index], value => { state[index] = value; }];
+    }
+  } };
+  const renderChart = () => { cursor = 0; return api.TechnicalAnalysis(props); };
+  const svgOf = tree => tree.props.children.find(child => child?.type === 'svg');
+  const pointer = x => ({ clientX: x, clientY: 80, currentTarget: {
+    getScreenCTM: () => ({ inverse: () => ({}) }),
+    createSVGPoint: () => ({ matrixTransform() { return { x: (this.x - 100) / 2 }; } })
+  } });
+  let tree = renderChart();
+  svgOf(tree).props.onPointerMove(pointer(200));
+  tree = renderChart();
+  assert.match(renderToStaticMarkup(tree), /9\.500 VND\/cổ phiếu/);
+  assert.match(renderToStaticMarkup(tree), /role="status"/);
+  svgOf(tree).props.onPointerMove(pointer(5000));
+  tree = renderChart();
+  assert.match(renderToStaticMarkup(tree), /10\.000 VND\/cổ phiếu/);
+  svgOf(tree).props.onKeyDown({ key: 'ArrowLeft', preventDefault() {} });
+  assert.match(renderToStaticMarkup(renderChart()), /9\.500 VND\/cổ phiếu/);
+  svgOf(tree).props.onPointerLeave();
+  assert.doesNotMatch(renderToStaticMarkup(renderChart()), /role="status"/);
+  svgOf(tree).props.onFocus();
+  tree = renderChart();
+  assert.match(renderToStaticMarkup(tree), /10\.000 VND\/cổ phiếu/);
+  tree.props.children[1].props.children.find(button => button.key === '6m').props.onClick();
+  assert.doesNotMatch(renderToStaticMarkup(renderChart()), /role="status"/);
+  props.stock = api.toStock(data('BBB', 2), { factors: {} });
+  assert.doesNotMatch(renderToStaticMarkup(renderChart()), /role="status"/);
+});
+
 test('out-of-order analyze responses cannot overwrite the latest ticker', async () => {
   // Exercise the actual request handler mounted in the supplied bundle.
   const bundle = fs.readFileSync('frontend/dist/assets/index-CI87uAUB.js', 'utf8');

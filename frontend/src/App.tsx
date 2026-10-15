@@ -1,253 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import { STOCKS_DATA, StockData } from './data/stocks';
-import { TopNav } from './components/TopNav';
-import { StockHeader } from './components/StockHeader';
-import { StockTabs, SubTabType } from './components/StockTabs';
-import { OverviewView } from './components/OverviewView';
-import { TechnicalView } from './components/TechnicalView';
-import { FinancialsView } from './components/FinancialsView';
-import { ValuationView } from './components/ValuationView';
-import { NewsSentimentView } from './components/NewsSentimentView';
-import { RisksAuditView } from './components/RisksAuditView';
-import { BullBearView } from './components/BullBearView';
-import { WatchlistView } from './components/WatchlistView';
-import { ReportsLibraryView } from './components/ReportsLibraryView';
-import { RecommendationsView } from './components/RecommendationsView';
-import { PdfExportModal } from './components/PdfExportModal';
-import { HoseBoardModal } from './components/HoseBoardModal';
-import { AiCopilotDrawer } from './components/AiCopilotDrawer';
-import { TickerSearchModal } from './components/TickerSearchModal';
-import { CompanyProfileModal } from './components/CompanyProfileModal';
-
-export default function App() {
-  const API_URL = "http://127.0.0.1:8000/api/analyze";
-
-  const [currentSymbol, setCurrentSymbol] = useState<string>('FPT');
-  const [activeNavTab, setActiveNavTab] = useState<string>('Tổng quan');
-  const [activeSubTab, setActiveSubTab] = useState<SubTabType>('overview');
-
-  // State lưu trữ dữ liệu thật từ Backend FastAPI
-  const [liveStockData, setLiveStockData] = useState<StockData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // Modals & Drawers state
-  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isHoseBoardOpen, setIsHoseBoardOpen] = useState(false);
-  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
-  const [isCompanyProfileOpen, setIsCompanyProfileOpen] = useState(false);
-
-  // Watchlist favorite status
-  const [watchlistedSymbols, setWatchlistedSymbols] = useState<string[]>(['FPT', 'HPG', 'VNM']);
-
-  // Ưu tiên dữ liệu từ backend, nếu null thì fallback về STOCKS_DATA
-  const currentStock: StockData = liveStockData || STOCKS_DATA[currentSymbol] || STOCKS_DATA['FPT'];
-  const isBookmarked = watchlistedSymbols.includes(currentSymbol);
-
-  const handleToggleBookmark = () => {
-    if (isBookmarked) {
-      setWatchlistedSymbols(prev => prev.filter(s => s !== currentSymbol));
-    } else {
-      setWatchlistedSymbols(prev => [...prev, currentSymbol]);
-    }
-  };
-
-  // Hàm gọi API tới Backend FastAPI Python
-  const fetchStockAnalysis = async (symbol: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ticker: symbol,
-          profile: "long_term",
-          as_of: "2026-10-09",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log("Dữ liệu nhận từ Python Backend:", result);
-
-      // Cập nhật dữ liệu vào giao diện (map theo schema của StockData)
-      // Giữ lại cấu trúc hiện tại và ghi đè các thông tin phân tích mới
-      const baseStock = STOCKS_DATA[symbol] || STOCKS_DATA['FPT'];
-      const recommendationMap: Record<string, StockData['aiRecommendation']> = {
-        'Hấp dẫn': 'MUA',
-        'MUA MẠNH': 'MUA MẠNH',
-        'MUA': 'MUA',
-        'GIỮ': 'GIỮ',
-        'BÁN': 'BÁN',
-      };
-
-      setLiveStockData({
-        ...baseStock,
-        symbol: result.ticker || symbol,
-        targetPrice: result.target_price || baseStock.targetPrice,
-        aiRecommendation: recommendationMap[result.recommendation] || baseStock.aiRecommendation,
-        // Nếu backend trả về scores hoặc debate, có thể ghi đè tiếp ở đây
-      });
-    } catch (err) {
-      console.error("Không kết nối được tới backend 8000, dùng dữ liệu offline:", err);
-      // Fallback về mock data nếu backend tắt
-      setLiveStockData(STOCKS_DATA[symbol] || STOCKS_DATA['FPT']);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Tự động gọi API khi currentSymbol thay đổi
-  useEffect(() => {
-    fetchStockAnalysis(currentSymbol);
-  }, [currentSymbol]);
-
-  const handleSelectStock = (symbol: string) => {
-    setCurrentSymbol(symbol);
-    setActiveNavTab('Tổng quan');
-    setActiveSubTab('overview');
-  };
-
-  return (
-    <div className="min-h-screen bg-[#F8F9FF] text-[#0C1D2D] flex flex-col font-sans selection:bg-[#AED2FD] selection:text-[#001D35]">
-      {/* ================= TOP NAVIGATION ================= */}
-      <TopNav
-        currentStock={currentStock}
-        activeNavTab={activeNavTab}
-        setActiveNavTab={setActiveNavTab}
-        onOpenPdfModal={() => setIsPdfModalOpen(true)}
-        onOpenSearch={() => setIsSearchOpen(true)}
-        isBookmarked={isBookmarked}
-        onToggleBookmark={handleToggleBookmark}
-        onOpenCopilot={() => setIsCopilotOpen(true)}
-        onOpenHoseBoard={() => setIsHoseBoardOpen(true)}
-      />
-
-      {/* ================= MAIN CONTAINER ================= */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
-        {/* Render depending on Top Nav selection */}
-        {activeNavTab === 'Danh mục theo dõi' ? (
-          <WatchlistView onSelectStock={handleSelectStock} />
-        ) : activeNavTab === 'Báo cáo AI' ? (
-          <ReportsLibraryView 
-            onOpenPdfModal={() => setIsPdfModalOpen(true)} 
-            onSelectStock={handleSelectStock} 
-          />
-        ) : activeNavTab === 'Khuyến nghị đầu tư' ? (
-          <RecommendationsView onSelectStock={handleSelectStock} />
-        ) : (
-          /* Active Stock Analysis Workspace */
-          <div className="space-y-4">
-            {/* Stock Identity Header */}
-            <StockHeader
-              stock={currentStock}
-              isWatchlisted={isBookmarked}
-              onToggleWatchlist={handleToggleBookmark}
-              onOpenCopilot={() => setIsCopilotOpen(true)}
-              onOpenCompanyProfile={() => setIsCompanyProfileOpen(true)}
-            />
-
-            {/* Sub-tab Navigation Ribbon */}
-            <StockTabs
-              activeTab={activeSubTab}
-              setActiveTab={setActiveSubTab}
-            />
-
-            {/* Sub-tab Content Area */}
-            {activeSubTab === 'overview' && (
-              <OverviewView
-                stock={currentStock}
-                onNavigateTab={(tab) => setActiveSubTab(tab)}
-                onOpenPdfModal={() => setIsPdfModalOpen(true)}
-                onOpenCompanyProfile={() => setIsCompanyProfileOpen(true)}
-              />
-            )}
-
-            {activeSubTab === 'technical' && (
-              <TechnicalView stock={currentStock} />
-            )}
-
-            {activeSubTab === 'financials' && (
-              <FinancialsView stock={currentStock} />
-            )}
-
-            {activeSubTab === 'valuation' && (
-              <ValuationView stock={currentStock} />
-            )}
-
-            {activeSubTab === 'news' && (
-              <NewsSentimentView stock={currentStock} />
-            )}
-
-            {activeSubTab === 'risks' && (
-              <RisksAuditView stock={currentStock} />
-            )}
-
-            {activeSubTab === 'bullbear' && (
-              <BullBearView stock={currentStock} />
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* ================= FOOTER ================= */}
-      <footer className="bg-white border-t border-[#E1E7EF] py-4 px-4 sm:px-6 mt-8 flex-none">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between text-xs text-[#68788C] gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-bold text-[#1A56DB]">StockLens VN 2025</span>
-            <span>• Nền tảng Định lượng & Tình báo Cổ phiếu Việt Nam</span>
-            <span className="px-2 py-0.5 rounded bg-[#EFF6FF] text-[#1A56DB] font-mono-numbers font-semibold border border-[#BFDBFE]">
-              Phiên bản Pro 3.4.1
-            </span>
-          </div>
-
-          <p className="text-[11px] text-[#74777F] text-center md:text-right max-w-xl leading-relaxed">
-            Miễn trừ trách nhiệm: Báo cáo nhằm mục đích tham khảo và phân tích định lượng dựa trên số liệu lịch sử. Nhà đầu tư tự chịu trách nhiệm với quyết định giao dịch của mình.
-          </p>
-        </div>
-      </footer>
-
-      {/* ================= MODALS & DRAWERS ================= */}
-      {/* 1. PDF Export Modal with Live Preview */}
-      <PdfExportModal
-        stock={currentStock}
-        isOpen={isPdfModalOpen}
-        onClose={() => setIsPdfModalOpen(false)}
-      />
-
-      {/* 2. HOSE Electronic Board Stream Modal */}
-      <HoseBoardModal
-        isOpen={isHoseBoardOpen}
-        onClose={() => setIsHoseBoardOpen(false)}
-        onSelectStock={handleSelectStock}
-        currentSymbol={currentSymbol}
-      />
-
-      {/* 3. AI Copilot Drawer */}
-      <AiCopilotDrawer
-        stock={currentStock}
-        isOpen={isCopilotOpen}
-        onClose={() => setIsCopilotOpen(false)}
-      />
-
-      {/* 4. Command Palette Ticker Search (⌘K) */}
-      <TickerSearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSelectStock={handleSelectStock}
-      />
-
-      {/* 5. Company Profile & Overview Modal */}
-      <CompanyProfileModal
-        stock={currentStock}
-        isOpen={isCompanyProfileOpen}
-        onClose={() => setIsCompanyProfileOpen(false)}
-      />
+import React, {useEffect, useRef, useState} from 'react';
+import {Activity, ArrowDownRight, ArrowRight, ArrowUpRight, BarChart3, Bell, Bookmark, Check, ChevronRight, CircleHelp, Clock3, Database, Download, FileText, Gauge, Home, Layers3, Menu, Newspaper, RefreshCw, Search, Settings2, ShieldCheck, Sparkles, TrendingUp, X} from 'lucide-react';
+import {WatchlistPage} from './components/WatchlistPage';
+import {OpportunitiesPage} from './components/OpportunitiesPage';
+import {NewsDashboard} from './components/NewsDashboard';
+import {PriceChart, ScoreRadar} from './components/DashboardCharts';
+import {DataAvailability, CatalogAvailability, factorScore, factorLabel} from './components/DataAvailability';
+import {CompanyOverview} from './components/CompanyOverview';
+import {AnalysisPage, AnalysisSnapshotMetrics} from './components/AnalysisPage';
+declare global {interface Window {StockAI:any}}
+const api=window.StockAI;
+export const fmt=(v:any,d=2)=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('vi-VN',{maximumFractionDigits:d}):'—';
+const factors=[
+  {key:'F',module:'m2',name:'Cơ bản',color:'var(--fundamental)',icon:BarChart3,tab:'financials',note:'Sức khỏe tài chính & tăng trưởng'},
+  {key:'T',module:'m3',name:'Kỹ thuật',color:'var(--technical)',icon:TrendingUp,tab:'technical',note:'Xu hướng giá & động lượng'},
+  {key:'V',module:'m4',name:'Định giá',color:'var(--valuation)',icon:Database,tab:'valuation',note:'Giá trị & biên an toàn'},
+  {key:'S',module:'m5',name:'Tin tức',color:'var(--sentiment)',icon:Newspaper,tab:'news',note:'Sắc thái tin tức từ tiêu đề'},
+  {key:'R',module:'m6',name:'Rủi ro',color:'var(--risk)',icon:ShieldCheck,tab:'risk',note:'Biến động & mức sụt giảm'},
+];
+const navs=[{id:'overview',label:'Tổng quan',icon:Home},{id:'analysis',label:'Phân tích cổ phiếu',icon:Activity},{id:'opportunities',label:'Cơ hội đầu tư',icon:TrendingUp},{id:'watchlist',label:'Danh mục theo dõi',icon:Bookmark},{id:'reports',label:'Báo cáo PDF',icon:FileText},{id:'news',label:'Tin tức',icon:Newspaper},{id:'history',label:'Lịch sử',icon:Clock3}];
+function stored(key:string,fallback:any){try{return JSON.parse(localStorage.getItem(key)||'null')??fallback;}catch{return fallback;}}
+function save(key:string,value:any){try{localStorage.setItem(key,JSON.stringify(value));}catch{}}
+function Panel({title,icon:Icon,action,children,className=''}:any){return <section className={`panel ${className}`}><div className="panel-heading"><h2>{Icon&&<Icon size={16}/>} {title}</h2>{action}</div>{children}</section>;}
+export default function App(){
+  const [analysisPage,setAnalysisPage]=useState(1);
+  const [newsPage,setNewsPage]=useState(1);
+  const [watchPage,setWatchPage]=useState(1);
+  const [symbol,setSymbol]=useState('FPT'),[profile,setProfile]=useState('long_term'),[nav,setNav]=useState('overview'),[tab,setTab]=useState('technical');
+  const [data,setData]=useState<any>(null),[loading,setLoading]=useState(false),[error,setError]=useState(''),[reload,setReload]=useState(0);
+  const [search,setSearch]=useState(false),[query,setQuery]=useState(''),[catalog,setCatalog]=useState<any[]>([]),[catalogError,setCatalogError]=useState('');
+  const [favorites,setFavorites]=useState<string[]>(()=>stored('stockai-favorites',[])),[history,setHistory]=useState<any[]>(()=>stored('stockai-history',[]));
+  const [menu,setMenu]=useState(false),[settings,setSettings]=useState(false),[dense,setDense]=useState(()=>stored('stockai-dense',false)),[notifications,setNotifications]=useState(false);
+  const inputRef=useRef<HTMLInputElement>(null);
+  useEffect(()=>{save('stockai-favorites',favorites);},[favorites]);
+  useEffect(()=>{save('stockai-dense',dense);},[dense]);
+  useEffect(()=>{
+    const controller=new AbortController();setLoading(true);setError('');setData(null);
+    fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker:symbol,profile}),signal:controller.signal})
+      .then(async r=>{if(!r.ok)throw Error(`Không tải được phân tích ${symbol} (HTTP ${r.status}).`);return r.json();})
+      .then(result=>{if(controller.signal.aborted)return;setData(result);setHistory(previous=>{const next=[{symbol,profile,asof:result.as_of,viewedAt:new Date().toISOString()},...previous.filter(row=>row.symbol!==symbol||row.profile!==profile)].slice(0,30);save('stockai-history',next);return next;});})
+      .catch(err=>{if(!controller.signal.aborted)setError(err.message);}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});
+    return ()=>controller.abort();
+  },[symbol,profile,reload]);
+  useEffect(()=>{let active=true;api.loadTickerCatalog().then((r:any)=>{if(active)setCatalog(r.items);}).catch(()=>{if(active)setCatalogError('Không tải được danh sách doanh nghiệp.');});return ()=>{active=false;};},[reload]);
+  useEffect(()=>{const key=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setSearch(true);}if(e.key==='Escape'){setSearch(false);setSettings(false);setNotifications(false);}};window.addEventListener('keydown',key);return ()=>window.removeEventListener('keydown',key);},[]);
+  useEffect(()=>{if(search)inputRef.current?.focus();},[search]);
+  const select=(ticker:string)=>{setSymbol(ticker);setSearch(false);setQuery('');setNav(previous=>previous==='news'?'news':'overview');setMenu(false);};
+  const navigate=(id:string)=>{setNav(id);setMenu(false);};
+  const openTab=(id:string)=>{setTab(id);setNav('analysis');};
+  const positive=(data?.price_change??0)>=0,date=data?.as_of||'Chưa có snapshot';
+  const reportUrl=typeof data?.report_url==='string'&&data.report_url.startsWith('/api/report/')?data.report_url:null;
+  const filtered=api.filterTickers(catalog,query);
+  const displayScores=Object.fromEntries(factors.map(f=>[f.key,factorScore(data,f.key,f.module)]));
+  const pdfCard=<Panel title="Xuất báo cáo PDF" icon={FileText} className="pdf-panel"><div className="pdf-content"><div className="report-cover"><div className="mini-brand">Stock<span>AI</span></div><small>BÁO CÁO PHÂN TÍCH</small><strong>{symbol}</strong><div className="paper-chart"><TrendingUp size={54}/></div><span>{date}</span></div><div className="report-details"><p><Check size={15}/> Dữ liệu {data?'đã tải':'chưa sẵn sàng'}</p><p><Clock3 size={15}/> Snapshot {date}</p><p><ShieldCheck size={15}/> Kiểm tra: {data?.validation?.status||'—'}</p>{reportUrl?<a className="btn gradient" href={reportUrl} target="_blank" rel="noreferrer"><Download size={16}/> Xuất báo cáo PDF</a>:<button className="btn" disabled>Chưa có báo cáo</button>}</div></div></Panel>;
+  return <div className={`app-shell ${dense?'dense':''}`}>
+    <aside className={`sidebar ${menu?'open':''}`}><a className="brand" href="#" onClick={e=>{e.preventDefault();navigate('overview');}}><span className="brand-icon"><BarChart3 size={31}/><TrendingUp size={19}/></span><span>Stock<span className="cyan">AI</span><small>Phân tích hôm nay<br/>Đầu tư vững vàng ngày mai</small></span></a><span className="nav-caption">KHÔNG GIAN ĐẦU TƯ</span><nav aria-label="Điều hướng chính">{navs.map(item=><button key={item.id} data-nav={item.id} className={`nav-item ${nav===item.id?'active':''}`} onClick={()=>navigate(item.id)}><item.icon size={19}/>{item.label}{nav===item.id&&<ChevronRight size={14}/>}</button>)}</nav><button className="nav-item" onClick={()=>setSettings(true)}><Settings2 size={19}/>Cài đặt giao diện</button>
+      <div className="sidebar-bottom"><div className="signal-art"><Activity size={105}/><TrendingUp size={76}/><span>DATA INTO OPPORTUNITY</span></div><div className="insight-box"><Sparkles size={20}/><strong>Hiểu dữ liệu. Thấy cơ hội.</strong><p>Góc nhìn đa chiều từ 5 trụ cột phân tích.</p><button className="btn" onClick={()=>openTab('bullbear')}>Khám phá luận điểm <ArrowRight size={15}/></button></div><div className="universe"><span className="live-dot"/> THỊ TRƯỜNG VIỆT NAM<strong>{catalog.length?fmt(catalog.length,0):'—'} <small>doanh nghiệp</small></strong><span>Dữ liệu snapshot · HOSE / HNX / UPCoM</span></div></div>
+    </aside>{menu&&<button aria-label="Đóng menu" className="sidebar-backdrop" onClick={()=>setMenu(false)}/>}
+    <div className="workspace"><header className="topbar"><button className="icon-btn mobile-menu" aria-label="Mở menu" onClick={()=>setMenu(!menu)}><Menu/></button><div className="page-heading"><span className="eyebrow">STOCKAI / INVESTMENT INTELLIGENCE</span><h1>{nav==='watchlist'?<>Danh mục theo dõi <span className="analysis-page-number">· {watchPage}/2</span></>:nav==='opportunities'?<>Cơ hội đầu tư</>:nav==='news'?<>Tin tức & Sentiment <span className="analysis-page-number">· {newsPage}/2</span></>:nav==='analysis'?<>Phân tích cổ phiếu <span className="analysis-page-number">· {analysisPage}/2</span></>:<>Hệ thống Phân tích Cơ hội Đầu tư Cổ phiếu</>}</h1><p>Dữ liệu đa nguồn. Phân tích đa chiều. Quyết định có cơ sở.</p></div><button className="global-search" onClick={()=>setSearch(true)}><Search size={17}/><span>Tìm mã cổ phiếu, doanh nghiệp…</span><kbd>⌘ K</kbd></button><button className="icon-btn notification" aria-label="Thông báo dữ liệu" onClick={()=>setNotifications(!notifications)}><Bell size={20}/>{data?.flags?.length>0&&<i/>}</button><div className="workspace-badge"><span>VN</span><div>Nhà đầu tư<small>Không gian cá nhân</small></div></div></header>
+      {notifications&&<div className="notice-popover"><strong>Thông báo dữ liệu</strong><button className="icon-btn" onClick={()=>setNotifications(false)} aria-label="Đóng thông báo"><X size={16}/></button><p>Snapshot: {date}</p><p>{data?.flags?.length||0} cờ dữ liệu.</p><button className="text-btn" onClick={()=>{openTab('risk');setNotifications(false);}}>Xem kiểm tra dữ liệu →</button></div>}
+      <main><div className={`toolbar ${nav==='opportunities'||nav==='watchlist'?'opportunities-toolbar':''}`}><div className="controls"><label>Mã cổ phiếu<button className="ticker-select" onClick={()=>setSearch(true)}>{symbol}<Search size={16}/></button></label><label>Ngày snapshot<div className="date-field"><Clock3 size={15}/>{date}</div></label><label>Hồ sơ nhà đầu tư<div className="segmented"><button className={profile==='long_term'?'selected':''} onClick={()=>setProfile('long_term')}>Long-term</button><button className={profile==='swing'?'selected':''} onClick={()=>setProfile('swing')}>Swing</button></div></label><button className="btn gradient analyze-btn" disabled={loading} onClick={()=>setReload(v=>v+1)}>{loading?<RefreshCw size={17} className="spin"/>:<Sparkles size={17}/>} {loading?'Đang phân tích…':nav==='opportunities'||nav==='watchlist'?'Cập nhật danh sách':'Phân tích ngay'}<ArrowRight size={17}/></button></div><div className="data-promo"><Layers3 size={34}/><div><strong>Sức mạnh của dữ liệu</strong><span>Kết nối thông tin, mở lối đầu tư</span></div><span className="orb"/></div></div>
+      {error&&<div className="error-state" role="alert">{error}<button onClick={()=>setReload(v=>v+1)}>Thử lại</button></div>}{loading&&<div className="loading-strip" role="status"><span className="live-dot"/> Đang đọc dữ liệu phân tích {symbol}…</div>}
+      {nav!=='news'&&nav!=='opportunities'&&nav!=='watchlist'&&<section className={nav==='analysis'?'stock-summary analysis-stock-summary':'stock-summary'} aria-label="Tổng quan cổ phiếu"><div className="company-block"><div className="ticker-monogram">{symbol.slice(0,3)}</div><div><div className="company-title"><h2>{symbol}</h2><button className={`icon-btn favorite ${favorites.includes(symbol)?'saved':''}`} onClick={()=>setFavorites(p=>p.includes(symbol)?p.filter(x=>x!==symbol):[...p,symbol])} aria-label={favorites.includes(symbol)?'Bỏ theo dõi':'Theo dõi cổ phiếu'}><Bookmark size={17} fill={favorites.includes(symbol)?'currentColor':'none'}/></button></div><p>{data?.company?.name||(loading?'Đang tải doanh nghiệp…':symbol)}</p><div className="tags"><span>{data?.company?.exchange||'—'}</span><span>{data?.company?.sector||'Chưa có ngành'}</span></div></div></div><div className="price-block"><span>Giá đóng cửa snapshot</span><strong>{fmt(data?.current_price,0)} <small>₫</small></strong><p className={positive?'positive':'negative'}>{positive?<ArrowUpRight size={17}/>:<ArrowDownRight size={17}/>} {fmt(data?.price_change,0)} ₫ ({fmt(data?.price_change_percent)}%)</p></div><div className={`score-block ${data?.quality_gate?.scored===false?'unranked':''}`}><span><Gauge size={15}/>Điểm tổng hợp</span><strong>{data?.quality_gate?.scored===false?<span className="unranked-label">Chưa xếp hạng</span>:<>{fmt(data?.score)}<small>/100</small></>}</strong><div className="score-track"><i style={{width:`${Math.max(0,Math.min(100,data?.score||0))}%`}}/></div></div><div className="recommendation-block"><span>Khuyến nghị</span><strong>{data?.recommendation||'—'}</strong><small>Từ kết quả pipeline</small></div><div className="target-block"><span>Giá mục tiêu cơ sở</span><strong>{fmt(data?.target_price,0)} <small>₫</small></strong><p className={(data?.upside??0)>=0?'positive':'negative'}><TrendingUp size={16}/>{fmt(data?.upside)}% so với giá đóng cửa</p></div>{nav==='analysis'&&<AnalysisSnapshotMetrics data={data} valuation={analysisPage===2}/>}</section>}
+      {nav==='overview'&&<CompanyOverview data={data} symbol={symbol} loading={loading}/>}{nav!=='news'&&nav!=='opportunities'&&nav!=='watchlist'&&<DataAvailability data={data}/>}<div className={`factor-grid ${nav==='analysis'||nav==='news'||nav==='opportunities'||nav==='watchlist'?'analysis-hidden':''}`}>{factors.map(f=><button key={f.key} className="factor-card" style={{'--factor':f.color} as React.CSSProperties} onClick={()=>openTab(f.tab)}><span className="factor-icon"><f.icon size={25}/></span><div><h3>{f.module.toUpperCase()} {f.name} ({f.key})</h3><strong>{fmt(factorScore(data,f.key,f.module))}<small>/100</small></strong><span className="factor-status">{factorLabel(data,f.key,f.module)}</span></div><ChevronRight className="factor-arrow" size={15}/><p>{f.note}</p></button>)}</div>
+      {nav==='overview'&&<><div className="dashboard-grid"><Panel title="Biểu đồ giá & khối lượng" icon={Activity} className="chart-panel" action={<span className="snapshot-pill"><span className="live-dot"/> SNAPSHOT</span>}><PriceChart rows={data?.price_history||[]} symbol={symbol}/></Panel><Panel title="Phân bổ điểm thành phần" icon={Gauge} className="radar-panel"><ScoreRadar scores={displayScores}/><p className="subtle radar-note">R càng cao, rủi ro đo được càng lớn.</p></Panel><Panel title="Quy trình phân tích M1 – M9" icon={Layers3} className="pipeline-panel"><ol className="pipeline">{['Dữ liệu snapshot','Cơ bản (F)','Kỹ thuật (T)','Định giá (V)','Tin tức (S)','Rủi ro (R)','Tổng hợp điểm','Kiểm tra dữ liệu','Xuất báo cáo PDF'].map((label,i)=>{const ok=i===0?data?.price_history?.length>0:i<6?['ok','partial'].includes(data?.modules?.[`m${i+1}`]?.status):i===6?Number.isFinite(data?.score):i===7?!!data?.validation:!!reportUrl;return <li key={label} className={ok?'complete':''}><span className="pipeline-dot">{ok?<Check size={11}/>:<span/>}</span><b>M{i+1}</b><span>{label}</span></li>;})}</ol></Panel></div>
+      <div className="bottom-grid"><Panel title="Tin tức & sắc thái thị trường" icon={Newspaper} action={<button className="text-btn" onClick={()=>navigate('news')}>Xem tất cả <ArrowRight size={13}/></button>}><div className="news-grid">{data?.news?.length?data.news.slice(0,4).map((item:any,i:number)=><article className="news-card" key={item.id||i}><div className={`news-art art-${i}`}><Newspaper size={35}/><span>{symbol} / MARKET INTELLIGENCE</span></div><div className="news-meta"><span className={`sentiment ${item.label==='pos'?'positive':item.label==='neg'?'negative':'muted'}`}>{item.label==='pos'?'Tích cực':item.label==='neg'?'Tiêu cực':item.label==='neutral'?'Trung tính':'Chưa phân loại'}</span><time>{item.published_at?.slice(0,10)||'—'}</time></div><h3>{/^https?:\/\//i.test(item.url||'')?<a href={item.url} target="_blank" rel="noreferrer">{item.title}</a>:item.title}</h3><p>{item.summary||item.source||'Tin tiêu biểu trong snapshot.'}</p></article>):<div className="empty-state"><Newspaper/><p>{loading?'Đang tải tin tức…':'Chưa có tin tiêu biểu cho snapshot này.'}</p></div>}</div><p className="subtle news-note">Sắc thái phân loại theo tiêu đề; không phải dự báo biến động giá.</p></Panel>{pdfCard}</div></>}
+      {nav==='analysis'&&<AnalysisPage key={symbol} data={data} symbol={symbol} activeTab={tab} onNavigate={openTab} onPageChange={setAnalysisPage}/>}
+      {nav==='news'&&<NewsDashboard symbol={symbol} profile={profile} asof={data?.as_of} prices={data?.price_history||[]} onPageChange={setNewsPage} reload={reload}/>}
+      {nav==='reports'&&<div className="report-page">{pdfCard}<Panel title="Nội dung báo cáo" icon={FileText}><div className="report-info"><h3>Phân tích {symbol} · {profile==='swing'?'Swing':'Dài hạn'}</h3><p>Tổng hợp điểm, định giá, luận điểm Bull/Bear và kiểm tra dữ liệu theo snapshot {date}.</p><p>PDF được tạo từ backend khi bạn chọn xuất báo cáo.</p></div></Panel></div>}
+      {nav==='history'&&<Panel title="Lịch sử phân tích trên thiết bị này" icon={Clock3} action={<button className="text-btn" onClick={()=>{setHistory([]);save('stockai-history',[]);}}>Xóa lịch sử</button>}><div className="history-list">{history.length?history.map(row=><button key={`${row.symbol}-${row.profile}`} onClick={()=>{select(row.symbol);setProfile(row.profile);}}><span className="ticker-mini">{row.symbol}</span><span>{row.profile==='swing'?'Swing':'Long-term'}<small>Snapshot {row.asof}</small></span><time>{new Date(row.viewedAt).toLocaleString('vi-VN')}</time><ChevronRight size={16}/></button>):<p className="empty-state">Chưa có lịch sử phân tích.</p>}</div></Panel>}
+      {nav==='opportunities'&&<OpportunitiesPage profile={profile} catalog={catalog} favorites={favorites} reload={reload} onToggleFavorite={(ticker:string)=>setFavorites(p=>p.includes(ticker)?p.filter(t=>t!==ticker):[...p,ticker])} onAddFavorites={(tickers:string[])=>setFavorites(p=>[...new Set([...p,...tickers])])} onOpen={(ticker:string,nextTab:string)=>{setSymbol(ticker);setTab(nextTab);setNav('analysis');}} onNews={()=>navigate('news')}/>}
+      {nav==='watchlist'&&<WatchlistPage favorites={favorites} catalog={catalog} profile={profile} reload={reload} onPageChange={setWatchPage} onAdd={(ticker:string)=>setFavorites(p=>p.includes(ticker)?p:[...p,ticker])} onRemove={(ticker:string)=>setFavorites(p=>p.filter(t=>t!==ticker))} onOpen={(ticker:string)=>{setSymbol(ticker);setTab('technical');setNav('analysis');}}/>}
+      <footer><CircleHelp size={14}/><span>Dữ liệu giá theo snapshot. Phân tích hỗ trợ nghiên cứu, không phải khuyến nghị đầu tư cá nhân.</span><span className="footer-brand"><ShieldCheck size={15}/> Dữ liệu minh bạch · Góc nhìn đa chiều</span></footer></main>
     </div>
-  );
+    {search&&<div className="modal-backdrop" onClick={()=>setSearch(false)}><section className="search-dialog" role="dialog" aria-modal="true" aria-label="Tìm doanh nghiệp" onClick={e=>e.stopPropagation()}><div className="search-input"><Search size={20}/><input ref={inputRef} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Tìm mã cổ phiếu, tên hoặc ngành…" onKeyDown={e=>{if(e.key==='Enter'&&filtered[0]&&filtered[0].snapshot_status!=='error')select(filtered[0].symbol);}}/><button className="icon-btn" aria-label="Đóng tìm kiếm" onClick={()=>setSearch(false)}><X size={19}/></button></div><div className="search-meta">{filtered.length} doanh nghiệp · Toàn bộ snapshot</div><div className="search-results">{filtered.slice(0,100).map((item:any)=><button disabled={item.snapshot_status==='error'} key={item.symbol} onClick={()=>select(item.symbol)}><span className="ticker-mini">{item.symbol}</span><span><strong>{item.name||item.symbol}</strong><small>{item.exchange} · {item.sector||'Chưa có ngành'}</small><CatalogAvailability item={item}/></span><span className="search-price">{fmt(item.current_price,0)}<small>{item.price_date||'—'}</small></span><ChevronRight size={16}/></button>)}{!filtered.length&&<p className="empty-state">{catalogError||'Không có doanh nghiệp phù hợp.'}</p>}</div><div className="search-meta">Enter để chọn · Esc để đóng{filtered.length>100?' · Nhập từ khóa để thu hẹp kết quả':''}</div></section></div>}
+    {settings&&<div className="modal-backdrop" onClick={()=>setSettings(false)}><section className="settings-dialog" role="dialog" aria-modal="true" aria-label="Cài đặt giao diện" onClick={e=>e.stopPropagation()}><div className="panel-heading"><h2><Settings2 size={17}/> Cài đặt giao diện</h2><button className="icon-btn" onClick={()=>setSettings(false)} aria-label="Đóng cài đặt"><X size={19}/></button></div><label><input type="checkbox" checked={dense} onChange={e=>setDense(e.target.checked)}/> Chế độ hiển thị gọn</label><p className="subtle">Tùy chọn và danh sách theo dõi được lưu trên trình duyệt này.</p><strong>Mã đang theo dõi ({favorites.length})</strong><div className="favorite-list">{favorites.length?favorites.map(ticker=><button className="btn" key={ticker} onClick={()=>{select(ticker);setSettings(false);}}>{ticker}</button>):<p className="subtle">Bấm biểu tượng đánh dấu cạnh mã để theo dõi.</p>}</div></section></div>}
+  </div>;
 }

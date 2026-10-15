@@ -7,7 +7,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from stockai.api.store import ResultStore
+from stockai.api.store import ResultStore, repo_root
+from stockai.api.company_profile import company_profile
+from stockai.api.dividends import dividends_for
 from stockai.llm.payload import build_debate_payload
 
 
@@ -57,10 +59,18 @@ def analyze_snapshot(store: ResultStore, ticker: str, profile: str) -> dict:
     bundle = store.get_bundle(ticker, profile, debate_mode="template")
     snapshot = store.load_snapshot(ticker)
     result = bundle.get("m7") or {}
-    company = bundle.get("company") or {}
+    company = dict(snapshot.get("company") or {})
+    company.update({key: value for key, value in (bundle.get("company") or {}).items() if value is not None})
+    root = getattr(store, "root", None) or repo_root()
+    profile_data = company_profile(snapshot, ticker, root)
+    if profile_data.get("name") and company.get("name") in (None, "", ticker):
+        company["name"] = profile_data["name"]
     target = result.get("target") or {}
     rows = sorted(
-        (r for r in snapshot.get("prices", {}).get("rows", []) if r.get("date", "") <= store.asof),
+        (r for r in (snapshot.get("prices") or {}).get("rows", [])
+         if r.get("date") and r["date"] <= store.asof
+         and isinstance(r.get("close"), (int, float)) and not isinstance(r["close"], bool)
+         and isfinite(r["close"])),
         key=lambda r: r["date"],
     )
     latest = rows[-1] if rows else {}
@@ -85,11 +95,17 @@ def analyze_snapshot(store: ResultStore, ticker: str, profile: str) -> dict:
             "url": source.get("url"),
             "published_at": published,
         })
+    reports = financial_reports(snapshot, store.asof)
+    source_flags = (snapshot.get("meta") or {}).get("flags") or []
+    source_news = [item for item in snapshot.get("news", [])
+                   if not item.get("published_at") or str(item["published_at"])[:10] <= store.asof]
     return {
         "ticker": ticker,
         "profile": profile,
         "as_of": store.asof,
         "company": company,
+        "company_profile": profile_data,
+        "dividends": dividends_for(root, ticker, asof=store.asof),
         "score": result.get("score"),
         "recommendation": result.get("rating"),
         "scores": result.get("scores"),
@@ -114,7 +130,16 @@ def analyze_snapshot(store: ResultStore, ticker: str, profile: str) -> dict:
         "flags": result.get("flags") or [],
         "modules": {key: bundle.get(key) for key in ("m2", "m3", "m4", "m5", "m6")},
         "validation": bundle.get("m8"),
-        "financial_reports": financial_reports(snapshot, store.asof),
+        "financial_reports": reports,
+        "data_availability": {
+            "price_sessions": len(rows),
+            "price_date": latest.get("date"),
+            "annual_reports": len(reports["annual"]),
+            "quarterly_reports": len(reports["quarterly"]),
+            "news_articles": len(source_news),
+            "collection_incomplete": "fetch_skipped_early" in source_flags,
+            "data_status": (snapshot.get("meta") or {}).get("data_status") or {},
+        },
         "data_source": "snapshot",
         "report_url": f"/api/report/{ticker}.pdf?profile={profile}",
     }

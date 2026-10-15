@@ -1,7 +1,7 @@
 """M7 - tổng hợp. Ghép scoring + debate -> analysis_result.json."""
 from stockai.contracts.helpers import quality_reasons, quality_tier
 from stockai.m7_scoring.debate import run_debate
-from stockai.m7_scoring.scoring import compute_score, to_rating
+from stockai.m7_scoring.scoring import apply_data_gate, compute_score, implied_upside_pct, to_rating
 
 _TRADE_RATINGS = ("Mua mạnh", "Mua", "Nắm giữ", "Giảm tỷ trọng", "Bán")
 
@@ -49,6 +49,8 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
 
     comp = compute_score({"F": sc("m2"), "T": sc("m3"), "V": sc("m4"), "S": sc("m5"), "R": sc("m6")}, profile, cfg)
     rating, rflags = to_rating(comp["score"], comp["scores"]["R"], cfg)
+    rating, gflags = apply_data_gate(rating, gate["tier"], implied_upside_pct(upstream), cfg)
+    rflags = rflags + gflags
     bull, bear = run_debate(snapshot, upstream, cfg)
     debate_flags = list(cfg.pop("_debate_flags", []) or [])
     flags = comp["flags"] + rflags + [f for o in upstream.values() for f in o.get("flags", [])] + qflags + debate_flags

@@ -33,10 +33,13 @@ _DEFAULT_CFG = _REPO_ROOT / "config" / "llm.yaml"
 _rpm_lock = threading.Lock()
 _rpm_times: list[float] = []
 
-# Retry cùng model: rate-limit 429 + 5xx; backoff 2s, 4s, 8s (tối đa 3 lần)
+# Retry cùng model: 5xx/timeout backoff 2s, 4s, 8s; 429 → 15s/30s/60s (014m)
 # Quota exhausted → KHÔNG backoff, ghi state + skip model
 _RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 _BACKOFF_SEC = (2.0, 4.0, 8.0)
+_RATE_LIMIT_BACKOFF_SEC = (15.0, 30.0, 60.0)
+_RATE_LIMIT_MAX_TRIES = 3
+_DEFAULT_GLM_MIN_INTERVAL_SEC = 20.0
 
 # Circuit breaker: provider:model → state
 _circuit_lock = threading.Lock()
@@ -44,32 +47,18 @@ _circuit: dict[str, dict[str, Any]] = {}
 # Thống kê lý do lỗi theo provider (batch in bảng cuối)
 _error_reasons: dict[str, dict[str, int]] = {}
 
+# Pacing GLM (và provider có min_interval_sec): gọi tuần tự, khoảng cách tối thiểu
+_pace_lock = threading.Lock()
+_last_call_mono: dict[str, float] = {}
+
 def load_dotenv_keys(env_path: str | Path | None = None) -> None:
     """Nạp GEMINI_API_KEY / ZAI_API_KEY từ .env nếu chưa có trong environ.
 
-    Không in giá trị khóa. Chỉ parse dòng KEY=VALUE đơn giản.
+    Dùng chung parser với DNSE (`stockai.envfile.load_dotenv`). Không in giá trị khóa.
     """
-    path = Path(env_path) if env_path else _REPO_ROOT / ".env"
-    if not path.is_file():
-        return
-    wanted = {"GEMINI_API_KEY", "ZAI_API_KEY"}
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return
-    for line in lines:
-        s = line.strip()
-        if not s or s.startswith("#") or "=" not in s:
-            continue
-        name, _, val = s.partition("=")
-        name = name.strip()
-        if name not in wanted:
-            continue
-        if os.environ.get(name):
-            continue
-        val = val.strip().strip('"').strip("'")
-        if val:
-            os.environ[name] = val
+    from stockai.envfile import load_dotenv
+
+    load_dotenv(env_path, keys=("GEMINI_API_KEY", "ZAI_API_KEY"))
 
 
 def load_llm_cfg(path: str | Path | None = None) -> dict:
@@ -87,10 +76,96 @@ def _debate_section(cfg: dict) -> dict:
 
 
 def reset_circuit_state() -> None:
-    """Xóa circuit breaker + bảng lỗi (dùng trong test / đầu batch)."""
+    """Xóa circuit breaker + bảng lỗi + pace (dùng trong test / đầu batch)."""
     with _circuit_lock:
         _circuit.clear()
         _error_reasons.clear()
+    with _pace_lock:
+        _last_call_mono.clear()
+
+
+def min_interval_sec_for(provider: str, debate: dict | None = None) -> float:
+    """Khoảng cách tối thiểu giữa hai lần gọi provider (giây).
+
+    GLM mặc định 20s nếu không cấu hình. Provider khác: 0 nếu thiếu khóa.
+    """
+    d = debate if isinstance(debate, dict) else {}
+    sec = d.get(provider) if isinstance(d.get(provider), dict) else {}
+    raw = None
+    if isinstance(sec, dict) and sec.get("min_interval_sec") is not None:
+        raw = sec.get("min_interval_sec")
+    elif d.get("min_interval_sec") is not None:
+        raw = d.get("min_interval_sec")
+    if raw is None:
+        return _DEFAULT_GLM_MIN_INTERVAL_SEC if provider == "glm" else 0.0
+    try:
+        return max(0.0, float(raw))
+    except (TypeError, ValueError):
+        return _DEFAULT_GLM_MIN_INTERVAL_SEC if provider == "glm" else 0.0
+
+
+def _pace_before_call(provider: str, debate: dict) -> float:
+    """Chờ min_interval trước khi gọi; trả số giây đã chờ (0 nếu không chờ)."""
+    min_iv = min_interval_sec_for(provider, debate)
+    if min_iv <= 0:
+        with _pace_lock:
+            _last_call_mono[provider] = time.monotonic()
+        return 0.0
+    waited = 0.0
+    with _pace_lock:
+        last = float(_last_call_mono.get(provider) or 0.0)
+        now = time.monotonic()
+        if last > 0:
+            gap = now - last
+            if gap < min_iv:
+                waited = min_iv - gap
+        if waited > 0:
+            # Giải phóng lock khi sleep để không chặn thread khác đọc state
+            pass
+    if waited > 0:
+        _safe_print(f"pace {provider}: chờ {waited:.0f}s (min_interval={min_iv:.0f}s)")
+        time.sleep(waited)
+    with _pace_lock:
+        _last_call_mono[provider] = time.monotonic()
+    return waited
+
+
+def _is_rate_limited(exc: Exception) -> bool:
+    if getattr(exc, "status_code", None) == 429 and not _is_quota_exhausted(exc):
+        return True
+    return "rate_limited" in str(exc).lower()
+
+
+def _rate_limit_sleep_sec(exc: Exception, attempt: int) -> float:
+    """Thời gian chờ sau 429: Retry-After nếu có; else 15→30→60. Tối thiểu 1s."""
+    ra = getattr(exc, "retry_after", None)
+    if ra is not None:
+        try:
+            val = float(ra)
+            if val >= 1.0:
+                return val
+        except (TypeError, ValueError):
+            pass
+    idx = min(max(0, attempt), len(_RATE_LIMIT_BACKOFF_SEC) - 1)
+    return max(1.0, float(_RATE_LIMIT_BACKOFF_SEC[idx]))
+
+
+def _counts_toward_circuit(exc: Exception) -> bool:
+    """Chỉ timeout/5xx đếm circuit; 429 rate_limited và quota không đếm (014m)."""
+    if _is_rate_limited(exc) or _is_quota_exhausted(exc):
+        return False
+    msg = str(exc)
+    if msg == "timeout":
+        return True
+    code = getattr(exc, "status_code", None)
+    if isinstance(code, int) and code >= 500:
+        return True
+    if code is None and msg.startswith("http_"):
+        try:
+            return int(msg.split("_", 1)[1]) >= 500
+        except ValueError:
+            return False
+    return False
 
 
 def error_reason_table() -> dict[str, dict[str, int]]:
@@ -136,6 +211,42 @@ def _circuit_is_open(provider: str, model: str, debate: dict) -> bool:
             st["fails"] = 0
             return False
         return True
+
+
+def circuit_open_until(provider: str, model: str) -> float | None:
+    """Unix monotonic deadline khi circuit đang mở; None nếu đóng."""
+    key = _cb_key(provider, model)
+    with _circuit_lock:
+        st = _circuit.get(key)
+        if not st:
+            return None
+        until = float(st.get("open_until") or 0.0)
+        if until <= 0 or time.monotonic() >= until:
+            return None
+        return until
+
+
+def circuit_retry_after_sec(provider: str, model: str) -> float | None:
+    until = circuit_open_until(provider, model)
+    if until is None:
+        return None
+    return max(0.0, until - time.monotonic())
+
+
+def circuit_snapshot() -> dict[str, dict[str, Any]]:
+    """Bản sao state circuit (test / probe) — không chứa key."""
+    with _circuit_lock:
+        out: dict[str, dict[str, Any]] = {}
+        now = time.monotonic()
+        for k, st in _circuit.items():
+            until = float(st.get("open_until") or 0.0)
+            out[k] = {
+                "fails": int(st.get("fails") or 0),
+                "open": until > 0 and now < until,
+                "retry_after_sec": max(0.0, until - now) if until > now else 0.0,
+                "last_reason": str(st.get("last_reason") or ""),
+            }
+        return out
 
 
 def _circuit_record_success(provider: str, model: str) -> None:
@@ -230,7 +341,7 @@ def _models_for(provider: str, debate: dict) -> list[str]:
 
 def _timeout_for(provider: str, debate: dict) -> float:
     """Timeout per-provider; fallback debate.timeout_sec."""
-    base = float(debate.get("timeout_sec") or 90)
+    base = float(debate.get("timeout_sec") or 30)
     sec = debate.get(provider) if isinstance(debate.get(provider), dict) else {}
     if isinstance(sec, dict) and sec.get("timeout_sec") is not None:
         try:
@@ -238,6 +349,112 @@ def _timeout_for(provider: str, debate: dict) -> float:
         except (TypeError, ValueError):
             pass
     return base
+
+
+def _ordered_model_targets(
+    providers: list[str],
+    debate: dict,
+    qpath: Path,
+) -> list[tuple[str, str]]:
+    """Thứ tự thử: model khỏe (non-GLM) → GLM → phần còn lại cùng danh sách.
+
+    «Khỏe» = có key, không bị quota block, circuit đóng.
+    Bỏ qua model đang circuit/quota (không xếp vào rest).
+    """
+    healthy_non_glm: list[tuple[str, str]] = []
+    healthy_glm: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+
+    for provider in providers:
+        if not _has_key(provider):
+            continue
+        for model in _models_for(provider, debate):
+            key = (provider, model)
+            if key in seen:
+                continue
+            seen.add(key)
+            blocked, _until = is_blocked(provider, model, path=qpath)
+            if blocked or _circuit_is_open(provider, model, debate):
+                continue
+            if provider == "glm":
+                healthy_glm.append(key)
+            else:
+                healthy_non_glm.append(key)
+    # healthy → GLM → (rest đã gộp trong healthy_non_glm theo thứ tự config)
+    return healthy_non_glm + healthy_glm
+
+
+def keyed_model_targets(debate: dict) -> list[tuple[str, str]]:
+    """Mọi (provider, model) có API key theo thứ tự ``debate.providers``."""
+    providers = list(debate.get("providers") or ["gemini", "glm"])
+    out: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for provider in providers:
+        if not _has_key(provider):
+            continue
+        for model in _models_for(provider, debate):
+            key = (provider, model)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(key)
+    return out
+
+
+def all_keyed_models_blocked(cfg: dict | None = None, *, debate: dict | None = None) -> bool:
+    """True khi mọi model có key đều bị quota hoặc circuit (không còn model để thử).
+
+    Không có key nào → False (không coi là «all blocked» để dừng batch).
+    """
+    d = debate if debate is not None else _debate_section(cfg or {})
+    targets = keyed_model_targets(d)
+    if not targets:
+        return False
+    qpath = _quota_path(d)
+    for provider, model in targets:
+        blocked, _until = is_blocked(provider, model, path=qpath)
+        if blocked:
+            continue
+        if _circuit_is_open(provider, model, d):
+            continue
+        return False
+    return True
+
+
+def should_stop_batch(
+    cfg: dict | None = None,
+    *,
+    debate: dict | None = None,
+    flags: list | None = None,
+    exc: BaseException | None = None,
+) -> tuple[bool, str]:
+    """Có nên dừng cả batch không.
+
+    Chỉ dừng khi hết ``max_live_calls`` hoặc mọi model có key đều bị chặn.
+    Một model hết quota → không dừng (failover / mã tiếp theo vẫn chạy).
+    """
+    fl = list(flags or [])
+    if any(isinstance(f, str) and "llm_max_live_calls" in f for f in fl):
+        return True, "max_live_calls"
+    if exc is not None and "max_live_calls_reached" in str(exc):
+        return True, "max_live_calls"
+    if all_keyed_models_blocked(cfg, debate=debate):
+        return True, "all_models_blocked"
+    return False, ""
+
+
+def _record_model_try(
+    models_tried: list[dict[str, str]],
+    provider: str,
+    model: str,
+    reason: str,
+) -> None:
+    """Ghi/cập nhật lý do thử model (một dòng mỗi provider/model)."""
+    for row in models_tried:
+        if row.get("provider") == provider and row.get("model") == model:
+            row["reason"] = reason
+            return
+    models_tried.append({"provider": provider, "model": model, "reason": reason})
 
 
 def _gemini_gen_opts(debate: dict) -> dict[str, Any]:
@@ -367,6 +584,14 @@ def _reason_tag(exc: Exception) -> str:
     return (msg.split(":", 1)[0] or "error")[:40]
 
 
+def _safe_print(msg: str) -> None:
+    """In log ops — tránh UnicodeEncodeError cp1252 trên Windows console."""
+    try:
+        print(msg, flush=True)
+    except UnicodeEncodeError:
+        print(msg.encode("ascii", "replace").decode("ascii"), flush=True)
+
+
 def _persist_quota_block(provider: str, model: str, exc: Exception, debate: dict) -> None:
     body = getattr(exc, "body", "") or ""
     code_1113 = bool(getattr(exc, "code_1113", False))
@@ -382,7 +607,7 @@ def _persist_quota_block(provider: str, model: str, exc: Exception, debate: dict
         default_hours=6.0,
         path=_quota_path(debate),
     )
-    print(f"quota_block: {provider}/{model} đến {format_blocked_until(until)}")
+    _safe_print(f"quota_block: {provider}/{model} until {format_blocked_until(until)}")
 
 
 def generate_json(
@@ -396,7 +621,8 @@ def generate_json(
 ) -> dict:
     """Gọi LLM theo thứ tự provider → model; parse JSON object.
 
-    Retry rate-limit 429/500/502/503/504 + timeout trên cùng model (backoff 2/4/8s, max 3).
+    Retry 5xx/timeout (backoff 2/4/8s); 429 rate_limited (Retry-After hoặc 15/30/60s, max 3).
+    429 không đếm circuit; timeout/5xx mới đếm. GLM có min_interval_sec (mặc định 20).
     Quota exhausted → ghi ``_quota_state.json``, skip model (không backoff); lần sau bỏ qua ngay.
     Empty MAX_TOKENS → gemini_rest retry ×2 tokens; vẫn fail → model tiếp.
     Circuit breaker: cùng provider/model lỗi liên tiếp N lần → bỏ qua cooldown phút.
@@ -411,6 +637,8 @@ def generate_json(
     temperature = float(debate.get("temperature", 0))
     max_retries = int(debate.get("max_retries_per_call", 3))
     max_retries = max(1, min(max_retries, 3))
+    # 429 được phép đủ 3 lần thử trên cùng model (014m)
+    max_attempts = max(max_retries, _RATE_LIMIT_MAX_TRIES)
     rpm = int(debate.get("rpm_limit", 30))
     cache_dir = debate.get("cache_dir") or "data/llm_cache"
     parts = dict(cache_key_parts or {})
@@ -452,126 +680,211 @@ def generate_json(
 
     last_err: Exception | None = None
     last_reason = "all_providers_failed"
+    models_tried: list[dict[str, str]] = []
     for provider in providers:
         if not _has_key(provider):
             flags.append(f"llm_missing_key_{provider}")
+
+    # Log + flag model bị bỏ (quota/circuit) dù không nằm trong hàng đợi thử
+    for provider in providers:
+        if not _has_key(provider):
             continue
-        timeout_sec = _timeout_for(provider, debate)
         for model in _models_for(provider, debate):
             blocked, until = is_blocked(provider, model, path=qpath)
             if blocked and until is not None:
                 msg_until = format_blocked_until(until)
-                print(f"bỏ qua {model} đến {msg_until}")
+                _safe_print(f"skip {provider}/{model} until {msg_until}")
                 flags.append(f"llm_quota_skip_{provider}_{model}")
+                _record_model_try(models_tried, provider, model, "quota_skip")
                 continue
             if _circuit_is_open(provider, model, debate):
                 flags.append(f"llm_circuit_open_{provider}_{model}")
-                continue
-            for attempt in range(max_retries):
-                try:
-                    _wait_rpm(rpm)
-                    parsed, usage, extra_flags = _call_provider_model(
-                        provider,
-                        prompt,
+                _record_model_try(models_tried, provider, model, "circuit_open")
+
+    targets = _ordered_model_targets(providers, debate, qpath)
+    providers_tried: set[str] = set()
+    providers_ok: set[str] = set()
+    for provider, model in targets:
+        blocked, until = is_blocked(provider, model, path=qpath)
+        if blocked and until is not None:
+            msg_until = format_blocked_until(until)
+            _safe_print(f"skip {provider}/{model} until {msg_until}")
+            flags.append(f"llm_quota_skip_{provider}_{model}")
+            _record_model_try(models_tried, provider, model, "quota_skip")
+            continue
+        if _circuit_is_open(provider, model, debate):
+            flags.append(f"llm_circuit_open_{provider}_{model}")
+            _record_model_try(models_tried, provider, model, "circuit_open")
+            continue
+        timeout_sec = _timeout_for(provider, debate)
+        providers_tried.add(provider)
+        for attempt in range(max_attempts):
+            t_attempt = time.monotonic()
+            try:
+                _wait_rpm(rpm)
+                _pace_before_call(provider, debate)
+                parsed, usage, extra_flags = _call_provider_model(
+                    provider,
+                    prompt,
+                    model=model,
+                    debate=debate,
+                    temperature=temperature,
+                    timeout_sec=timeout_sec,
+                    schema_hint=schema_hint,
+                )
+                latency_ms = int((time.monotonic() - t_attempt) * 1000)
+                _safe_print(
+                    f"llm_attempt provider={provider} model={model} "
+                    f"latency_ms={latency_ms} class=ok attempt={attempt + 1}"
+                )
+                in_tok = int(usage.get("input_tokens") or 0)
+                out_tok = int(usage.get("output_tokens") or 0)
+                cost = estimate_cost_usd(model, in_tok, out_tok, debate)
+                _circuit_record_success(provider, model)
+                providers_ok.add(provider)
+                _record_model_try(models_tried, provider, model, "ok")
+                if can_cache:
+                    write_cache(
+                        cache_dir,
+                        key,
+                        bull=list(parsed.get("bull") or []) if isinstance(parsed.get("bull"), list) else [],
+                        bear=list(parsed.get("bear") or []) if isinstance(parsed.get("bear"), list) else [],
+                        provider=provider,
                         model=model,
-                        debate=debate,
-                        temperature=temperature,
-                        timeout_sec=timeout_sec,
-                        schema_hint=schema_hint,
+                        flags=flags,
                     )
-                    in_tok = int(usage.get("input_tokens") or 0)
-                    out_tok = int(usage.get("output_tokens") or 0)
-                    cost = estimate_cost_usd(model, in_tok, out_tok, debate)
-                    _circuit_record_success(provider, model)
-                    if can_cache:
-                        write_cache(
-                            cache_dir,
-                            key,
-                            bull=list(parsed.get("bull") or []) if isinstance(parsed.get("bull"), list) else [],
-                            bear=list(parsed.get("bear") or []) if isinstance(parsed.get("bear"), list) else [],
-                            provider=provider,
-                            model=model,
-                            flags=flags,
-                        )
-                        try:
-                            path = cache_path(cache_dir, key)
-                            existing = json.loads(path.read_text(encoding="utf-8"))
-                            if isinstance(existing, dict):
-                                existing["raw"] = {k: v for k, v in parsed.items()}
-                                existing["usage"] = usage
-                                existing["cost_usd"] = cost
-                                path.write_text(
-                                    json.dumps(existing, ensure_ascii=False, indent=2),
-                                    encoding="utf-8",
-                                )
-                        except (OSError, ValueError):
-                            pass
-                    meta_flags = list(flags) + list(extra_flags)
-                    if attempt > 0:
-                        meta_flags.append(f"llm_retry_ok_{provider}_{model}")
-                    parsed["_meta"] = {
-                        "provider": provider,
-                        "model": model,
-                        "flags": meta_flags,
-                        "cache_hit": False,
-                        "usage": usage,
-                        "cost_usd": cost,
-                        "attempts_on_model": attempt + 1,
-                        "network_calls": get_network_call_count(),
-                    }
-                    return parsed
-                except (gemini_rest.GeminiRestError, glm_rest.GlmRestError) as e:
-                    # Bắt TRƯỚC RuntimeError vì GeminiRestError/GlmRestError kế thừa RuntimeError
-                    last_err = e
-                    last_reason = str(e)
-                    reason = _reason_tag(e)
-                    opened = _circuit_record_failure(provider, model, reason, debate)
-                    if opened:
-                        flags.append(f"llm_circuit_open_{provider}_{model}")
+                    try:
+                        path = cache_path(cache_dir, key)
+                        existing = json.loads(path.read_text(encoding="utf-8"))
+                        if isinstance(existing, dict):
+                            existing["raw"] = {k: v for k, v in parsed.items()}
+                            existing["usage"] = usage
+                            existing["cost_usd"] = cost
+                            path.write_text(
+                                json.dumps(existing, ensure_ascii=False, indent=2),
+                                encoding="utf-8",
+                            )
+                    except (OSError, ValueError):
+                        pass
+                meta_flags = list(flags) + list(extra_flags)
+                if attempt > 0:
+                    meta_flags.append(f"llm_retry_ok_{provider}_{model}")
+                # Đánh dấu provider trước đó đã cạn model
+                for prev in providers_tried:
+                    if prev != provider and prev not in providers_ok:
+                        pe = f"llm_provider_exhausted_{prev}"
+                        if pe not in meta_flags:
+                            meta_flags.append(pe)
+                parsed["_meta"] = {
+                    "provider": provider,
+                    "model": model,
+                    "flags": meta_flags,
+                    "cache_hit": False,
+                    "usage": usage,
+                    "cost_usd": cost,
+                    "attempts_on_model": attempt + 1,
+                    "network_calls": get_network_call_count(),
+                    "latency_ms": latency_ms,
+                    "models_tried": list(models_tried),
+                }
+                return parsed
+            except (gemini_rest.GeminiRestError, glm_rest.GlmRestError) as e:
+                # Bắt TRƯỚC RuntimeError vì GeminiRestError/GlmRestError kế thừa RuntimeError
+                last_err = e
+                last_reason = str(e)
+                reason = _reason_tag(e)
+                latency_ms = int((time.monotonic() - t_attempt) * 1000)
+                _safe_print(
+                    f"llm_attempt provider={provider} model={model} "
+                    f"latency_ms={latency_ms} class={reason} attempt={attempt + 1}"
+                )
+                _record_model_try(models_tried, provider, model, reason)
 
-                    if _is_empty_output(e):
-                        flags.append("llm_empty_output")
-                        flags.append(f"llm_model_exhausted_{provider}_{model}")
-                        break
+                if _is_empty_output(e):
+                    if _counts_toward_circuit(e):
+                        opened = _circuit_record_failure(provider, model, reason, debate)
+                        if opened:
+                            flags.append(f"llm_circuit_open_{provider}_{model}")
+                    flags.append("llm_empty_output")
+                    flags.append(f"llm_model_exhausted_{provider}_{model}")
+                    break
 
-                    if _is_quota_exhausted(e):
-                        try:
-                            _persist_quota_block(provider, model, e, debate)
-                        except OSError:
-                            pass
-                        flag = f"llm_quota_exhausted:{provider}"
-                        if flag not in flags:
-                            flags.append(flag)
-                        flags.append(f"llm_model_exhausted_{provider}_{model}")
-                        # Chỉ bỏ model này — thử model khác cùng provider (quota per-model)
-                        break
+                if _is_quota_exhausted(e):
+                    # Chỉ quota_exhausted thật mới ghi _quota_state.json
+                    # 503/429 tạm → KHÔNG ghi quota; 429 không đếm circuit (014m)
+                    try:
+                        _persist_quota_block(provider, model, e, debate)
+                    except OSError:
+                        pass
+                    flag = f"llm_quota_exhausted:{provider}"
+                    if flag not in flags:
+                        flags.append(flag)
+                    flags.append(f"llm_model_exhausted_{provider}_{model}")
+                    break
 
-                    if _is_retryable(e) and attempt + 1 < max_retries:
-                        sleep_for = _BACKOFF_SEC[min(attempt, len(_BACKOFF_SEC) - 1)]
+                # 014m: rate_limited — chờ rồi thử lại; không đếm circuit
+                if _is_rate_limited(e):
+                    if attempt + 1 < _RATE_LIMIT_MAX_TRIES:
+                        sleep_for = _rate_limit_sleep_sec(e, attempt)
+                        sleep_for = max(1.0, float(sleep_for))
+                        _safe_print(f"rate_limited (sẽ chờ {sleep_for:.0f}s)")
                         time.sleep(sleep_for)
                         continue
                     flags.append(f"llm_model_exhausted_{provider}_{model}")
+                    flags.append(f"llm_rate_limited_exhausted_{provider}_{model}")
                     break
-                except RuntimeError as e:
-                    if "max_live_calls_reached" in str(e):
-                        last_err = e
-                        last_reason = str(e)
-                        flags.append("llm_max_live_calls")
-                        err = RuntimeError(f"all_providers_failed:{last_err}")
-                        setattr(err, "flags", flags + [f"debate_llm_final_reason:{last_reason}"])
-                        raise err from e
-                    last_err = e
-                    last_reason = str(e)
-                    reason = _reason_tag(e)
+
+                # timeout / 5xx → đếm circuit
+                if _counts_toward_circuit(e):
                     opened = _circuit_record_failure(provider, model, reason, debate)
                     if opened:
                         flags.append(f"llm_circuit_open_{provider}_{model}")
-                    flags.append(f"llm_model_exhausted_{provider}_{model}")
-                    break
-            # next model
-        flags.append(f"llm_provider_exhausted_{provider}")
+
+                if _is_retryable(e) and attempt + 1 < max_retries:
+                    # 5xx: tối đa 1 retry rồi failover model
+                    sc = getattr(e, "status_code", None)
+                    if isinstance(sc, int) and sc >= 500 and attempt >= 1:
+                        flags.append(f"llm_model_exhausted_{provider}_{model}")
+                        break
+                    sleep_for = _BACKOFF_SEC[min(attempt, len(_BACKOFF_SEC) - 1)]
+                    sleep_for = max(1.0, float(sleep_for))
+                    time.sleep(sleep_for)
+                    continue
+                flags.append(f"llm_model_exhausted_{provider}_{model}")
+                break
+            except RuntimeError as e:
+                if "max_live_calls_reached" in str(e):
+                    last_err = e
+                    last_reason = str(e)
+                    flags.append("llm_max_live_calls")
+                    _record_model_try(models_tried, provider, model, "max_live_calls")
+                    err = RuntimeError(f"all_providers_failed:{last_err}")
+                    setattr(err, "flags", flags + [f"debate_llm_final_reason:{last_reason}"])
+                    setattr(err, "models_tried", list(models_tried))
+                    raise err from e
+                last_err = e
+                last_reason = str(e)
+                reason = _reason_tag(e)
+                latency_ms = int((time.monotonic() - t_attempt) * 1000)
+                _safe_print(
+                    f"llm_attempt provider={provider} model={model} "
+                    f"latency_ms={latency_ms} class={reason} attempt={attempt + 1}"
+                )
+                _record_model_try(models_tried, provider, model, reason)
+                if _counts_toward_circuit(e):
+                    opened = _circuit_record_failure(provider, model, reason, debate)
+                    if opened:
+                        flags.append(f"llm_circuit_open_{provider}_{model}")
+                flags.append(f"llm_model_exhausted_{provider}_{model}")
+                break
+    for provider in providers_tried:
+        if provider not in providers_ok:
+            flag_pe = f"llm_provider_exhausted_{provider}"
+            if flag_pe not in flags:
+                flags.append(flag_pe)
     err = RuntimeError(f"all_providers_failed:{last_err}")
     setattr(err, "flags", flags + [f"debate_llm_final_reason:{last_reason}"])
+    setattr(err, "models_tried", list(models_tried))
     raise err
 
 

@@ -1,0 +1,855 @@
+.analysis-page-number {
+  color:#3b9cff;
+  margin-left:6px;
+}
+
+.analysis-page-switch {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+
+.analysis-page-switch>button {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  border:1px solid #365b87;
+  background:#1d385a;
+  color:#9bafca;
+  border-radius:7px;
+  padding:10px 15px;
+  font-size:13px;
+  font-weight:750;
+}
+
+.analysis-page-switch>button>span {
+  color:#b9cbe3;
+  font-size:13px;
+  font-weight:600;
+}
+
+.analysis-page-switch>button.active {
+  background:linear-gradient(100deg,#2563FF44,#8B2CF522);
+  border-color:#2563FF;
+  color:#00D9FF;
+  box-shadow:inset 0 -1px #00D9FF44;
+}
+
+.analysis-page-switch>button.active>span {
+  color:#F5F8FF;
+}
+
+.analysis-page-switch>small {
+  margin-left:auto;
+  font-size:11px;
+  color:#9bafca;
+}
+
+.analysis-stock-summary .analysis-valuation-metrics.valuation-metrics-page-two {
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+
+.valuation-main-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr) minmax(0,1.05fr);
+  gap:11px;
+}
+
+.valuation-method-panel,.published-target,.valuation-commentary,.return-comparison,.risk-radar-panel,.risk-components,.risk-commentary {
+  border:1px solid #365b87;
+  border-radius:9px;
+  overflow:hidden;
+  min-width:0;
+  background:#11213a77;
+}
+
+.valuation-tabs {
+  display:flex;
+  gap:4px;
+  margin:8px;
+  padding:3px;
+  border:1px solid #4a6a91;
+  border-radius:6px;
+  background:#1d385a;
+}
+
+.valuation-tabs button {
+  flex:1;
+  padding:7px 4px;
+  font-size:12px;
+  background:transparent;
+  border:1px solid transparent;
+  border-radius:4px;
+  color:#cbdaf0;
+  white-space:nowrap;
+}
+
+.valuation-tabs button.active {
+  background:linear-gradient(100deg,#00B8FF77,#2563FF88,#8B2CF555);
+  border-color:#2563FF;
+  color:white;
+  box-shadow:inset 0 0 8px #2563FF77;
+}
+
+.valuation-reference-note {
+  padding:8px 12px;
+  margin:0 0 11px;
+  border:1px solid #FFB54744;
+  border-radius:5px;
+  font-size:12px;
+  line-height:1.7;
+  color:#FFB547;
+  background:#FFB54709;
+}
+
+.method-reference {
+  padding:5px 13px 10px;
+  border-bottom:1px solid #365b8744;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:5px;
+  align-items:center;
+}
+
+.method-reference h3 {
+  font-size:13px;
+  font-weight:700;
+  color:#c8d8f3;
+}
+
+.method-reference strong {
+  color:#00D9FF;
+  font-size:20px;
+}
+
+.method-reference strong small {
+  font-size:10px;
+  color:#9bafca;
+  font-weight:500;
+}
+
+.method-reference p,.method-reference>small {
+  grid-column:1/-1;
+  font-size:11px;
+  line-height:1.7;
+  color:#b9cbe3;
+}
+
+.method-reference>small {
+  color:#FFB547;
+  font-size:10px;
+}
+
+.scenario-chart {
+  padding:10px 12px 6px;
+}
+
+.scenario-chart h4 {
+  font-size:12px;
+  color:#c8d8f3;
+  font-weight:600;
+  margin:0 0 4px;
+}
+
+.scenario-chart svg {
+  display:block;
+  width:100%;
+  min-height:170px;
+}
+
+.scenario-chart output {
+  display:block;
+  font-size:10px;
+  line-height:1.6;
+  color:#9bafca;
+  min-height:24px;
+}
+
+.published-target {
+  padding:16px 13px;
+  background:radial-gradient(ellipse at 70% 0%,#8B2CF52b,transparent 70%),linear-gradient(120deg,#1d385a,#1e284f);
+  border-color:#8B2CF588;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.target-primary {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:13px;
+  text-align:center;
+  margin:4px 0 18px;
+}
+
+.target-primary>svg {
+  color:#F12BCB;
+  filter:drop-shadow(0 0 7px #F12BCB66);
+}
+
+.target-primary h3 {
+  font-size:13px;
+  color:#c8d8f3;
+  font-weight:600;
+  margin-bottom:8px;
+}
+
+.target-primary strong {
+  display:block;
+  font-size:34px;
+  line-height:1.4;
+  color:#00E5A0;
+  font-weight:900;
+  letter-spacing:-.9px;
+}
+
+.target-primary strong small {
+  font-size:22px;
+  font-weight:600;
+}
+
+.target-primary span {
+  display:block;
+  font-size:17px;
+  margin-top:4px;
+  font-weight:750;
+}
+
+.target-mini-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-bottom:10px;
+}
+
+.target-mini-grid>div {
+  border:1px solid #4a6a91;
+  border-radius:6px;
+  background:#294d7577;
+  padding:9px 5px;
+  text-align:center;
+  min-width:0;
+}
+
+.target-mini-grid span {
+  display:block;
+  color:#b9cbe3;
+  font-size:11px;
+  margin-bottom:5px;
+}
+
+.target-mini-grid strong {
+  font-size:15px;
+  color:#e0ebff;
+}
+
+.target-conclusion {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 10px;
+  border:1px solid #00E5A055;
+  border-radius:8px;
+  background:linear-gradient(100deg,#00E5A018,#152a46);
+  color:#00E5A0;
+}
+
+.target-conclusion span {
+  display:block;
+  font-size:11px;
+  color:#b9cbe3;
+}
+
+.target-conclusion strong {
+  display:block;
+  font-size:16px;
+  line-height:1.6;
+  margin:3px 0;
+}
+
+.target-conclusion p {
+  font-size:11px;
+  color:#cbdaf0;
+  line-height:1.7;
+}
+
+.target-conclusion.unavailable {
+  border-color:#FFB54755;
+  background:#FFB54708;
+  color:#FFB547;
+}
+
+.published-target>.analysis-source-note {
+  padding:10px 0 0;
+}
+
+.valuation-commentary ul,.risk-commentary ul {
+  list-style:none;
+  padding:4px 13px 12px;
+  margin:0;
+}
+
+.valuation-commentary li,.risk-commentary li {
+  position:relative;
+  padding-left:14px;
+  font-size:12px;
+  line-height:1.9;
+  color:#cbdaf0;
+  margin-top:13px;
+}
+
+.valuation-commentary li:before,.risk-commentary li:before {
+  content:"";
+  position:absolute;
+  width:6px;
+  height:6px;
+  background:#00D9FF;
+  box-shadow:0 0 8px #00D9FF33;
+  border-radius:50%;
+  top:7px;
+  left:0;
+}
+
+.valuation-commentary li:nth-child(even):before {
+  background:#00E5A0;
+}
+
+.dcf-state {
+  min-height:290px;
+  padding:25px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:13px;
+  text-align:center;
+  color:#9bafca;
+}
+
+.dcf-state>svg {
+  color:#A855F7;
+}
+
+.dcf-state h3 {
+  font-size:17px;
+  color:#c8d8f3;
+  font-weight:700;
+}
+
+.dcf-state p {
+  font-size:13px;
+  line-height:1.9;
+  max-width:330px;
+}
+
+.peer-comparison>h3 {
+  padding:7px 13px 10px;
+  font-size:13px;
+  color:#cbdaf0;
+}
+
+.peer-scroll {
+  overflow:auto;
+  max-height:247px;
+}
+
+.peer-scroll table {
+  width:100%;
+  border-collapse:collapse;
+  text-align:right;
+  font-size:12px;
+  min-width:270px;
+}
+
+.peer-scroll th,.peer-scroll td {
+  padding:9px 13px;
+  border-bottom:1px solid #365b8744;
+  font-weight:500;
+}
+
+.peer-scroll thead th {
+  color:#b9cbe3;
+  background:#294d7544;
+  position:sticky;
+  top:0;
+}
+
+.peer-scroll th:first-child {
+  text-align:left;
+  color:#c8d8f3;
+}
+
+.peer-scroll .own-peer {
+  background:#2563FF22;
+  color:#00D9FF;
+}
+
+.peer-scroll .own-peer th {
+  color:#00D9FF;
+}
+
+.risk-module .analysis-module-heading>svg {
+  color:#00D9FF;
+}
+
+.risk-summary-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 190px;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.risk-kpis {
+  margin-bottom:0;
+  gap:7px;
+}
+
+.risk-kpis .fundamental-kpi {
+  padding:12px 9px;
+  gap:7px;
+  align-items:flex-start;
+}
+
+.risk-kpis .kpi-icon {
+  width:29px;
+  height:29px;
+}
+
+.risk-kpis .fundamental-kpi h3 {
+  font-size:10px;
+}
+
+.risk-kpis .fundamental-kpi strong {
+  font-size:21px;
+  margin:9px 0 7px;
+}
+
+.risk-kpis .fundamental-kpi p {
+  font-size:9px;
+  line-height:1.7;
+}
+
+.risk-score-gauge {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:7px;
+  border:1px solid #FF426B55;
+  border-radius:9px;
+  background:radial-gradient(ellipse at left,#FF426B22,transparent),#1d385a;
+}
+
+.risk-score-gauge svg {
+  width:68px;
+  height:68px;
+}
+
+.risk-score-gauge span {
+  font-size:11px;
+  color:#cbdaf0;
+  display:block;
+}
+
+.risk-score-gauge strong {
+  font-size:26px;
+  font-weight:850;
+  display:block;
+  margin:7px 0;
+}
+
+.risk-score-gauge strong small {
+  font-size:14px;
+  margin-left:2px;
+  color:#b9cbe3;
+  font-weight:600;
+}
+
+.risk-score-gauge p {
+  font-size:9px;
+  color:#FFB547;
+  line-height:1.7;
+}
+
+.risk-main-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1.45fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,1.1fr);
+  gap:9px;
+}
+
+.return-chart {
+  display:block;
+  width:100%;
+  cursor:crosshair;
+  touch-action:pan-y;
+  min-height:200px;
+}
+
+.return-comparison .annual-legend {
+  font-size:10px;
+  gap:9px;
+}
+
+.return-tooltip {
+  display:block;
+  min-height:36px;
+}
+
+.risk-radar {
+  display:block;
+  width:100%;
+  min-height:210px;
+  max-height:300px;
+}
+
+.risk-bars {
+  padding:10px 11px;
+}
+
+.risk-bars>div {
+  display:grid;
+  grid-template-columns:1.2fr 1fr 28px;
+  gap:7px;
+  align-items:center;
+  margin:10px 0 15px;
+}
+
+.risk-bars span {
+  font-size:12px;
+  display:block;
+}
+
+.risk-bars small {
+  display:block;
+  font-size:9px;
+  color:#9bafca;
+  margin-top:4px;
+}
+
+.risk-bars strong {
+  font-size:12px;
+  font-weight:700;
+  text-align:right;
+}
+
+.risk-bar-track {
+  height:6px;
+  background:#365b87;
+  border-radius:8px;
+  overflow:hidden;
+}
+
+.risk-bar-track i {
+  height:100%;
+  display:block;
+  border-radius:8px;
+}
+
+.risk-commentary li {
+  font-size:11px;
+  margin-top:10px;
+}
+
+.risk-commentary li:before {
+  background:#FF426B;
+}
+
+.risk-commentary li:nth-child(2):before {
+  background:#FFB547;
+}
+
+.risk-commentary li:nth-child(3):before {
+  background:#A855F7;
+}
+
+.supplementary-status {
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:12px 5px 2px;
+  color:#b9cbe3;
+  font-size:12px;
+}
+
+.supplementary-error {
+  padding:10px 12px;
+  border:1px solid #FFB54755;
+  border-radius:6px;
+  color:#FFB547;
+  background:#FFB54708;
+  font-size:12px;
+  line-height:1.8;
+  margin-top:12px;
+}
+
+.supplementary-error>button {
+  padding:5px 10px;
+  margin-left:10px;
+  border:1px solid #FFB54755;
+  background:#1d385a;
+  color:#F5F8FF;
+  border-radius:4px;
+  font-size:11px;
+}
+
+@media(min-width:1700px) {
+  .valuation-main-grid {
+    grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1.1fr);
+  }
+  .valuation-commentary li {
+    font-size:14px;
+  }
+  .risk-commentary li {
+    font-size:13px;
+  }
+  .risk-kpis .fundamental-kpi h3 {
+    font-size:12px;
+  }
+  .risk-kpis .fundamental-kpi strong {
+    font-size:25px;
+  }
+  .risk-summary-row {
+    grid-template-columns:minmax(0,1fr) 220px;
+  }
+}
+
+@media(max-width:1350px) {
+  .valuation-main-grid {
+    grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
+  }
+  .valuation-commentary {
+    grid-column:1/-1;
+  }
+  .valuation-commentary ul {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0 20px;
+  }
+  .risk-summary-row {
+    grid-template-columns:minmax(0,1fr) 190px;
+  }
+  .risk-kpis {
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .risk-score-gauge {
+    flex-direction:column;
+  }
+  .risk-score-gauge>div {
+    text-align:center;
+  }
+  .risk-main-grid {
+    grid-template-columns:1.4fr 1fr;
+  }
+  .risk-commentary ul {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0 13px;
+  }
+  .risk-components .risk-bars>div {
+    grid-template-columns:1fr 1.4fr 30px;
+  }
+  .risk-radar {
+    max-height:290px;
+  }
+  .return-chart {
+    min-height:220px;
+  }
+  .valuation-kpis .fundamental-kpi strong {
+    font-size:24px;
+  }
+}
+
+@media(max-width:1000px) {
+  .risk-summary-row {
+    grid-template-columns:1fr;
+  }
+  .risk-score-gauge {
+    flex-direction:row;
+    justify-content:flex-start;
+    padding:8px 18px;
+    gap:15px;
+  }
+  .risk-score-gauge>div {
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:3px 20px;
+    text-align:left;
+  }
+  .risk-score-gauge strong {
+    grid-row:1/3;
+    grid-column:2;
+  }
+  .risk-score-gauge svg {
+    width:55px;
+    height:55px;
+  }
+  .valuation-main-grid {
+    grid-template-columns:1.1fr 1fr;
+  }
+  .target-primary {
+    gap:8px;
+  }
+  .target-primary strong {
+    font-size:30px;
+  }
+  .target-primary>svg {
+    width:27px;
+  }
+  .risk-commentary ul {
+    display:block;
+  }
+}
+
+@media(max-width:760px) {
+  .analysis-page-switch {
+    gap:6px;
+  }
+  .analysis-page-switch>button {
+    flex:1;
+    justify-content:center;
+    padding:9px 7px;
+    font-size:12px;
+    gap:5px;
+  }
+  .analysis-page-switch>button>span {
+    font-size:11px;
+  }
+  .analysis-page-switch>button>svg {
+    display:none;
+  }
+  .analysis-page-switch>small {
+    width:100%;
+    text-align:right;
+    font-size:10px;
+    margin:0;
+  }
+  .valuation-kpis {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .valuation-kpis .fundamental-kpi {
+    padding:11px 8px;
+    gap:6px;
+  }
+  .valuation-kpis .fundamental-kpi strong {
+    font-size:22px;
+  }
+  .valuation-kpis .fundamental-kpi h3 {
+    font-size:10px;
+  }
+  .valuation-kpis .fundamental-kpi p {
+    font-size:9px;
+  }
+  .valuation-reference-note {
+    font-size:11px;
+    padding:8px;
+  }
+  .valuation-main-grid {
+    grid-template-columns:1fr;
+  }
+  .valuation-commentary {
+    grid-column:auto;
+  }
+  .published-target {
+    padding:18px 13px;
+  }
+  .target-primary>svg {
+    width:35px;
+  }
+  .target-primary strong {
+    font-size:37px;
+  }
+  .target-mini-grid strong {
+    font-size:17px;
+  }
+  .target-conclusion strong {
+    font-size:17px;
+  }
+  .valuation-commentary ul {
+    display:block;
+  }
+  .valuation-commentary li {
+    font-size:13px;
+    line-height:1.9;
+  }
+  .valuation-tabs button {
+    font-size:11px;
+  }
+  .method-reference {
+    grid-template-columns:1fr;
+  }
+  .method-reference strong {
+    font-size:21px;
+  }
+  .scenario-chart {
+    padding:11px 9px 5px;
+  }
+  .scenario-chart svg {
+    min-height:170px;
+  }
+  .scenario-chart h4 {
+    font-size:12px;
+  }
+  .risk-summary-row {
+    grid-template-columns:1fr;
+  }
+  .risk-kpis {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .risk-kpis .fundamental-kpi h3 {
+    font-size:11px;
+  }
+  .risk-kpis .fundamental-kpi strong {
+    font-size:24px;
+  }
+  .risk-kpis .fundamental-kpi p {
+    font-size:10px;
+  }
+  .risk-main-grid {
+    grid-template-columns:1fr;
+  }
+  .return-chart {
+    min-height:190px;
+  }
+  .risk-radar {
+    max-height:290px;
+  }
+  .risk-radar-panel {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .risk-radar-panel>.analysis-subheading {
+    width:100%;
+  }
+  .risk-radar-panel>.analysis-source-note {
+    align-self:flex-start;
+  }
+  .risk-components .risk-bars>div {
+    grid-template-columns:1fr 1.3fr 35px;
+  }
+  .risk-bars span {
+    font-size:13px;
+  }
+  .risk-bars strong {
+    font-size:14px;
+  }
+  .risk-commentary li {
+    font-size:13px;
+  }
+  .risk-method-button {
+    margin-left:auto;
+    font-size:11px;
+  }
+  .analysis-stock-summary .valuation-metrics-page-two>div {
+    padding-left:6px;
+  }
+  .analysis-stock-summary .valuation-metrics-page-two>div:first-child {
+    padding-left:0;
+  }
+  .analysis-stock-summary .valuation-metrics-page-two strong {
+    font-size:16px;
+  }
+}

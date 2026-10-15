@@ -1,17 +1,32 @@
 # Feature 011 — FastAPI layer (web demo). Chỉ đọc kết quả pipeline; LLM theo yêu cầu.
 snapshots_dir: data/snapshots  # đọc cả thư mục con; mã trùng ưu tiên file gần thư mục gốc
-frontend_dir: frontend/dist
 asof: auto                    # auto = ngày mới nhất có snapshot; hoặc YYYY-MM-DD
 default_profile: long_term
 host: 127.0.0.1
 port: 8000
-cors_origins:
-  - http://localhost:5173
-  - http://127.0.0.1:5173
-docs_enabled: true            # false → tắt /docs, /redoc, /openapi.json
-trust_proxy_headers: false    # true chỉ khi đứng sau proxy tin cậy (Cloudflare tunnel…)
+cors_origins: ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"] # ví dụ: ["http://localhost:5173"]
+docs_enabled: true # bật tài liệu API khi chạy local
+trust_proxy_headers: false # local trực tiếp; chỉ bật khi đặt sau proxy tin cậy
+frontend_dir: frontend/dist # frontend tĩnh của develop (chỉ dùng khi không có web/dist)
 proxy_ip_header: CF-Connecting-IP
 debate_live_max_per_hour: 10
 debate_live_max_per_ip_per_hour: 3
-debate_live_max_per_day: 15   # trần UTC/ngày, lưu data/api_cache/_debate_budget.json
+debate_live_max_per_day: 15 # trần UTC/ngày, lưu data/api_cache/_debate_budget.json
+debate_job_max_workers: 2 # pool nền POST /debate/jobs (feature 014j)
 cache_dir: data/api_cache
+web_dist_dir: null # giữ dashboard frontend/dist đã tùy chỉnh; web/src mới vẫn có trong repo
+
+# Feature 017a — realtime (display + phân tích tạm tính; không vào M2–M7)
+realtime:
+  enabled: true # false → luôn SnapshotQuoteProvider, state=no_realtime
+  max_symbols: 250 # trần subscribe (liquid + đang xem)
+  max_per_connection: 200 # giới hạn SDK DNSE
+  price_scale: 1000 # số cố định hoặc "auto" (bình chọn ≥20 mã, đa số ≥90% rồi khoá)
+  stale_after_sec: 90
+  sse_heartbeat_sec: 15
+  sse_max_symbols: 20
+  sse_max_per_ip: 5
+  market_sse_max_per_ip: 2 # /api/stream/market (trang chủ) — 1 tab = 1 kết nối
+  market_stream_interval_sec: 1.5
+  market_stream_idle_sec: 15 # ngoài giờ: kiểm tra thưa, chỉ heartbeat nếu không đổi
+  market_stream_lists_sec: 4

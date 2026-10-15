@@ -23,3 +23,9 @@ openai
 fastapi
 uvicorn
 httpx
+# Feature 017a: DNSE LightSpeed market data (import `dnse`; KHÔNG dùng PyPI package tên "dnse" 0.5.x)
+# Ghim 2.4.1 — RealtimeHub bọc API nội bộ TradingClient._dispatch_message (raw T/matchPrice).
+dnse-sdk-openapi==2.4.1
+# SDK 2.4.1 does not declare these WebSocket dependencies in its package metadata.
+msgpack>=1,<2
+websockets>=14,<18

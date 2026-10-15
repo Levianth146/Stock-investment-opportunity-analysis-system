@@ -61,7 +61,11 @@ def _fin(annual=True, bn=False):
                  "OWNER'S EQUITY": [80 * G] * 6, "Short-term borrowings": [20 * G] * 6}, per, k)
     cf = _long({"Net profit/(loss) before tax": [16 * G] * 6, "Depreciation and amortization": [8 * G] * 6,
                 "Net cash inflows/outflows from operating activities": [10 * G] * 6,
-                "Purchases of fixed assets and other long-term assets": [-7 * G] * 6}, per, k)
+                "Purchases of fixed assets and other long-term assets": [-7 * G] * 6,
+                "Dividends paid": [-5 * G] * 6,
+                "Dividends and interest received": [1 * G] * 6}, per, k)
+    # item_id chuẩn VCI cho dòng cổ tức tiền mặt
+    cf.loc[cf["item_en"] == "Dividends paid", "item_id"] = "dividends_paid"
     return [inc, bal, cf]
 
 
@@ -83,9 +87,28 @@ def test_financials_mapping_units_capex_and_lookahead():
     assert it["revenue"] == 150e9                                   # "Net sales", không phải "Sales" (chưa trừ giảm trừ)
     assert it["net_income"] == 14e9 and it["net_income_parent"] == 13e9      # không nhầm "before tax" của dòng tiền
     assert it["total_assets"] == 160e9 and it["total_equity"] == 80e9 and it["cfo"] == 10e9 and it["capex"] == 7e9   # capex luôn dương
+    assert it["dividends_paid"] == 5e9  # abs như capex; không lấy dòng "received"
     assert it["short_term_debt"] == 20e9 and it["depreciation"] == 8e9 and it["eps"] == 1700
     assert cmap["revenue"] == "Net sales" and cmap["net_income"] == "Net profit/(loss) after tax"
     assert all(p["published_at_estimated"] for p in per)
+
+
+def test_dividends_paid_from_item_id_positive():
+    """Fixture cashflow có item_id=dividends_paid (âm như VCI) → snapshot dương."""
+    per = ["2025", "2024"]
+    G = 1e9
+    cf = _long(
+        {
+            "Net cash inflows/outflows from operating activities": [10 * G, 9 * G],
+            "Dividends paid": [-2.5 * G, -1.2 * G],
+        },
+        per,
+    )
+    cf.loc[cf["item_en"] == "Dividends paid", "item_id"] = "dividends_paid"
+    out, cmap, _ = nz.normalize_financials([cf], True, "2026-10-09", "src", False, keep=2)
+    assert out[0]["items"]["dividends_paid"] == 2.5e9
+    assert out[1]["items"]["dividends_paid"] == 1.2e9
+    assert "dividends_paid" in cmap
 
 
 def test_financials_not_yet_published_excluded():
@@ -175,5 +198,6 @@ def test_aliases_match_real_vci_item_names():
               "cash": "Cash and cash equivalents", "short_term_debt": "Short-term borrowings", "long_term_debt": "Long-term borrowings",
               "cfo": "Net cash inflows/(outflows) from operating activities", "cfi": "Net cash inflows/(outflows) from investing activities",
               "cff": "Net cash inflows/(outflows) from financing activities",
-              "capex": "Purchases of fixed assets and other long term assets"}
+              "capex": "Purchases of fixed assets and other long term assets",
+              "dividends_paid": "Dividends paid"}
     assert cmap == expect and not any("unmatched" in f for f in flags)

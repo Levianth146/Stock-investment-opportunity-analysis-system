@@ -1,13 +1,18 @@
-"""FastAPI app — rankings / ticker / debate / quotes / PDF (feature 011)."""
+"""FastAPI app — rankings / ticker / debate / quotes / PDF / web SPA (011+014+017)."""
 from __future__ import annotations
 
+import asyncio
+import json
+import logging
 import re
+import threading
+import time
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncIterator
 
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from stockai.api.analysis import AnalyzeRequest, analyze_snapshot
@@ -15,11 +20,21 @@ from stockai.api.debate_service import llm_public_status
 from stockai.api.deps import (
     client_ip,
     get_api_cfg,
+    get_debate_jobs,
     get_debate_service,
     get_quote_provider,
+    get_realtime_hub,
+    get_sse_limiter,
     get_store,
     init_app_state,
 )
+from stockai.api.insession import build_market_analysis
+from stockai.api.dividends import dividends_for
+from stockai.api.profiles import company_profile
+from stockai.api.market_stream import MarketDeltaState, shared_market
+from stockai.api.realtime import SSE_COALESCE_SEC
+from stockai.api.watchlist import build_watchlist_summary
+from stockai.api.spa import mount_spa, resolve_web_dist
 from stockai.api.store import (
     DISCLAIMER,
     FORMULA_VERSION,
@@ -33,6 +48,29 @@ from stockai.api.store import (
 from stockai.m9_report.run import run as run_m9
 
 _SYMBOL_RE = re.compile(r"^[A-Z0-9]{1,6}$")
+_log = logging.getLogger(__name__)
+
+
+def _warmup_caches(app: FastAPI) -> None:
+    """Nạp sẵn rankings / sectors / market vào bộ nhớ nền."""
+    try:
+        st: ResultStore = app.state.store
+        for profile in PROFILES:
+            try:
+                st.iter_ranking_rows(profile, include_unranked=False)
+            except Exception as exc:  # noqa: BLE001
+                _log.warning("warmup rankings %s: %s", profile, exc)
+            try:
+                st.sectors(profile=profile)
+            except Exception as exc:  # noqa: BLE001
+                _log.warning("warmup sectors %s: %s", profile, exc)
+        try:
+            st.market()
+        except Exception as exc:  # noqa: BLE001
+            _log.warning("warmup market: %s", exc)
+    finally:
+        app.state.ready = True
+
 
 
 def _envelope(data: dict, store: ResultStore) -> dict:
@@ -54,17 +92,36 @@ def _err(status: int, message: str, store: ResultStore | None = None) -> JSONRes
     return JSONResponse(status_code=status, content=body)
 
 
+def _read_refreshed_at(store: ResultStore) -> str | None:
+    """Đọc mốc refresh daily từ ``cache_dir/_refreshed_at.json``."""
+    path = Path(store.cache_dir) / "_refreshed_at.json"
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return None
+    if isinstance(data, dict):
+        v = data.get("refreshed_at")
+        return str(v) if v else None
+    return None
+
+
 def create_app(
     *,
     api_cfg: dict | None = None,
     store: ResultStore | None = None,
 ) -> FastAPI:
-    cfg = api_cfg if api_cfg is not None else load_api_cfg()
+    cfg = dict(api_cfg) if api_cfg is not None else load_api_cfg()
+    # TestClient truyền store sẵn → bỏ warmup + không mở DNSE thật
+    if store is not None:
+        cfg.setdefault("skip_warmup", True)
+        cfg.setdefault("skip_realtime_start", True)
     docs_on = bool(cfg["docs_enabled"]) if "docs_enabled" in cfg else True
     app = FastAPI(
         title="StockAI API",
-        version="0.11.0",
-        description="Layer đọc kết quả pipeline cho web demo (feature 011).",
+        version="0.17.0",
+        description="Layer đọc kết quả pipeline + SPA web + realtime tạm tính (011/014/017).",
         docs_url="/docs" if docs_on else None,
         redoc_url="/redoc" if docs_on else None,
         openapi_url="/openapi.json" if docs_on else None,
@@ -79,6 +136,21 @@ def create_app(
             allow_headers=["*"],
         )
     init_app_state(app, api_cfg=cfg, store=store)
+    skip_warmup = store is not None or bool(cfg.get("skip_warmup"))
+    app.state.ready = skip_warmup
+
+    @app.on_event("startup")
+    def _on_startup() -> None:
+        if skip_warmup:
+            app.state.ready = True
+            return
+        app.state.ready = False
+        threading.Thread(
+            target=_warmup_caches,
+            args=(app,),
+            name="stockai-warmup",
+            daemon=True,
+        ).start()
 
     @app.exception_handler(Exception)
     async def _unhandled(_request: Request, _exc: Exception) -> JSONResponse:
@@ -87,7 +159,8 @@ def create_app(
     @app.get("/api/health", response_model=None)
     def health(request: Request) -> dict:
         store = get_store(request)
-        return _envelope({"status": "ok"}, store)
+        ready = bool(getattr(request.app.state, "ready", True))
+        return _envelope({"status": "ok" if ready else "warming"}, store)
 
     @app.get("/api/meta", response_model=None)
     def meta(request: Request) -> dict:
@@ -105,9 +178,11 @@ def create_app(
             ) or {}
         except Exception:
             scoring_cfg = {}
+        refreshed_at = _read_refreshed_at(store)
         return _envelope(
             {
                 "asof": store.asof,
+                "refreshed_at": refreshed_at,
                 "profiles": list(PROFILES),
                 "default_profile": store.default_profile,
                 "universe_count": universe,
@@ -118,6 +193,12 @@ def create_app(
             },
             store,
         )
+
+    @app.get("/api/llm/status", response_model=None)
+    def llm_status(request: Request) -> dict:
+        """Trạng thái LLM công khai (ok | quota_blocked | no_key). Không lộ key."""
+        store = get_store(request)
+        return _envelope(llm_public_status(), store)
 
     @app.post("/api/analyze", response_model=None)
     def analyze(request: Request, payload: AnalyzeRequest) -> Any:
@@ -139,7 +220,7 @@ def create_app(
         q: str | None = None,
         sort: str = Query("score"),
         order: str = Query("desc"),
-        limit: int = Query(50, ge=1, le=500),
+        limit: int = Query(50, ge=1, le=2000),
         offset: int = Query(0, ge=0),
         include_unranked: bool = False,
     ) -> Any:
@@ -164,8 +245,27 @@ def create_app(
             return _err(500, "Lỗi nội bộ", store)
 
     @app.get("/api/sectors", response_model=None)
-    def sectors(request: Request) -> dict:
-        return get_store(request).sectors()
+    def sectors(
+        request: Request,
+        profile: str | None = None,
+    ) -> Any:
+        store = get_store(request)
+        profile = profile or store.default_profile
+        if profile not in PROFILES:
+            return _err(400, "profile không hợp lệ", store)
+        try:
+            return store.sectors(profile=profile)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/market", response_model=None)
+    def market(request: Request) -> Any:
+        """VN-Index đóng cửa từ snapshot (không realtime)."""
+        store = get_store(request)
+        try:
+            return store.market()
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
 
     @app.get("/api/tickers", response_model=None)
     def ticker_catalog(request: Request) -> dict:
@@ -194,8 +294,23 @@ def create_app(
             return bad
         profile = profile or store.default_profile
         try:
+            from stockai.api.checks import evaluate_all_checks, pillar_ranks_in_sector
+
             bundle = store.get_bundle(sym, profile, debate_mode="template")
             m7 = bundle.get("m7") or {}
+            snap = store.load_snapshot(sym)
+            peer_metrics, peer_score_rows = store.sector_peer_context(sym, profile)
+            checks = evaluate_all_checks(
+                snapshot=snap,
+                bundle=bundle,
+                sector_peer_metrics=peer_metrics,
+            )
+            scores = m7.get("scores") if isinstance(m7.get("scores"), dict) else {}
+            pillar_rank = pillar_ranks_in_sector(
+                scores=scores,
+                peer_scores=peer_score_rows,
+                min_peers=8,
+            )
             return _envelope(
                 {
                     "symbol": sym,
@@ -211,6 +326,12 @@ def create_app(
                     },
                     "validation": bundle.get("m8"),
                     "quality_gate": m7.get("quality_gate"),
+                    "pillar_rank": pillar_rank,
+                    "checks_summary": {
+                        "rewards_count": checks.get("rewards_count"),
+                        "risks_count": checks.get("risks_count"),
+                        "f_score": checks.get("f_score"),
+                    },
                 },
                 store,
             )
@@ -225,6 +346,8 @@ def create_app(
         symbol: str,
         range: str = Query("3m", alias="range"),  # noqa: A002
         profile: str | None = None,
+        include_index: bool = Query(False),
+        include_indicators: bool = Query(False),
     ) -> Any:
         store = get_store(request)
         sym = (symbol or "").strip().upper()
@@ -234,7 +357,88 @@ def create_app(
         if range not in ("3m", "6m", "1y", "all"):
             return _err(400, "range không hợp lệ", store)
         try:
-            return store.prices(sym, range_key=range, profile=profile)
+            return store.prices(
+                sym,
+                range_key=range,
+                profile=profile,
+                include_index=include_index,
+                include_indicators=include_indicators,
+            )
+        except KeyError:
+            return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/financials", response_model=None)
+    def ticker_financials(request: Request, symbol: str) -> Any:
+        """BCTC năm/quý (tỷ VND) + margin/ROE/D/E/FCF/YoY. ROE năm: vốn trung bình."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return store.financials(sym)
+        except KeyError:
+            return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/income-flow", response_model=None)
+    def ticker_income_flow(
+        request: Request,
+        symbol: str,
+        period: str = Query("TTM"),
+    ) -> Any:
+        """Sankey doanh thu → LNST (tỷ VND). Ngân hàng: supported=false."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return store.income_flow(sym, period=period)
+        except KeyError:
+            return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/profile", response_model=None)
+    def ticker_profile(request: Request, symbol: str) -> Any:
+        """Hồ sơ công ty: giới thiệu, niêm yết, sở hữu (cache M1, không realtime)."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return _envelope(company_profile(store.root, sym), store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/dividends", response_model=None)
+    def ticker_dividends(request: Request, symbol: str) -> Any:
+        """Lịch sử cổ tức (tiền mặt/cổ phiếu) từ file fetch; thiếu thì available=false."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return _envelope(dividends_for(store.root, sym, asof=store.asof), store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/peers", response_model=None)
+    def ticker_peers(request: Request, symbol: str) -> Any:
+        """Peers ngành từ snapshot + median ngành (valuation_sector_stats)."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return store.peers(sym)
         except KeyError:
             return _err(404, "Không tìm thấy mã", store)
         except Exception:
@@ -253,6 +457,80 @@ def create_app(
             return bad
         try:
             return store.news(sym, profile=profile)
+        except KeyError:
+            return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/checks", response_model=None)
+    def ticker_checks(
+        request: Request,
+        symbol: str,
+        profile: str | None = None,
+    ) -> Any:
+        """Phép kiểm minh họa (Piotroski/Graham/ngành/quy ước) — additive 014g."""
+        from stockai.api.checks import evaluate_all_checks
+
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        profile = profile or store.default_profile
+        try:
+            bundle = store.get_bundle(sym, profile, debate_mode="template")
+            snap = store.load_snapshot(sym)
+            peer_metrics, _ = store.sector_peer_context(sym, profile)
+            out = evaluate_all_checks(
+                snapshot=snap,
+                bundle=bundle,
+                sector_peer_metrics=peer_metrics,
+            )
+            return _envelope({"symbol": sym, "profile": profile, **out}, store)
+        except KeyError:
+            return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/quarter-summary", response_model=None)
+    def ticker_quarter_summary(request: Request, symbol: str) -> Any:
+        from stockai.api.checks import build_quarter_summary
+
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            snap = store.load_snapshot(sym)
+            prices = snap.get("prices") if isinstance(snap.get("prices"), dict) else {}
+            rows = prices.get("rows") if isinstance(prices.get("rows"), list) else []
+            out = build_quarter_summary(snap, prices_rows=rows)
+            return _envelope({"symbol": sym, **out}, store)
+        except KeyError:
+            return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/snapshot-stats", response_model=None)
+    def ticker_snapshot_stats(
+        request: Request,
+        symbol: str,
+        profile: str | None = None,
+    ) -> Any:
+        from stockai.api.checks import build_snapshot_stats
+
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        profile = profile or store.default_profile
+        try:
+            bundle = store.get_bundle(sym, profile, debate_mode="template")
+            snap = store.load_snapshot(sym)
+            out = build_snapshot_stats(snap, bundle)
+            return _envelope({"symbol": sym, "profile": profile, **out}, store)
         except KeyError:
             return _err(404, "Không tìm thấy mã", store)
         except Exception:
@@ -287,6 +565,61 @@ def create_app(
             # LLM/validate fail đã được DebateService nuốt → TEMPLATE; đây là lỗi khác
             return _err(500, "Lỗi nội bộ", store)
 
+    @app.post("/api/tickers/{symbol}/debate/jobs", response_model=None)
+    def ticker_debate_job_create(
+        request: Request,
+        symbol: str,
+        profile: str | None = None,
+    ) -> Any:
+        """Tạo job AI nền — trả ngay job_id (idempotent nếu cùng mã đang chạy)."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        profile = profile or store.default_profile
+        if profile not in PROFILES:
+            return _err(400, "profile không hợp lệ", store)
+        try:
+            mgr = get_debate_jobs(request)
+            job = mgr.submit(sym, profile=profile, client_ip=client_ip(request))
+            return _envelope(
+                {
+                    "job_id": job.job_id,
+                    "state": job.state,
+                    "symbol": job.symbol,
+                    "profile": job.profile,
+                    "attempt": job.attempt,
+                },
+                store,
+            )
+        except KeyError:
+            return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/debate/jobs/{job_id}", response_model=None)
+    def ticker_debate_job_get(
+        request: Request,
+        symbol: str,
+        job_id: str,
+        profile: str | None = None,
+    ) -> Any:
+        """Trạng thái job AI: queued|running|ok|failed (+ result khi xong)."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        profile = profile or store.default_profile
+        if profile not in PROFILES:
+            return _err(400, "profile không hợp lệ", store)
+        mgr = get_debate_jobs(request)
+        job = mgr.get_for_symbol(sym, profile, job_id)
+        if job is None:
+            return _err(404, "Không tìm thấy job", store)
+        return _envelope(job.public(), store)
+
     @app.get("/api/quotes", response_model=None)
     def quotes(
         request: Request,
@@ -304,6 +637,243 @@ def create_app(
         provider = get_quote_provider(request)
         items = provider.get_quotes(clean)
         return _envelope({"items": items}, store)
+
+    @app.get("/api/realtime/status", response_model=None)
+    def realtime_status(request: Request) -> Any:
+        store = get_store(request)
+        hub = get_realtime_hub(request)
+        return _envelope(hub.status(), store)
+
+    @app.get("/api/realtime/market", response_model=None)
+    def realtime_market(request: Request) -> Any:
+        """Breadth / lists / heatmap / valuation tạm tính (nhóm liquid)."""
+        store = get_store(request)
+        hub = get_realtime_hub(request)
+        try:
+            payload = build_market_analysis(hub, store)
+            return _envelope(payload, store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/watchlist/summary", response_model=None)
+    def watchlist_summary(
+        request: Request,
+        symbols: str = Query(..., description="Danh sách mã, cách nhau bởi dấu phẩy, tối đa 50"),
+        profile: str = Query("long_term"),
+    ) -> Any:
+        """Tóm tắt danh sách theo dõi — giá live + điểm M7 EOD; không cost basis."""
+        store = get_store(request)
+        raw = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        if not raw:
+            return _err(400, "symbols bắt buộc", store)
+        if len(raw) > 50:
+            return _err(400, "symbols quá nhiều (tối đa 50 mã)", store)
+        clean: list[str] = []
+        for s in raw:
+            if not _SYMBOL_RE.fullmatch(s) or not is_valid_symbol(s):
+                return _err(400, f"Mã không hợp lệ: {s}", store)
+            if not store.has_ticker(s):
+                return _err(400, f"Không tìm thấy mã: {s}", store)
+            clean.append(s)
+        if profile not in PROFILES:
+            return _err(400, "profile không hợp lệ", store)
+        hub = get_realtime_hub(request)
+        try:
+            payload = build_watchlist_summary(hub, store, clean, profile=profile)
+            return _envelope(payload, store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/stream", response_model=None)
+    async def realtime_stream(
+        request: Request,
+        symbols: str = Query(..., description="Tối đa 20 mã, cách nhau bởi dấu phẩy"),
+    ) -> Any:
+        """SSE giá phiên — coalesce ≤1/s/mã; heartbeat 15s; refcount khi client rời."""
+        store = get_store(request)
+        cfg = get_api_cfg(request)
+        rt = cfg.get("realtime") if isinstance(cfg.get("realtime"), dict) else {}
+        max_sym = int(rt.get("sse_max_symbols") or 20)
+        hb_sec = float(rt.get("sse_heartbeat_sec") or 15)
+        coalesce_sec = float(rt.get("sse_coalesce_sec") or SSE_COALESCE_SEC)
+
+        raw = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        if not raw:
+            return _err(400, "symbols bắt buộc", store)
+        if len(raw) > max_sym:
+            return _err(400, f"symbols quá nhiều (tối đa {max_sym} mã)", store)
+        clean: list[str] = []
+        for s in raw:
+            if not _SYMBOL_RE.fullmatch(s) or not is_valid_symbol(s):
+                return _err(400, f"Mã không hợp lệ: {s}", store)
+            if not store.has_ticker(s):
+                return _err(400, f"Không tìm thấy mã: {s}", store)
+            clean.append(s)
+
+        ip = client_ip(request)
+        sse_lim = get_sse_limiter(request)
+        if not sse_lim.try_acquire(ip):
+            return _err(429, "Quá nhiều kết nối stream từ IP này", store)
+
+        hub = get_realtime_hub(request)
+        hub.acquire_view(clean)
+        max_events = int(cfg.get("_sse_max_events") or 0)
+
+        async def event_gen() -> AsyncIterator[str]:
+            last_hb = time.monotonic()
+            last_by_sym: dict[str, tuple[Any, Any]] = {}
+            last_sent_mono: dict[str, float] = {}
+            pending: dict[str, dict[str, Any]] = {}
+            sent = 0
+            try:
+                items = hub.get_quotes(clean)
+                first = {
+                    "type": "quotes",
+                    "items": items,
+                    "label": "tạm tính",
+                    "asof": store.asof,
+                }
+                now0 = time.monotonic()
+                for it in items:
+                    sym = str(it.get("symbol") or "")
+                    last_by_sym[sym] = (it.get("price"), it.get("state"))
+                    last_sent_mono[sym] = now0
+                yield f"data: {json.dumps(first, ensure_ascii=False)}\n\n"
+                sent += 1
+                if max_events and sent >= max_events:
+                    return
+                loops = 0
+                while True:
+                    if await request.is_disconnected():
+                        break
+                    loops += 1
+                    if max_events and loops > 4:
+                        break
+                    await asyncio.sleep(0.05 if max_events else 0.25)
+                    items = hub.get_quotes(clean)
+                    now = time.monotonic()
+                    for it in items:
+                        sym = str(it.get("symbol") or "")
+                        sig = (it.get("price"), it.get("state"))
+                        if last_by_sym.get(sym) != sig:
+                            pending[sym] = it
+                            last_by_sym[sym] = sig
+                    ready: list[dict[str, Any]] = []
+                    for sym, it in list(pending.items()):
+                        last_t = last_sent_mono.get(sym, 0.0)
+                        if now - last_t >= coalesce_sec:
+                            ready.append(it)
+                            last_sent_mono[sym] = now
+                            pending.pop(sym, None)
+                    if ready:
+                        payload = {
+                            "type": "quotes",
+                            "items": ready,
+                            "label": "tạm tính",
+                            "asof": store.asof,
+                            "coalesced": True,
+                        }
+                        yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+                        sent += 1
+                        if max_events and sent >= max_events:
+                            break
+                    if now - last_hb >= hb_sec:
+                        last_hb = now
+                        yield f": heartbeat\n\n"
+                        yield (
+                            "data: "
+                            + json.dumps(
+                                {"type": "heartbeat", "ts": time.time()},
+                                ensure_ascii=False,
+                            )
+                            + "\n\n"
+                        )
+                        sent += 1
+                        if max_events and sent >= max_events:
+                            break
+            finally:
+                hub.release_view(clean)
+                sse_lim.release(ip)
+
+        return StreamingResponse(
+            event_gen(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
+
+    @app.get("/api/stream/market", response_model=None)
+    async def market_stream(request: Request) -> Any:
+        """SSE trang chủ: ``full`` khi kết nối, sau đó ``delta`` (seq tăng dần); heartbeat 15s."""
+        store = get_store(request)
+        cfg = get_api_cfg(request)
+        rt = cfg.get("realtime") if isinstance(cfg.get("realtime"), dict) else {}
+        hb_sec = float(rt.get("sse_heartbeat_sec") or 15)
+        tick_sec = float(rt.get("market_stream_interval_sec") or 1.5)
+        idle_sec = float(rt.get("market_stream_idle_sec") or 15)
+        lists_every = float(rt.get("market_stream_lists_sec") or 4)
+        lim = request.app.state.market_sse_limiter
+        ip = client_ip(request)
+        if not lim.try_acquire(ip):
+            return _err(429, "Quá nhiều kết nối stream từ IP này", store)
+        hub = get_realtime_hub(request)
+        max_events = int(cfg.get("_sse_max_events") or 0)
+
+        async def event_gen() -> AsyncIterator[str]:
+            state = MarketDeltaState(lists_every=lists_every)
+            last_hb = time.monotonic()
+            sent = 0
+            try:
+                payload = await asyncio.to_thread(shared_market, hub, store, min_age=0.0)
+                yield f"data: {json.dumps(state.full(payload), ensure_ascii=False)}\n\n"
+                sent += 1
+                loops = 0
+                while True:
+                    if max_events and sent >= max_events:
+                        break
+                    if await request.is_disconnected():
+                        break
+                    loops += 1
+                    if max_events and loops > 40:
+                        break
+                    open_now = hub.session_now().phase != "closed"
+                    wait = (0.05 if max_events else (tick_sec if open_now else idle_sec))
+                    await asyncio.sleep(wait)
+                    payload = await asyncio.to_thread(
+                        shared_market, hub, store, min_age=0.0 if max_events else 1.0
+                    )
+                    if max_events:
+                        ev = state.delta(payload, now=time.monotonic() + 100.0 * loops)
+                    else:
+                        ev = state.delta(payload)
+                    if ev is not None:
+                        last_hb = time.monotonic()
+                        yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+                        sent += 1
+                    elif time.monotonic() - last_hb >= (0.0 if max_events else hb_sec):
+                        last_hb = time.monotonic()
+                        yield ": heartbeat\n\n"
+                        yield (
+                            "data: "
+                            + json.dumps({"type": "heartbeat", "ts": time.time(), "seq": state.seq})
+                            + "\n\n"
+                        )
+                        sent += 1
+            finally:
+                lim.release(ip)
+
+        return StreamingResponse(
+            event_gen(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
 
     @app.get("/api/report/{symbol}.pdf", response_model=None)
     def report_pdf(
@@ -362,23 +932,31 @@ def create_app(
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
 
-    # Register the build after API routes so unknown /api paths remain JSON 404s.
-    frontend_dir = Path(str(cfg.get("frontend_dir") or "frontend/dist"))
-    if not frontend_dir.is_absolute():
-        frontend_dir = repo_root() / frontend_dir
-    if (frontend_dir / "index.html").is_file():
-        assets_dir = frontend_dir / "assets"
-        if assets_dir.is_dir():
-            app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend-assets")
+    # SPA React (web/dist) ưu tiên; không có thì lùi về frontend tĩnh của develop (frontend/dist).
+    spa_mounted = False
+    if cfg.get("web_dist_dir"):
+        dist = resolve_web_dist(cfg, repo_root())
+        if dist is not None:
+            mount_spa(app, dist)
+            spa_mounted = True
+    if not spa_mounted:
+        # Register the build after API routes so unknown /api paths remain JSON 404s.
+        frontend_dir = Path(str(cfg.get("frontend_dir") or "frontend/dist"))
+        if not frontend_dir.is_absolute():
+            frontend_dir = repo_root() / frontend_dir
+        if (frontend_dir / "index.html").is_file():
+            assets_dir = frontend_dir / "assets"
+            if assets_dir.is_dir():
+                app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend-assets")
 
-        @app.get("/", include_in_schema=False)
-        def frontend_index():
-            return FileResponse(frontend_dir / "index.html")
+            @app.get("/", include_in_schema=False)
+            def frontend_index():
+                return FileResponse(frontend_dir / "index.html")
 
-        if (frontend_dir / "api-client.js").is_file():
-            @app.get("/api-client.js", include_in_schema=False)
-            def frontend_client():
-                return FileResponse(frontend_dir / "api-client.js", media_type="text/javascript")
+            if (frontend_dir / "api-client.js").is_file():
+                @app.get("/api-client.js", include_in_schema=False)
+                def frontend_client():
+                    return FileResponse(frontend_dir / "api-client.js", media_type="text/javascript")
 
     return app
 

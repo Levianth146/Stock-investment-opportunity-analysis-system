@@ -76,6 +76,7 @@
 
   function TechnicalAnalysis({ react, jsx, stock, compact = false }) {
     const [range, setRange] = react.useState("3m");
+    const [selection, setSelection] = react.useState(null);
     const { h, card, paragraph, metrics, evidence, heading } = ui(jsx);
     const data = analysisOf(stock), module = moduleOf(data, "m3");
     const history = (data?.price_history || []).filter(row => Number.isFinite(row.close));
@@ -84,14 +85,52 @@
     if (points.length > 1) {
       const min = Math.min(...points.map(row => row.close)), max = Math.max(...points.map(row => row.close));
       const coordinates = points.map((row, index) => `${50 + index / (points.length - 1) * 690},${20 + (max - row.close) / (max - min || 1) * 180}`).join(" ");
+      const selectedIndex = selection?.data === data && selection?.range === range ? selection.index : null;
+      const selected = points[selectedIndex];
+      const select = index => setSelection({ data, range, index });
+      const hover = event => {
+        const svg = event.currentTarget;
+        const matrix = svg.getScreenCTM();
+        if (!matrix) return;
+        const cursor = svg.createSVGPoint();
+        cursor.x = event.clientX;
+        cursor.y = event.clientY;
+        const local = cursor.matrixTransform(matrix.inverse());
+        select(Math.round(Math.max(0, Math.min(1, (local.x - 50) / 690)) * (points.length - 1)));
+      };
+      const x = selected ? 50 + selectedIndex / (points.length - 1) * 690 : 0;
+      const y = selected ? 20 + (max - selected.close) / (max - min || 1) * 180 : 0;
+      const tooltipX = Math.max(50, Math.min(540, x - 100));
+      const tooltipY = y < 85 ? y + 14 : y - 64;
       chart = h("svg", { viewBox: "0 0 760 240", role: "img", "aria-label": `Biểu đồ giá đóng cửa ${stock.symbol} từ ${points[0].date} đến ${points.at(-1).date}`,
+        tabIndex: 0, onPointerMove: hover, onPointerDown: hover,
+        onPointerLeave: () => setSelection(null), onBlur: () => setSelection(null),
+        onFocus: () => select(points.length - 1),
+        onKeyDown: event => {
+          if (!["ArrowLeft", "ArrowRight", "Home", "End", "Escape"].includes(event.key)) return;
+          event.preventDefault();
+          if (event.key === "Escape") return setSelection(null);
+          const current = selectedIndex ?? points.length - 1;
+          select(event.key === "Home" ? 0 : event.key === "End" ? points.length - 1
+            : Math.max(0, Math.min(points.length - 1, current + (event.key === "ArrowLeft" ? -1 : 1))));
+        },
         style: { width: "100%", minWidth: "300px", maxHeight: "320px" }, children: [
-          h("title", { children: `Giá đóng cửa ${stock.symbol} (VND/cổ phiếu)` }),
+          h("desc", { children: "Trỏ chuột hoặc chạm để xem ngày và giá. Dùng phím mũi tên trái/phải để chọn phiên." }),
+          h("rect", { x: 0, y: 0, width: 760, height: 240, fill: "transparent" }),
           h("text", { x: 0, y: 18, fontSize: 10, children: number(max) }),
           h("text", { x: 0, y: 205, fontSize: 10, children: number(min) }),
           h("polyline", { points: coordinates, fill: "none", stroke: "#1A56DB", strokeWidth: 2 }),
           h("text", { x: 50, y: 230, fontSize: 11, children: points[0].date }),
-          h("text", { x: 740, y: 230, textAnchor: "end", fontSize: 11, children: points.at(-1).date })
+          h("text", { x: 740, y: 230, textAnchor: "end", fontSize: 11, children: points.at(-1).date }),
+          selected ? h("g", { pointerEvents: "none", children: [
+            h("line", { x1: x, x2: x, y1: 20, y2: 200, stroke: "#94A3B8", strokeDasharray: "4 4" }),
+            h("circle", { cx: x, cy: y, r: 4, fill: "#1A56DB", stroke: "white", strokeWidth: 2 }),
+            h("g", { role: "status", "aria-live": "polite", children: [
+              h("rect", { x: tooltipX, y: tooltipY, width: 200, height: 50, rx: 6, fill: "#0C1D2D" }),
+              h("text", { x: tooltipX + 10, y: tooltipY + 19, fill: "white", fontSize: 11, children: selected.date }),
+              h("text", { x: tooltipX + 10, y: tooltipY + 37, fill: "white", fontSize: 11, children: `${number(selected.close)} VND/cổ phiếu` })
+            ] })
+          ] }) : null
         ] });
     } else chart = paragraph("Chưa đủ dữ liệu lịch sử giá để vẽ biểu đồ.");
     const historyCard = card("Lịch sử giá đóng cửa", [
@@ -100,7 +139,7 @@
           className: "px-3 py-1.5 rounded-md text-xs " + (range === key ? "bg-[#1A56DB] text-white" : "bg-[#EFF6FF] text-[#1A56DB]"),
           children: { "3m": "3 tháng", "6m": "6 tháng", "1y": "1 năm" }[key]
         }, key)) }), chart,
-        paragraph(`Giá theo snapshot, đơn vị VND/cổ phiếu. ${points.length} phiên hiển thị. Các chỉ báo bên dưới tính tại phiên cuối, không đổi theo phạm vi biểu đồ.`)
+        paragraph(`Giá theo snapshot, đơn vị VND/cổ phiếu. ${points.length} phiên hiển thị. Trỏ chuột hoặc chạm vào biểu đồ để xem ngày và giá. Các chỉ báo bên dưới tính tại phiên cuối, không đổi theo phạm vi biểu đồ.`)
       ]);
     if (compact) return historyCard;
     return h("div", { className: "space-y-4", children: [

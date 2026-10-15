@@ -88,6 +88,7 @@ def test_quota_exhausted_no_backoff_failover_glm(keys, monkeypatch):
 
 
 def test_rate_limited_still_retries_with_backoff(keys, monkeypatch):
+    """014m: 429 dùng backoff 15/30/60 (không còn 2/4/8); không mở circuit."""
     calls = {"n": 0}
     sleeps: list[float] = []
     monkeypatch.setattr("stockai.llm.generate.time.sleep", lambda s: sleeps.append(s))
@@ -112,7 +113,9 @@ def test_rate_limited_still_retries_with_backoff(keys, monkeypatch):
         )
     assert out["_meta"]["provider"] == "gemini"
     assert calls["n"] == 3
-    assert 2.0 in sleeps
+    assert 15.0 in sleeps
+    assert 30.0 in sleeps
+    assert 2.0 not in sleeps
 
 
 def test_circuit_breaker_skips_after_3_fails(keys, monkeypatch):
