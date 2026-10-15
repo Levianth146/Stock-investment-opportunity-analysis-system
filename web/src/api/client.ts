@@ -14,6 +14,8 @@ import type {
   MetaResponse,
   NewsResponse,
   ChecksResponse,
+  CompanyProfileResponse,
+  DividendsResponse,
   PeersResponse,
   PricesResponse,
   Profile,
@@ -188,6 +190,16 @@ export const api = {
     request<IncomeFlowResponse>(
       `/api/tickers/${encodeURIComponent(symbol)}/income-flow`,
       { searchParams: { period: period || "TTM" } },
+    ),
+
+  dividends: (symbol: string) =>
+    request<DividendsResponse>(
+      `/api/tickers/${encodeURIComponent(symbol)}/dividends`,
+    ),
+
+  companyProfile: (symbol: string) =>
+    request<CompanyProfileResponse>(
+      `/api/tickers/${encodeURIComponent(symbol)}/profile`,
     ),
 
   peers: (symbol: string) =>

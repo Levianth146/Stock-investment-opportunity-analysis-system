@@ -1,3 +1,7 @@
+import { DividendHistory } from "../components/DividendHistory";
+import { FundamentalSummary } from "../components/FundamentalSummary";
+import { TechnicalSummary } from "../components/TechnicalSummary";
+import { CompanyProfileCard } from "../components/CompanyProfileCard";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +42,7 @@ import { buildIncomeBridge, sumPeriodItems } from "../waterfall";
 type Tab =
   | "overview"
   | "valuation"
+  | "fundamental"
   | "growth"
   | "health"
   | "dividend"
@@ -47,6 +52,7 @@ type Tab =
 const TABS: { id: Tab; label: string; question: string }[] = [
   { id: "overview", label: "Tổng quan", question: "Mã này đáng xem ở mức nào?" },
   { id: "valuation", label: "Định giá", question: "Giá có hấp dẫn?" },
+  { id: "fundamental", label: "Cơ bản", question: "Doanh nghiệp khỏe và định giá thế nào?" },
   { id: "growth", label: "Tăng trưởng", question: "Doanh thu và lợi nhuận đang đi đâu?" },
   {
     id: "health",
@@ -383,9 +389,21 @@ export function TickerPage() {
                 refDisplay={refView.display}
               />
             )}
+            {tab === "fundamental" && (
+              <FundamentalSummary
+                symbol={symbol}
+                shares={detail.data.company?.shares_outstanding ?? null}
+                priceClose={priceClose}
+                isFinancial={
+                  !!detail.data.company?.is_bank ||
+                  /bank|financial/i.test(String(detail.data.company?.sector || ""))
+                }
+              />
+            )}
             {(tab === "growth" || tab === "health" || tab === "dividend") && (
               <FinancialsTab
                 symbol={symbol}
+                priceClose={priceClose}
                 mode={tab}
                 isBank={
                   !!detail.data.company?.is_bank ||
@@ -682,7 +700,12 @@ function OverviewTab({
 
   return (
     <section>
-      <h2 style={{ fontSize: "var(--fs-md)", fontWeight: 600 }}>Giá 1 năm</h2>
+      <CompanyProfileCard
+        symbol={symbol}
+        exchange={detail.company?.exchange ?? null}
+        sector={detail.company?.sector ?? null}
+      />
+      <h2 style={{ fontSize: "var(--fs-md)", fontWeight: 600, marginTop: 24 }}>Giá 1 năm</h2>
       {pricesQ.isLoading && <div className="skeleton" />}
       {pricesQ.isError && (
         <div className="error-box">
@@ -1007,10 +1030,12 @@ function OverviewTab({
 function FinancialsTab({
   symbol,
   isBank,
+  priceClose,
   mode = "growth",
 }: {
   symbol: string;
   isBank?: boolean;
+  priceClose?: number | null;
   mode?: "growth" | "health" | "dividend";
 }) {
   const q = useQuery({
@@ -1054,6 +1079,7 @@ function FinancialsTab({
     // Tab trống: chỉ thông báo — không kèm chú thích đơn vị/ROE
     return (
       <section>
+        <DividendHistory symbol={symbol} priceClose={priceClose ?? null} />
         <DividendPanel rows={data.annual} />
       </section>
     );
@@ -1396,6 +1422,7 @@ function TechnicalTab({ symbol, profile }: { symbol: string; profile: Profile })
 
   return (
     <section>
+      <TechnicalSummary symbol={symbol} />
       <label>
         Khoảng{" "}
         <select value={range} onChange={(e) => setRange(e.target.value)} aria-label="Khoảng thời gian">
@@ -1460,14 +1487,24 @@ function NewsTab({ symbol, profile }: { symbol: string; profile: Profile }) {
         Không tải được tin. Tải lại trang hoặc thử sau.
       </div>
     );
-  const items = q.data?.items || [];
+  const classified = q.data?.items || [];
+  const others = q.data?.other_items || [];
+  const items = [...classified, ...others];
   if (!items.length)
     return (
       <div className="empty">
-        Chưa có tin đã phân loại. Đợi snapshot tin cập nhật hoặc chọn mã khác.
+        Chưa có tin nào trong snapshot cho mã này. Chạy lại bước lấy tin (M1) để cập nhật.
       </div>
     );
   return (
+    <>
+    <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "0 0 4px" }}>
+      {classified.length > 0
+        ? `${classified.length} tin đã dùng chấm điểm cảm xúc, ${others.length} tin còn lại gán nhãn theo từ khoá tiêu đề (không tính vào điểm).`
+        : `Hiện ${others.length} tin gần nhất, nhãn theo từ khoá tiêu đề (không tính vào điểm).`}{" "}
+      {items.some((x) => !x.url) ? "Nguồn tin không cung cấp liên kết bài viết; dùng \"Tìm bài viết\" để tìm trên web. " : ""}
+      Tin mới nhất: {q.data?.latest_news_date ? dateVi(q.data.latest_news_date) : "—"}.
+    </p>
     <ul style={{ paddingLeft: 0, listStyle: "none" }}>
       {items.map((n) => (
         <li
@@ -1498,9 +1535,19 @@ function NewsTab({ symbol, profile }: { symbol: string; profile: Profile }) {
             <span>{n.label}</span>
             <span>{n.source || "—"}</span>
             <span className="tabular">{dateVi(n.published_at)}</span>
+            {!n.url && n.title && (
+              <a
+                href={`https://www.google.com/search?q=${encodeURIComponent(n.title)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Tìm bài viết
+              </a>
+            )}
           </div>
         </li>
       ))}
     </ul>
+    </>
   );
 }

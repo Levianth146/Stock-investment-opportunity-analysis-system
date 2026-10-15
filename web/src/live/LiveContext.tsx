@@ -144,7 +144,8 @@ export function LiveProvider({ children }: { children: ReactNode }) {
           state,
           sessionPhase: phase,
           reason,
-          banner: bannerForState(displayState, null, reason),
+          banner:
+            phase === "lunch" ? "Nghỉ trưa — HOSE mở lại lúc 13:00. Đang hiện giá phiên sáng." : bannerForState(displayState, null, reason),
         });
       } catch {
         /* offline */

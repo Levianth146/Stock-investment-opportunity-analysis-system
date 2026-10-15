@@ -286,6 +286,9 @@ export interface NewsItem {
 export interface NewsResponse extends ApiEnvelope {
   symbol: string;
   items: NewsItem[];
+  other_items?: NewsItem[];
+  latest_news_date?: string | null;
+  total_news?: number;
 }
 
 export interface DebateAiAttempt {
@@ -470,9 +473,53 @@ export interface RealtimeMarketResponse extends ApiEnvelope {
   heatmap?: Array<{
     symbol: string;
     sector: string;
-    change_pct?: { value?: number | null };
+    change_pct?: { value?: number | null; basis?: string | null };
     market_cap?: { value?: number | null };
+    market_cap_ref?: number | null;
+    label?: string | null;
   }>;
+}
+
+export interface CompanyProfile {
+  symbol: string;
+  name?: string | null;
+  short_name?: string | null;
+  intro?: string | null;
+  listing_date?: string | null;
+  first_price?: number | null;
+  state_pct?: number | null;
+  foreign_pct?: number | null;
+  foreign_max_pct?: number | null;
+  free_float_pct?: number | null;
+  issue_share?: number | null;
+  source?: string;
+  data_date?: string;
+}
+
+export interface CompanyProfileResponse extends ApiEnvelope {
+  symbol: string;
+  available: boolean;
+  profile: CompanyProfile | null;
+}
+
+export interface DividendEvent {
+  ex_date: string | null;
+  record_date?: string | null;
+  pay_date?: string | null;
+  kind: "cash" | "stock" | string;
+  percent_of_par?: number | null;
+  dps_vnd?: number | null;
+  title?: string | null;
+}
+
+export interface DividendsResponse extends ApiEnvelope {
+  symbol: string;
+  available: boolean;
+  reason?: string;
+  events: DividendEvent[];
+  dps_ttm_vnd?: number | null;
+  source?: string | null;
+  fetched_at?: string | null;
 }
 
 export interface WatchlistItem {

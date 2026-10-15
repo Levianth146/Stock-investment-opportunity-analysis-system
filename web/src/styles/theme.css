@@ -1727,7 +1727,7 @@ button.linkish:hover {
   .app-header { align-items: flex-start; }
 }
 
-/* ��� 017b live home + watchlist ��� */
+/* ��� 017b live home + watchlist ��� */
 .live-status-banner {
   min-height: 1.5em;
   font-size: var(--fs-xs);
@@ -1966,3 +1966,58 @@ button.linkish:hover {
 }
 .pos { color: var(--up); }
 .neg { color: var(--down); }
+
+/* 017d — heatmap: chuyển màu êm, chú giải màu */
+.heat-rect { transition: fill 300ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .heat-rect { transition: none; }
+}
+.heat-legend {
+  display: flex; flex-wrap: wrap; gap: 4px 12px; list-style: none;
+  margin: 8px 0 0; padding: 0; font-size: var(--fs-xs); color: var(--ink-2);
+}
+.heat-legend li { display: inline-flex; align-items: center; gap: 4px; }
+.heat-legend-sw { display: inline-block; width: 14px; height: 10px; border: 1px solid var(--rule); }
+.market-conn { font-size: var(--fs-xs); margin: 0 0 8px; display: flex; align-items: center; gap: 6px; }
+.market-conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); display: inline-block; }
+.market-conn--live .market-conn-dot { background: var(--up); }
+.market-conn--fallback .market-conn-dot { background: var(--down); }
+.ms-live { font-size: var(--fs-xs); color: var(--up); }
+
+/* Giới thiệu công ty (tab Tổng quan) */
+.co-profile { margin: 0 0 8px; max-width: 78ch; }
+.co-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.co-logo { width: 56px; height: 56px; object-fit: contain; border: 1px solid var(--rule); background: #fff; }
+.co-logo--letter { display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 24px; color: var(--ink-2); background: var(--paper); }
+.co-name { font-size: var(--fs-md); font-weight: 600; margin: 0; }
+.co-sub { margin: 2px 0 0; font-size: var(--fs-sm); }
+.co-intro--clamp { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.co-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; margin: 12px 0 0; }
+.co-facts dt { font-size: var(--fs-xs); color: var(--ink-3); }
+.co-facts dd { margin: 0; font-weight: 600; }
+.co-note { font-size: var(--fs-xs); margin: 8px 0 0; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--accent, #0b6e87); cursor: pointer; font: inherit; font-size: var(--fs-sm); text-decoration: underline; }
+
+/* Tóm tắt kỹ thuật (tab Kỹ thuật) */
+.ta-summary { margin-bottom: 20px; max-width: 78ch; }
+.ta-basis { font-size: var(--fs-xs); margin: 0 0 8px; }
+.ta-gauges { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.ta-gauge { margin: 0; text-align: center; }
+.ta-gauge-title { font-size: var(--fs-sm); font-weight: 600; }
+.ta-gauge-verdict { font-weight: 700; margin-top: -2px; }
+.ta-gauge-counts { font-size: var(--fs-xs); }
+.ta-h { font-size: var(--fs-md); font-weight: 600; margin: 18px 0 6px; }
+.ta-narr { margin: 0; }
+.ta-narr > div { margin: 0 0 8px; }
+.ta-narr dt { font-weight: 600; font-size: var(--fs-sm); }
+.ta-narr dd { margin: 0; }
+.ta-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.ta-table th, .ta-table td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--rule); }
+.ta-sig--buy { color: var(--up); font-weight: 600; }
+.ta-sig--sell { color: var(--down); font-weight: 600; }
+
+/* Phân tích cơ bản */
+.fa-summary { max-width: 78ch; }
+.fa-charts { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-top: 16px; }
+.fa-chart { margin: 0; flex: 1 1 280px; max-width: 360px; }
+.fa-chart-title { font-size: var(--fs-sm); font-weight: 600; }
