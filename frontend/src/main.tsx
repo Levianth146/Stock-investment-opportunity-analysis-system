@@ -6,5 +6,6 @@ import './valuationRisk.css';
 import './news.css';
 import './opportunities.css';
 import './watchlist.css';
+import './live.css';
 
 createRoot(document.getElementById('root')!).render(<App />);
