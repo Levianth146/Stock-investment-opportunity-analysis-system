@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { priceKind, priceKindWord } from "../live/staleness";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useLiveQuotes } from "../live/LiveContext";
@@ -75,8 +76,8 @@ export function FundamentalSummary({
   const fq = useQuery({ queryKey: ["financials", symbol], queryFn: () => api.financials(symbol) });
   const pq = useQuery({ queryKey: ["peers", symbol], queryFn: () => api.peers(symbol) });
   const quote = useLiveQuotes([symbol])[symbol];
-  const live = quote?.state === "live" && quote.price != null;
-  const price = live ? quote!.price! : priceClose;
+  const kind = priceKind(quote);
+  const price = kind !== "eod" ? quote!.price! : priceClose;
 
   // API trả tỷ VND (đã chia 1e9, kể cả EPS) → đưa về VND để P/E, P/B, vốn hoá cùng đơn vị với giá.
   const quarters = useMemo<Period[]>(
@@ -94,8 +95,8 @@ export function FundamentalSummary({
     [quarters],
   );
   const ratios = useMemo(
-    () => ratiosOf(quarters, price ?? null, live ? "live" : "eod", shares),
-    [quarters, price, live, shares],
+    () => ratiosOf(quarters, price ?? null, kind, shares),
+    [quarters, price, kind, shares],
   );
   const med = pq.data?.sector_medians;
   const blocks = useMemo(
@@ -120,7 +121,9 @@ export function FundamentalSummary({
     <section className="fa-summary" aria-label="Phân tích cơ bản">
       <p className="muted ta-basis">
         Báo cáo quý gần nhất: {formatQuarterLabel(latest.period)}.{" "}
-        {live ? "Vốn hoá, P/E, P/B tính theo giá trực tiếp." : "Vốn hoá, P/E, P/B tính theo giá đóng cửa (chưa có giá trực tiếp)."}
+        {kind === "eod"
+          ? "Vốn hoá, P/E, P/B tính theo giá đóng cửa (chưa có giá trực tiếp)."
+          : `Vốn hoá, P/E, P/B tính theo ${priceKindWord(kind)}.`}
       </p>
       <dl className="co-facts">
         <div><dt>Giá dùng để tính</dt><dd className="tabular">{fmt(price ?? null, 0)}</dd></div>

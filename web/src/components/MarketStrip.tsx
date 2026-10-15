@@ -14,11 +14,12 @@ export function MarketStrip() {
   // Không mở luồng ở đây — chỉ đọc nếu trang chủ đang giữ luồng sống.
   const { data: live, conn } = useMarketStream(false);
   const liveIdx = live?.index;
+  // Có số từ luồng/poll (kể cả khi SSE bị chặn) và là dữ liệu hub (trực tiếp hoặc chốt phiên hôm nay).
   const isLive =
-    conn === "live" &&
-    live?.realtime?.state === "live" &&
+    (conn === "live" || (conn === "fallback" && !!live)) &&
     liveIdx?.price?.value != null &&
     liveIdx?.source === "realtime";
+  const isRealtimeNow = isLive && live?.realtime?.state === "live" && liveIdx?.price?.basis === "live";
 
   const idx = q.data?.index;
   if (isLive && liveIdx) {
@@ -34,7 +35,11 @@ export function MarketStrip() {
             {num(lc, 2)}%
           </span>
         )}
-        <span className="ms-live">● Trực tiếp</span>
+        {isRealtimeNow ? (
+          <span className="ms-live">● Trực tiếp</span>
+        ) : (
+          <span className="muted ms-asof">{liveIdx.label || "Đóng cửa (tạm tính)"}</span>
+        )}
       </div>
     );
   }

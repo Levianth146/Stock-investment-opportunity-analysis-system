@@ -217,8 +217,11 @@ def _build_index_block(hub: RealtimeHub, store: Any, as_of_ts: str) -> dict[str,
     series_eod = (eod_idx or {}).get("series_30d") if isinstance(eod_idx, dict) else None
     prior_eod = _eod_prior_close(eod_idx if isinstance(eod_idx, dict) else None)
 
-    # Có quote từ mi (không phụ thuộc cờ subscribe _index_ok — tránh mất live khi reconnect)
-    if live_q and live_q.price is not None:
+    closed_now = hub.session_now().phase == "closed"
+    close_day = hub.session_close_date()
+    # Có quote từ mi (không phụ thuộc cờ subscribe _index_ok — tránh mất live khi reconnect).
+    # Ngoài giờ chỉ dùng khi hub giữ phiên mới hơn snapshot EOD; ngược lại lùi về EOD.
+    if live_q and live_q.price is not None and (not closed_now or close_day):
         if live_q.prev_close is None and prior_eod is not None:
             hub.set_index_prev_from_eod("VNINDEX", prior_eod)
             live_q = hub.get_index_quote("VNINDEX") or live_q
@@ -234,6 +237,9 @@ def _build_index_block(hub: RealtimeHub, store: Any, as_of_ts: str) -> dict[str,
             if basis == "live" and live_q.state in ("live", "stale")
             else f"đóng cửa {_fmt_ddmm(store.asof)}"
         )
+        if closed_now and close_day:
+            basis = "close"
+            label = f"đóng cửa {_fmt_ddmm(close_day)} (tạm tính)"
         idx_val = hub.get_index_value("VNINDEX")
         out: dict[str, Any] = {
             "symbol": "VNINDEX",
@@ -249,7 +255,7 @@ def _build_index_block(hub: RealtimeHub, store: Any, as_of_ts: str) -> dict[str,
             "series_eod": series_eod,
             "available": avail or ["VNINDEX"],
             "label": label,
-            "source": "realtime" if basis == "live" else "eod",
+            "source": "realtime" if basis in ("live", "close") else "eod",
         }
         if live_q.volume is not None:
             out["volume"] = {
@@ -320,6 +326,7 @@ def build_market_analysis(
     as_of_ts = sess.as_of_ts
     frac = max(sess.session_fraction, 0.05)
     session_open = sess.phase != "closed"
+    close_day = hub.session_close_date()  # ngày của giá chốt phiên chưa có EOD (hoặc None)
 
     up = down = flat = unmatched = 0
     excluded_no_ref = 0
@@ -344,7 +351,7 @@ def build_market_analysis(
         if st is None:
             continue
         price = q.price
-        basis = q.basis if q.state in ("live", "stale") else "eod"
+        basis = q.basis if (q.state in ("live", "stale") or q.basis == "close") else "eod"
         chg = q.change_pct
         has_ref = (
             getattr(q, "prev_close_source", "none") in ("tick", "snapshot")
@@ -408,7 +415,7 @@ def build_market_analysis(
             today_vol = float(q.volume) if q.volume is not None else st["last_vol"]
             if avg20 and avg20 > 0 and today_vol is not None:
                 rel_vol = round(today_vol / avg20, 2)
-                rel_vol_label = f"phiên {_fmt_ddmm(store.asof)}, KL/TB20"
+                rel_vol_label = f"phiên {_fmt_ddmm(close_day or store.asof)}, KL/TB20"
 
         # GTGD ngày (ước lượng) — trong phiên chỉ mã đã khớp
         value_traded = None
@@ -544,13 +551,13 @@ def build_market_analysis(
                     snap,
                     q.price,
                     as_of_ts=as_of_ts,
-                    basis=q.basis if q.state in ("live", "stale") else "eod",
+                    basis=q.basis if (q.state in ("live", "stale") or q.basis == "close") else "eod",
                 ),
             }
         )
 
     status = hub.status()
-    live_basis = "live" if status["mode"] == "live" else "eod"
+    live_basis = "live" if status["mode"] == "live" else ("close" if close_day else "eod")
     breadth_sum = up + down + flat + unmatched
     index_block = _build_index_block(hub, store, as_of_ts)
 
@@ -563,7 +570,11 @@ def build_market_analysis(
             else (
                 status.get("label")
                 if status["mode"] in ("connecting", "stale", "unit_mismatch")
-                else f"đóng cửa {_fmt_ddmm(store.asof)}"
+                else (
+                    f"đóng cửa {_fmt_ddmm(close_day)} (tạm tính)"
+                    if close_day
+                    else f"đóng cửa {_fmt_ddmm(store.asof)}"
+                )
             )
         ),
         "session": status["session"],

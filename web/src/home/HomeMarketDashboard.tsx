@@ -14,7 +14,12 @@ export function HomeMarketDashboard({ profile = "long_term" }: { profile?: strin
   const rtState = String(data?.realtime?.state || status.state || "no_realtime");
   const phase = status.sessionPhase ?? data?.session?.phase ?? null;
   const reason = status.reason ?? null;
+  const closeNote =
+    phase === "closed" && data?.index?.price?.basis === "close"
+      ? `Ngoài giờ giao dịch. Đang hiện giá chốt phiên (tạm tính) — ${data.index.label ?? "đóng cửa"}; số liệu EOD chính thức cập nhật sau.`
+      : null;
   const banner =
+    closeNote ||
     (phase === "lunch" ? "Nghỉ trưa — HOSE mở lại lúc 13:00. Đang hiện giá phiên sáng." : null) ||
     status.banner ||
     bannerForState(

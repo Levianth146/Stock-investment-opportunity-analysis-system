@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from "./components/Layout";
 import { LiveProvider } from "./live/LiveContext";
+import { ComparePage } from "./pages/ComparePage";
+import { MethodPage } from "./pages/MethodPage";
 import { RankingsPage } from "./pages/RankingsPage";
 import { SectorPage } from "./pages/SectorPage";
 import { TickerPage } from "./pages/TickerPage";
@@ -30,6 +32,8 @@ export function App() {
                 <Route index element={<RankingsPage />} />
                 <Route path="theo-doi" element={<WatchlistPage />} />
                 <Route path="nganh" element={<SectorPage />} />
+                <Route path="so-sanh" element={<ComparePage />} />
+                <Route path="phuong-phap" element={<MethodPage />} />
                 <Route path="t/:symbol" element={<TickerPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Route>

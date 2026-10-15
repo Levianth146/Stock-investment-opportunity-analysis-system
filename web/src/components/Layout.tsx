@@ -63,6 +63,8 @@ export function Layout() {
             <Link to={`/?profile=${profile}`}>Xếp hạng</Link>
             <Link to={`/theo-doi?profile=${profile}`}>Theo dõi</Link>
             <Link to={`/nganh?profile=${profile}`}>Ngành</Link>
+            <Link to={`/so-sanh?profile=${profile}`}>So sánh</Link>
+            <Link to="/phuong-phap">Phương pháp</Link>
           </nav>
         </div>
         <GlobalSearch profile={profile} />

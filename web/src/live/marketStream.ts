@@ -82,6 +82,7 @@ export function applyMessage(
 
 const NOTIFY_MS = 500; // ≤2 lần/giây
 const POLL_MS = 30_000;
+const POLL_OPEN_MS = 8_000; // khi sàn đang mở mà SSE không dùng được (vd. Cloudflare quick tunnel)
 const RECONNECT_MIN = 1_000;
 const RECONNECT_MAX = 30_000;
 
@@ -241,7 +242,9 @@ export class MarketStream {
 
   private schedulePoll() {
     clearTimeout(this.pollT);
-    this.pollT = window.setTimeout(() => void this.pollOnce(), POLL_MS);
+    const ph = this.snap.data?.session?.phase;
+    const open = !!ph && ph !== "closed" && ph !== "lunch";
+    this.pollT = window.setTimeout(() => void this.pollOnce(), open ? POLL_OPEN_MS : POLL_MS);
   }
 
   private async pollOnce() {
