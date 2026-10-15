@@ -51,7 +51,9 @@ def test_save_restore_shows_session_close(api_env, tmp_path):  # noqa: F811
     # mã không khớp hôm nay: giữ giá EOD, đứng giá (không bịa %)
     other = next(s for s in hub2._snapshot_close if s != "AAA")  # noqa: SLF001
     qo = hub2.get_quote(other)
-    assert qo.basis == "eod" and (qo.change_pct in (0.0, None))
+    # EOD của phiên cuối: % thay đổi so với phiên liền trước (không còn là 0% so với chính nó)
+    assert qo.basis == "eod" and qo.prev_close_source == "snapshot"
+    assert qo.change_pct is not None and qo.change_pct != 0.0
 
 
 def test_restore_ignored_when_snapshot_not_older(api_env, tmp_path):  # noqa: F811

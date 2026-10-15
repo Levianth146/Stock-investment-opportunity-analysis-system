@@ -179,6 +179,7 @@ class RealtimeHub:
         self._quotes: dict[str, QuoteTick] = {}
         # snapshot_close: luôn có (để auto-scale / drop rộng) — KHÔNG đồng nghĩa prev_close %.
         self._snapshot_close: dict[str, float] = {}
+        self._snapshot_prev_close: dict[str, float | None] = {}
         # Giá tham chiếu từ DNSE SecurityDefinition.basicPrice (ưu tiên cao nhất).
         self._tick_prev_close: dict[str, float] = {}
         self._snapshot_asof: str | None = getattr(store, "asof", None)
@@ -325,6 +326,10 @@ class RealtimeHub:
             except (TypeError, ValueError):
                 continue
             self._snapshot_close[t] = close
+            try:
+                self._snapshot_prev_close[t] = float(rows[-2].get("close")) if len(rows) > 1 else None
+            except (TypeError, ValueError):
+                self._snapshot_prev_close[t] = None
             # high/low/volume ngày từ nến EOD cuối nếu có
             high = last.get("high")
             low = last.get("low")
@@ -1503,6 +1508,13 @@ class RealtimeHub:
                     out.source = "dnse"
                 elif snap is not None:
                     out.price = snap
+                    # Đang hiển thị chính giá EOD của phiên cuối → % thay đổi so với phiên liền trước nó,
+                    # không phải so với chính nó (luôn 0%).
+                    p2 = self._snapshot_prev_close.get(symbol)
+                    if p2 is not None and p2 != 0:
+                        prev = p2
+                        out.prev_close = p2
+                        out.prev_close_source = "snapshot"
                 if prev is not None and prev != 0 and out.price is not None:
                     out.change = out.price - prev
                     out.change_pct = (out.price - prev) / prev * 100.0
@@ -1516,6 +1528,11 @@ class RealtimeHub:
                 if sess.phase != "closed":
                     out.change = None
                     out.change_pct = None
+                elif out.price is not None and self._snapshot_prev_close.get(symbol):
+                    p2 = float(self._snapshot_prev_close[symbol])  # type: ignore[arg-type]
+                    out.prev_close, out.prev_close_source = p2, "snapshot"
+                    out.change = out.price - p2
+                    out.change_pct = (out.price - p2) / p2 * 100.0
                 elif prev is not None and prev != 0 and out.price is not None:
                     out.change = out.price - prev
                     out.change_pct = (out.price - prev) / prev * 100.0

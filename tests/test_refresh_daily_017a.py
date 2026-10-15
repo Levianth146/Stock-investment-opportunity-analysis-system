@@ -25,6 +25,15 @@ def _load_rd():
 rd = _load_rd()
 
 
+@pytest.fixture(autouse=True)
+def _no_side_effects(monkeypatch, tmp_path):
+    """Không chạy script con thật (sync_shares/build thống kê ngành) và không ghi config/api.yaml thật."""
+    monkeypatch.setattr(rd, "_run", lambda cmd, **kw: 0)
+    fake_yaml = tmp_path / "_api_default.yaml"
+    fake_yaml.write_text("asof: 2026-01-01\n", encoding="utf-8")
+    monkeypatch.setattr(rd, "API_YAML", fake_yaml)
+
+
 def _touch_snap(
     dir_: Path,
     ticker: str,

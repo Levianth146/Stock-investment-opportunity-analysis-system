@@ -20,6 +20,18 @@ DEFAULTS: dict[str, Any] = {
     "out_dir": "reports",
     "colors": {
         "paper": "#FFFFFF",
+        "page_bg": "#F5FBFF",
+        "wave_blue": "#DDF3FF",
+        "wave_aqua": "#D9F5F1",
+        "panel_white": "#FFFFFF",
+        "panel_tint": "#F2F9FF",
+        "chart_bg": "#F6FBFF",
+        "panel_aqua": "#EFFAF7",
+        "panel_warm": "#FFF5F1",
+        "accent_aqua": "#087D72",
+        "panel_border": "#D7EAF6",
+        "kpi_border": "#D7EAF6",
+        "kpi_accent": "#1496F5",
         "ink": "#14233A",
         "ink_2": "#4F5B6B",
         "ink_3": "#6B7684",
@@ -39,6 +51,15 @@ DEFAULTS: dict[str, Any] = {
         "rating_hold": "#8A939E",
         "rating_sell": "#C62F2F",
     },
+    "cover_palette": {
+        "navy": "#082A55", "blue": "#126BC5", "blue_light": "#4CAAE8",
+        "cyan_soft": "#DDF5FB", "green": "#18A66B", "green_soft": "#E8F8F1",
+        "orange": "#F59E0B", "red": "#D65A50", "text": "#102A43",
+        "muted": "#61758A", "background": "#F9FCFF", "white": "#FFFFFF",
+        "line": "#D9E4EE", "sky": "#E8F6FC", "sky_deep": "#B9E1F2",
+        "city": "#75B7D8", "city_dark": "#3B85B5", "water": "#C7EAF4",
+        "teal": "#148D88", "gold": "#F5C77A", "panel": "#F4FAFD",
+    },
     "fonts": {
         "dir": "assets/fonts",
         "sans": "NotoSans-Regular.ttf",
@@ -57,7 +78,10 @@ DEFAULTS: dict[str, Any] = {
         "table": [8.5, 12],
         "caption": [7.5, 10],
     },
-    "layout": {"margin_mm": 18, "columns": 12, "gutter_mm": 6, "rule_pt": 0.5},
+    "layout": {
+        "margin_mm": 18, "columns": 12, "gutter_mm": 6, "rule_pt": 0.5,
+        "panel_radius_mm": 3.2, "page_wave_alpha": 0.20,
+    },
     "charts": {"dpi": 300, "line_pt": 1.5, "price_days": 252},
     "sectors": {},
     "exchanges": {"HSX": "HOSE", "HOSE": "HOSE", "HNX": "HNX", "UPCOM": "UPCoM"},
@@ -205,7 +229,7 @@ def setup_matplotlib(fonts: FontSet) -> dict[str, Any]:
         if sym_fam not in families:
             families.append(sym_fam)
     matplotlib.rcParams["font.family"] = families
-    matplotlib.rcParams["axes.unicode_minus"] = True
+    matplotlib.rcParams["axes.unicode_minus"] = False
     matplotlib.rcParams["pdf.fonttype"] = 42
     return {
         "family": families,

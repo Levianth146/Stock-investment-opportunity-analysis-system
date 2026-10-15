@@ -5,8 +5,12 @@ import asyncio
 import json
 import logging
 import re
+import shutil
+import tempfile
 import threading
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, AsyncIterator
 
@@ -14,6 +18,7 @@ from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.background import BackgroundTask
 
 from stockai.api.analysis import AnalyzeRequest, analyze_snapshot
 from stockai.api.debate_service import llm_public_status
@@ -183,6 +188,7 @@ def create_app(
             {
                 "asof": store.asof,
                 "refreshed_at": refreshed_at,
+                **_eod_freshness(store.asof),
                 "profiles": list(PROFILES),
                 "default_profile": store.default_profile,
                 "universe_count": universe,
@@ -919,8 +925,12 @@ def create_app(
                 "m7": bundle.get("m7"),
                 "m8": bundle.get("m8"),
             }
-            out_dir = str(Path(store.cache_dir) / "reports")
-            cfg: dict[str, Any] = {"profile": profile, "out_dir": out_dir}
+            # Mỗi lần xuất ghi vào thư mục riêng (không đè/đọc nhầm file của request khác) rồi xoá sau khi gửi.
+            reports_root = Path(store.cache_dir) / "reports"
+            reports_root.mkdir(parents=True, exist_ok=True)
+            out_dir = tempfile.mkdtemp(prefix="exp_", dir=str(reports_root))
+            export_day = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
+            cfg: dict[str, Any] = {"profile": profile, "out_dir": out_dir, "export_date": export_day}
             if cover is not None:
                 cfg["cover"] = cover
             if technical:
@@ -929,11 +939,13 @@ def create_app(
             m9 = run_m9(snapshot, upstream, cfg)
             pdf_path = Path(m9.get("pdf_path") or "")
             if not pdf_path.is_file():
+                shutil.rmtree(out_dir, ignore_errors=True)
                 return _err(500, "Lỗi nội bộ", store)
             return FileResponse(
                 path=str(pdf_path),
                 media_type="application/pdf",
-                filename=f"{sym}_{store.asof}_{profile}.pdf",
+                filename=f"{sym}_{export_day}_{profile}.pdf",
+                background=BackgroundTask(shutil.rmtree, out_dir, True),
             )
         except KeyError:
             return _err(404, "Không tìm thấy mã", store)
@@ -978,6 +990,41 @@ def _ranked_scores(store: ResultStore, profile: str) -> list[tuple[str, float]]:
     ]
 
 
+def _report_live(request: Request, store: ResultStore, sym: str) -> dict[str, Any]:
+    """Giá trực tiếp/chốt phiên, VN-Index và độ rộng tại thời điểm xuất PDF (không gọi mạng mới).
+
+    Lấy từ RealtimeHub đang chạy; hub không có dữ liệu thì trả {} và PDF dùng giá EOD.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    out: dict[str, Any] = {}
+    try:
+        items = get_quote_provider(request).get_quotes([sym])
+        q = next((i for i in items if i.get("symbol") == sym), None)
+        if q and isinstance(q.get("price"), (int, float)) and q.get("state") in ("live", "stale", "closed"):
+            out["quote"] = {k: q.get(k) for k in ("price", "change", "change_pct", "volume", "prev_close", "state", "basis", "label", "ts")}
+    except Exception:
+        pass
+    try:
+        mk = build_market_analysis(get_realtime_hub(request), store)
+        idx = mk.get("index") or {}
+        pv = (idx.get("price") or {}).get("value")
+        if isinstance(pv, (int, float)) and idx.get("source") == "realtime":
+            out["index"] = {"name": idx.get("name") or "VN-Index", "price": pv,
+                            "change_pct": (idx.get("change_pct") or {}).get("value"),
+                            "basis": (idx.get("price") or {}).get("basis"), "label": idx.get("label")}
+        br = mk.get("breadth") or {}
+        if {"up", "down"} <= set(br):
+            out["breadth"] = {"up": br.get("up"), "down": br.get("down"), "flat": br.get("flat", 0)}
+        out["session_phase"] = (mk.get("session") or {}).get("phase")
+    except Exception:
+        pass
+    if not out.get("quote") and not out.get("index"):
+        return {}
+    out["captured_at"] = datetime.now(timezone(timedelta(hours=7))).isoformat(timespec="seconds")
+    return out
+
+
 def _report_context(request: Request, store: ResultStore, sym: str, profile: str) -> dict[str, Any]:
     """Ngữ cảnh cho M9: điểm cả universe cùng profile, profile còn lại, debate đã cache (không gọi LLM)."""
     ctx: dict[str, Any] = {}
@@ -992,6 +1039,9 @@ def _report_context(request: Request, store: ResultStore, sym: str, profile: str
             ctx["other_profile"] = {"m7": ob.get("m7"), "universe_scores": _ranked_scores(store, other)}
         except Exception:
             pass
+    live = _report_live(request, store, sym)
+    if live:
+        ctx["live"] = live
     try:
         cached = get_debate_service(request).read_cached(sym, profile)
     except Exception:
@@ -1006,16 +1056,37 @@ def _report_context(request: Request, store: ResultStore, sym: str, profile: str
     return ctx
 
 
+def _expected_eod(now: "datetime | None" = None) -> str:
+    """Phiên có EOD mới nhất lẽ ra phải có: hôm nay nếu đã qua 15:30 ICT (ngày thường), ngược lại phiên trước."""
+    from datetime import timedelta
+
+    now = now or datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    d = now.date()
+    if d.weekday() < 5 and (now.hour, now.minute) < (15, 30):
+        d -= timedelta(days=1)
+    while d.weekday() >= 5:
+        d -= timedelta(days=1)
+    return d.isoformat()
+
+
+def _eod_freshness(asof: str, now: "datetime | None" = None) -> dict[str, Any]:
+    expected = _expected_eod(now)
+    return {"expected_asof": expected, "eod_stale": bool(asof and asof < expected)}
+
+
 def _module_summary(mod: dict | None) -> dict[str, Any]:
     if not isinstance(mod, dict):
         return {"status": "missing", "score": None, "flags": []}
-    return {
+    out = {
         "module": mod.get("module"),
         "status": mod.get("status"),
         "score": mod.get("score"),
         "flags": list(mod.get("flags") or [])[:20],
         "metrics": mod.get("metrics") if isinstance(mod.get("metrics"), dict) else {},
     }
+    if isinstance(mod.get("dcf"), dict):
+        out["dcf"] = mod["dcf"]
+    return out
 
 
 # Instance mặc định cho uvicorn: stockai.api.app:app
