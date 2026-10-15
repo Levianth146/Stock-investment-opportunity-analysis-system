@@ -32,6 +32,7 @@ import { evaluateRefPrice } from "../refPrice";
 import { buildRiskOpportunity } from "../riskOpportunity";
 import { sectorVi } from "../sectors";
 import { showToast } from "../toast";
+import { WatchStar } from "../watchlist/WatchStar";
 import { buildIncomeBridge, sumPeriodItems } from "../waterfall";
 
 type Tab =
@@ -270,6 +271,7 @@ export function TickerPage() {
                 <span className="company-name">{detail.data.company?.name}</span>
               </h1>
               <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                <WatchStar symbol={symbol} />
                 <label>
                   <span className="muted">Kiểu đầu tư </span>
                   <select
@@ -301,6 +303,13 @@ export function TickerPage() {
             </div>
 
             <p className="conclusion">{conclusion}</p>
+
+            {unranked && detail.data.asof && (
+              <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "0 0 8px" }}>
+                Mã chưa đủ điều kiện chấm điểm. Dữ liệu của mã này đến{" "}
+                {dateVi(detail.data.asof)}.
+              </p>
+            )}
 
             <div className="ticker-sector">{sectorVi(detail.data.company?.sector)}</div>
 

@@ -61,6 +61,7 @@ export function Layout() {
           </Link>
           <nav className="app-nav" aria-label="Chính">
             <Link to={`/?profile=${profile}`}>Xếp hạng</Link>
+            <Link to={`/theo-doi?profile=${profile}`}>Theo dõi</Link>
             <Link to={`/nganh?profile=${profile}`}>Ngành</Link>
           </nav>
         </div>

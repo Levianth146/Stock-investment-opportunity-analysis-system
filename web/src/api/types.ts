@@ -447,3 +447,57 @@ export interface MarketResponse extends ApiEnvelope {
   index: MarketIndex | null;
   flags?: string[];
 }
+
+export interface RealtimeMarketResponse extends ApiEnvelope {
+  as_of_ts?: string;
+  label?: string;
+  session?: { phase?: string; as_of_ts?: string };
+  realtime?: { mode?: string; state?: string };
+  index?: {
+    symbol?: string;
+    name?: string;
+    price?: { value?: number | null; basis?: string };
+    prev_close?: { value?: number | null };
+    change_pct?: { value?: number | null };
+    candles_1m?: Array<{ t: number; c: number }>;
+    series_eod?: Array<{ time: string; close: number | null }>;
+    available?: string[];
+    label?: string;
+    source?: string;
+  };
+  breadth?: Record<string, unknown>;
+  lists?: Record<string, unknown>;
+  heatmap?: Array<{
+    symbol: string;
+    sector: string;
+    change_pct?: { value?: number | null };
+    market_cap?: { value?: number | null };
+  }>;
+}
+
+export interface WatchlistItem {
+  symbol: string;
+  name?: string | null;
+  sector?: string | null;
+  price?: { value?: number | null; basis?: string };
+  change_pct?: { value?: number | null };
+  score?: number | null;
+  rank?: number | null;
+  total_scored?: number | null;
+  dividend_yield?: { value?: number | null };
+  sector_ref?: {
+    value?: number | null;
+    gap_pct?: number | null;
+    unreliable?: boolean;
+    label?: string | null;
+  };
+  state?: string;
+  label?: string;
+  data_asof?: string;
+}
+
+export interface WatchlistSummaryResponse extends ApiEnvelope {
+  profile?: Profile;
+  items: WatchlistItem[];
+  label?: string;
+}

@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LiveChangePct — không hiện +0% giả > snapshot: thiếu số → chỉ — 1`] = `"<span class="tabular muted">—</span>"`;

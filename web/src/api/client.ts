@@ -20,8 +20,10 @@ import type {
   QuarterSummaryResponse,
   RankingsResponse,
   SectorsResponse,
+  RealtimeMarketResponse,
   SnapshotStatsResponse,
   TickerDetailResponse,
+  WatchlistSummaryResponse,
 } from "./types";
 
 export class ApiError extends Error {
@@ -134,6 +136,25 @@ export const api = {
     }),
 
   market: () => request<MarketResponse>("/api/market"),
+
+  realtimeMarket: () =>
+    request<RealtimeMarketResponse>("/api/realtime/market"),
+
+  realtimeStatus: () =>
+    request<Record<string, unknown> & ApiEnvelope>("/api/realtime/status"),
+
+  watchlistSummary: (symbols: string[], profile?: Profile) =>
+    request<WatchlistSummaryResponse>("/api/watchlist/summary", {
+      searchParams: {
+        symbols: symbols.join(","),
+        profile,
+      },
+    }),
+
+  quotes: (symbols: string[]) =>
+    request<{ items: unknown[] } & ApiEnvelope>("/api/quotes", {
+      searchParams: { symbols: symbols.join(",") },
+    }),
 
   ticker: (symbol: string, profile?: Profile) =>
     request<TickerDetailResponse>(`/api/tickers/${encodeURIComponent(symbol)}`, {

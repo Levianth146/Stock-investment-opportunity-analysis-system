@@ -9,9 +9,10 @@ import {
   type SignalFilter,
   useRankingsUrlState,
 } from "../hooks/useUrlState";
-import { num, score, vnd } from "../fmt";
+import { score, vnd } from "../fmt";
 import { ratingsFromMeta } from "../ratings";
 import { sectorVi } from "../sectors";
+import { HomeMarketDashboard } from "../home/HomeMarketDashboard";
 
 const SIGNAL_CHIPS: { id: SignalFilter; label: string }[] = [
   { id: "above_ma50", label: "Trên MA50" },
@@ -254,7 +255,7 @@ export function RankingsPage() {
         </div>
       )}
 
-      <HomeMarketPanel ratings={ratings} allScores={allScores} />
+      <HomeMarketDashboard profile={state.profile} />
 
       {allScores.length > 0 && (
         <ScoreRuler
@@ -421,115 +422,6 @@ export function RankingsPage() {
         )}
       </details>
     </main>
-  );
-}
-
-function HomeMarketPanel({
-  ratings,
-  allScores,
-}: {
-  ratings: ReturnType<typeof ratingsFromMeta>;
-  allScores: number[];
-}) {
-  const [period, setPeriod] = useState<"1m" | "3m" | "1y">("1m");
-  const marketQ = useQuery({
-    queryKey: ["market"],
-    queryFn: () => api.market(),
-    staleTime: 300_000,
-  });
-  const series = marketQ.data?.index?.series_30d || [];
-  const breadth = useMemo(() => {
-    const dist: Record<string, number> = {};
-    // Ước từ ratings thresholds + allScores
-    for (const sc of allScores) {
-      let lab = ratings[0]?.label || "—";
-      for (let i = ratings.length - 1; i >= 0; i--) {
-        const r = ratings[i]!;
-        if (sc >= r.min) {
-          lab = r.label;
-          break;
-        }
-      }
-      dist[lab] = (dist[lab] || 0) + 1;
-    }
-    return dist;
-  }, [allScores, ratings]);
-  const total = Object.values(breadth).reduce((a, b) => a + b, 0) || 1;
-
-  return (
-    <div className="home-market" aria-label="Thị trường">
-      <div className="home-market-head">
-        <strong>VN-Index</strong>
-        <div className="period-chips" role="group" aria-label="Kỳ biểu đồ">
-          {(["1m", "3m", "1y"] as const).map((p) => (
-            <button
-              key={p}
-              type="button"
-              className={period === p ? "signal-chip signal-chip--on" : "signal-chip"}
-              aria-pressed={period === p}
-              onClick={() => setPeriod(p)}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
-      {series.length >= 2 && (
-        <MarketSpark series={series} period={period} />
-      )}
-      <div className="breadth-bar" aria-label="Độ rộng khuyến nghị">
-        {ratings.map((r) => {
-          const n = breadth[r.label] || 0;
-          if (!n) return null;
-          return (
-            <span
-              key={r.label}
-              style={{ width: `${(n / total) * 100}%` }}
-              title={`${r.label}: ${n}`}
-              className={`rs-seg rating-${r.label.toLowerCase().includes("mạnh") ? "strong-buy" : r.label.toLowerCase().includes("mua") ? "buy" : r.label.toLowerCase().includes("giảm") ? "reduce" : r.label.toLowerCase().includes("bán") ? "sell" : "hold"}`}
-            />
-          );
-        })}
-      </div>
-      <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "4px 0 12px" }}>
-        Phân bố khuyến nghị trên {allScores.length} mã có điểm
-        {marketQ.data?.index?.close != null
-          ? ` · VN-Index ${num(marketQ.data.index.close, 2)}`
-          : ""}
-      </p>
-    </div>
-  );
-}
-
-function MarketSpark({
-  series,
-  period,
-}: {
-  series: Array<{ time: string; close: number | null }>;
-  period: "1m" | "3m" | "1y";
-}) {
-  const take = period === "1m" ? 22 : period === "3m" ? 66 : series.length;
-  const vals = series
-    .slice(-take)
-    .map((p) => p.close)
-    .filter((v): v is number => typeof v === "number");
-  if (vals.length < 2) return null;
-  const w = 280;
-  const h = 64;
-  const min = Math.min(...vals);
-  const max = Math.max(...vals);
-  const span = max - min || 1;
-  const pts = vals
-    .map((v, i) => {
-      const x = (i / (vals.length - 1)) * (w - 2) + 1;
-      const y = h - 2 - ((v - min) / span) * (h - 4);
-      return `${x},${y}`;
-    })
-    .join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} aria-hidden className="home-vnindex">
-      <polyline fill="none" stroke="var(--accent)" strokeWidth="2" points={pts} />
-    </svg>
   );
 }
 
