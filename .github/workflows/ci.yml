@@ -15,6 +15,7 @@ jobs:
         run: >-
           python -m pip install pytest jsonschema pyyaml numpy pandas reportlab
           matplotlib jinja2 xhtml2pdf pypdf pymupdf streamlit fastapi httpx
+          dnse-sdk-openapi==2.4.1 "msgpack>=1,<2" "websockets>=14,<18"
       - name: Run offline tests
         run: python -m pytest -q --junitxml=.pytest_cache/ci-results.xml
       - name: Annotate test failures
