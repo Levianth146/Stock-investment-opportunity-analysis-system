@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { dateVi, num } from "../fmt";
+import { useMarketStream } from "../live/useMarketStream";
 
 /** VN-Index đóng cửa + sparkline 30 phiên — chỉ desktop. */
 export function MarketStrip() {
@@ -10,7 +11,33 @@ export function MarketStrip() {
     staleTime: 300_000,
   });
 
+  // Không mở luồng ở đây — chỉ đọc nếu trang chủ đang giữ luồng sống.
+  const { data: live, conn } = useMarketStream(false);
+  const liveIdx = live?.index;
+  const isLive =
+    conn === "live" &&
+    live?.realtime?.state === "live" &&
+    liveIdx?.price?.value != null &&
+    liveIdx?.source === "realtime";
+
   const idx = q.data?.index;
+  if (isLive && liveIdx) {
+    const lc = liveIdx.change_pct?.value ?? null;
+    const lup = lc != null && lc >= 0;
+    return (
+      <div className="market-strip" aria-label="VN-Index trực tiếp">
+        <span className="ms-sym">VN-Index</span>
+        <span className="tabular ms-close">{num(liveIdx.price?.value ?? null, 2)}</span>
+        {lc != null && (
+          <span className={`tabular ${lup ? "pos" : "neg"}`}>
+            {lup ? "+" : ""}
+            {num(lc, 2)}%
+          </span>
+        )}
+        <span className="ms-live">● Trực tiếp</span>
+      </div>
+    );
+  }
   if (q.isError || !idx || idx.close == null) return null;
 
   const series = idx.series_30d || [];

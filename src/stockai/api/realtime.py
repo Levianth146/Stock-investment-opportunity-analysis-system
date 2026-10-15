@@ -30,8 +30,18 @@ _log = logging.getLogger(__name__)
 
 MAX_STREAMS_PER_CONN = 200
 DEFAULT_HEARTBEAT = 25.0
-STALE_AFTER_SEC = 90.0
+STALE_AFTER_SEC = 90.0  # hub: >90s không tick → stale (reason=no_ticks)
+LIVE_TICK_MAX_AGE_SEC = 30.0  # live chỉ khi có ≥1 tick trong 30s (phiên liên tục)
+DISPLAY_STALE_AFTER_SEC = 20.0  # UI từng mã: >20s không tick (theo receive monotonic)
+SSE_COALESCE_SEC = 1.0  # tối đa 1 cập nhật/giây/mã/client
 CANDLE_MAX_BARS = 400  # ~1 phiên phút
+# Ghi phân bố T trong 60s đầu (để map sec_def / kênh lạ) — API nội bộ SDK.
+T_DISTRIBUTION_WINDOW_SEC = 60.0
+# SecurityDefinition trên wire: T="sd" (dnse-sdk-openapi 2.4.1 _MSG_TYPE_MAP).
+SEC_DEF_MSG_TYPES = frozenset({"sd", "sec_def", "security_definition"})
+# HOSE board G1: totalVolumeTraded trên T="t" là lot (1 lot = 10 CP).
+# Đối chiếu live: hub_vol×10 ≈ grossTradeAmount(tỷ)×1e9 / matchPrice(VND), sai số <1%.
+HOSE_LOT_SIZE = 10.0
 
 # Bảo vệ đơn vị giá (017a-fix / 017a-fix2)
 # Auto-scale: nearest power-of-10 từ tick/snapshot_close (KHÔNG dùng prev_close %).
@@ -44,8 +54,21 @@ DROP_WINDOW_SEC = 60.0
 DROP_SYMBOL_FRAC = 0.05  # >5% mã bị drop trong 1 phút → unit_mismatch
 UNIT_MISMATCH_LABEL = "Đơn vị giá lệch — đang dùng giá đóng cửa EOD"
 NO_REF_LABEL = "chưa có giá tham chiếu"
+CONNECTING_NO_TICKS_LABEL = "Đang kết nối — chưa nhận tick giá"
+STALE_NO_TICKS_LABEL = "Luồng giá chậm — hơn 90 giây không có tick"
+LIVE_LABEL = "trực tiếp (tạm tính)"
 
 PrevCloseSource = Literal["tick", "snapshot", "none"]
+# live | connecting | stale | closed | no_realtime | unit_mismatch | snapshot
+HubMode = Literal[
+    "live",
+    "connecting",
+    "stale",
+    "closed",
+    "no_realtime",
+    "unit_mismatch",
+    "snapshot",
+]
 
 
 @dataclass
@@ -163,12 +186,17 @@ class RealtimeHub:
         self._view_refs: dict[str, int] = defaultdict(int)
         self._liquid: set[str] = set()
         self._subscribed: set[str] = set()
-        self._mode = "no_realtime"  # live | snapshot | no_realtime | unit_mismatch
+        self._mode: HubMode = "no_realtime"
+        # Lý do: disabled | missing_key | sdk_missing | connect_error:<code>
+        # | no_ticks_yet | no_ticks — không chứa secrets
+        self._degrade_reason: str | None = None
         self._last_error: str | None = None
         self._dnse_session_phase: str | None = None
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._started = False
+        self._ws_connected = False
+        self._connected_mono: float | None = None
         self._index_ok = False  # market_index channel — chưa đo
         self._session_channel_ok = False
         self._sec_def_ok = False
@@ -176,12 +204,33 @@ class RealtimeHub:
         self._dropped_ticks = 0
         self._drop_events: deque[tuple[float, str]] = deque()  # (monotonic_ts, symbol)
         self._last_tick_mono: float | None = None
+        # Thời điểm nhận tick theo monotonic — staleness UI theo receive, không theo clock trình duyệt
+        self._receive_mono: dict[str, float] = {}
+        self._traded_session: set[str] = set()  # mã đã khớp trong phiên hiện tại
+        self._index_quotes: dict[str, QuoteTick] = {}  # VNINDEX / VN30 / …
+        # GTGD chỉ số (tỷ VND) từ mi.grossTradeAmount — không nằm trên QuoteTick
+        self._index_value: dict[str, float] = {}
+        # Log mỗi loại lỗi parse đúng một lần (exception class + thiếu field)
+        self._logged_parse_errors: set[str] = set()
+        self._mi_fields_logged = False  # log tên field T=mi đúng một lần
+        self._volume_unit: str = "shares"  # sau khi chuẩn hoá lot→CP
+        self._volume_scale: float = HOSE_LOT_SIZE  # hệ số lot→CP (STO/HOSE)
+        self._t_dist_deadline: float | None = None
         self._stats: dict[str, Any] = {
             "ticks": 0,
+            "raw_msgs": 0,
+            "parsed_trades": 0,
+            "parsed_index": 0,
+            "parse_errors": 0,
+            "msg_types": {},  # T → count (API nội bộ SDK)
             "reconnects": 0,
             "symbols_subscribed": 0,
             "dropped_ticks": 0,
             "measured": False,  # ngoài giờ / chưa chạy probe → False
+            "last_parse_error": None,  # mô tả ngắn, không secrets
+            "volume_unit": "shares",
+            "volume_scale": HOSE_LOT_SIZE,
+            "mi_fields": None,  # tên field T=mi (một lần)
         }
 
         self._seed_from_snapshots()
@@ -296,13 +345,33 @@ class RealtimeHub:
         self._liquid = set(liquid)
         self._stats["liquid_count"] = len(self._liquid)
 
+    def _ensure_dnse_env(self) -> tuple[str | None, str | None]:
+        """Nạp DNSE_* từ ``<repo>/.env`` nếu thiếu trong environ. Không ghi đè, không log giá trị."""
+        key = os.environ.get("DNSE_API_KEY")
+        secret = os.environ.get("DNSE_API_SECRET_KEY") or os.environ.get("DNSE_API_SECRET")
+        if key and secret:
+            return key, secret
+        from stockai.envfile import load_dotenv, repo_dotenv_path
+
+        load_dotenv(
+            repo_dotenv_path(),
+            keys=("DNSE_API_KEY", "DNSE_API_SECRET_KEY", "DNSE_API_SECRET"),
+        )
+        key = os.environ.get("DNSE_API_KEY")
+        secret = os.environ.get("DNSE_API_SECRET_KEY") or os.environ.get("DNSE_API_SECRET")
+        return key, secret
+
     # ------------------------------------------------------------------ lifecycle
     def start(self) -> None:
         if self._started:
             return
         self._started = True
         if self._fake is not None:
-            self._mode = "live"
+            # Chưa có tick → connecting (không tuyên bố "live"/"trực tiếp")
+            self._ws_connected = True
+            self._connected_mono = time.monotonic()
+            self._mode = "connecting"
+            self._degrade_reason = "no_ticks_yet"
             self._fake.connect()
             self._thread = threading.Thread(
                 target=self._fake_loop, name="stockai-rt-fake", daemon=True
@@ -311,14 +380,28 @@ class RealtimeHub:
             return
         if not self.enabled:
             self._mode = "no_realtime"
+            self._degrade_reason = "disabled"
+            self._last_error = "disabled"
             _log.info("realtime disabled (realtime.enabled=false)")
+            _log.info("DNSE key loaded: no")
             return
-        key = os.environ.get("DNSE_API_KEY")
-        secret = os.environ.get("DNSE_API_SECRET_KEY") or os.environ.get("DNSE_API_SECRET")
-        if not key or not secret:
+        key, secret = self._ensure_dnse_env()
+        has_key = bool(key and secret)
+        # Chỉ yes/no — không in giá trị khóa
+        _log.info("DNSE key loaded: %s", "yes" if has_key else "no")
+        if not has_key:
             self._mode = "no_realtime"
+            self._degrade_reason = "missing_key"
             self._last_error = "missing_dnse_credentials"
-            _log.info("realtime degrade: thiếu DNSE credentials (không in giá trị)")
+            return
+        # Kiểm tra SDK trước khi mở thread (tránh vòng reconnect vô ích)
+        try:
+            import dnse  # noqa: F401
+        except ImportError:
+            self._mode = "no_realtime"
+            self._degrade_reason = "sdk_missing"
+            self._last_error = "sdk_missing"
+            _log.info("realtime degrade: thiếu SDK dnse")
             return
         self._thread = threading.Thread(
             target=self._dnse_loop, name="stockai-rt-dnse", daemon=True
@@ -334,9 +417,12 @@ class RealtimeHub:
         assert self._fake is not None
         while not self._stop.is_set():
             for ev in self._fake.drain():
-                self._ingest_event(ev)
+                # Fake: cùng đường parse raw như wrap _dispatch_message
+                self.handle_raw_message(ev)
             if self._fake.disconnected:
+                self._ws_connected = False
                 self._mode = "no_realtime"
+                self._degrade_reason = "connect_error:fake_disconnected"
                 self._last_error = "fake_disconnected"
             time.sleep(0.05)
 
@@ -347,31 +433,58 @@ class RealtimeHub:
             try:
                 asyncio.run(self._dnse_session())
                 backoff = 1.0
-            except Exception as exc:  # noqa: BLE001
+            except ImportError:
                 self._mode = "no_realtime"
-                self._last_error = type(exc).__name__
+                self._degrade_reason = "sdk_missing"
+                self._last_error = "sdk_missing"
+                _log.warning("realtime DNSE lỗi (degrade): sdk_missing")
+                break
+            except Exception as exc:  # noqa: BLE001
+                code = type(exc).__name__
+                # Không đưa message/exception args (có thể chứa secrets) vào reason
+                self._mode = "no_realtime"
+                self._degrade_reason = f"connect_error:{code}"
+                self._last_error = code
                 self._stats["reconnects"] = int(self._stats.get("reconnects") or 0) + 1
-                _log.warning("realtime DNSE lỗi (degrade): %s", type(exc).__name__)
+                _log.warning("realtime DNSE lỗi (degrade): %s", code)
             if self._stop.wait(backoff):
                 break
             backoff = min(backoff * 2.0, 60.0)
 
     async def _dnse_session(self) -> None:
-        """Kết nối DNSE — chỉ market data (trades + tuỳ chọn index/session)."""
+        """Kết nối DNSE — ingest raw dict qua wrap ``client._dispatch_message``.
+
+        Dùng API nội bộ SDK (``_dispatch_message``) — đã xác nhận với probe
+        (~27 msg/s, ``T="t"`` + ``matchPrice``). Ghim ``dnse-sdk-openapi==2.4.1``.
+        Không dùng callback ``on_trade`` (Trade model dùng ``.price``, không
+        có ``matchPrice`` attribute → ticks=0 nếu đọc sai field + nuốt lỗi).
+        """
         # Ép tắt DEBUG để SDK không in header/chữ ký
         os.environ["DEBUG"] = "false"
-        from dnse import TradingClient
+        try:
+            from dnse import TradingClient
+        except ImportError:
+            self._mode = "no_realtime"
+            self._degrade_reason = "sdk_missing"
+            self._last_error = "sdk_missing"
+            raise
 
         api_key = os.environ["DNSE_API_KEY"]
         api_secret = os.environ.get("DNSE_API_SECRET_KEY") or os.environ["DNSE_API_SECRET"]
         # Không log key
         symbols = self._desired_symbols()
-        chunks = [
-            symbols[i : i + self.max_per_conn]
-            for i in range(0, len(symbols), self.max_per_conn)
+        # Hạn mức DNSE: tối đa max_per_conn kênh / kết nối (trades + sec_def + index + session).
+        # Kết nối đầu dành 2 kênh cho index + session → bớt 2 mã trade.
+        first_n = max(1, self.max_per_conn - 2)
+        chunks = [symbols[:first_n]] if symbols else []
+        rest = symbols[first_n:]
+        chunks += [
+            rest[i : i + self.max_per_conn]
+            for i in range(0, len(rest), self.max_per_conn)
         ]
         if not chunks:
             self._mode = "no_realtime"
+            self._degrade_reason = self._degrade_reason or "connect_error:no_symbols"
             return
 
         clients: list[Any] = []
@@ -387,65 +500,23 @@ class RealtimeHub:
             )
             clients.append(client)
 
-            def on_trade(trade: Any) -> None:
-                # Truyền matchPrice thô — hub nhân price_scale (cố định hoặc auto).
-                # Trade DNSE không có basicPrice/prev_close (xem SecurityDefinition).
-                try:
-                    sym = str(getattr(trade, "symbol", None) or "").upper()
-                    mp = getattr(trade, "match_price", None)
-                    if mp is None:
-                        mp = getattr(trade, "matchPrice", None)
-                    vol = getattr(trade, "total_volume_traded", None)
-                    if vol is None:
-                        vol = getattr(trade, "totalVolumeTraded", None)
-                    high = getattr(trade, "highest_price", None) or getattr(
-                        trade, "highestPrice", None
-                    )
-                    low = getattr(trade, "lowest_price", None) or getattr(
-                        trade, "lowestPrice", None
-                    )
-                    self._ingest_event(
-                        {
-                            "T": "t",
-                            "symbol": sym,
-                            "price": float(mp) if mp is not None else None,
-                            "volume": float(vol) if vol is not None else None,
-                            "high": float(high) if high is not None else None,
-                            "low": float(low) if low is not None else None,
-                        }
-                    )
-                except Exception:  # noqa: BLE001
-                    pass
+            # --- Wrap _dispatch_message (API nội bộ SDK 2.4.1) ---
+            orig_dispatch = client._dispatch_message
 
-            def on_sec_def(sec: Any) -> None:
-                # SecurityDefinition.basicPrice = giá tham chiếu phiên (DNSE SDK thật).
+            async def tracked_dispatch(data: dict[str, Any]) -> None:
                 try:
-                    sym = str(getattr(sec, "symbol", None) or "").upper()
-                    bp = getattr(sec, "basicPrice", None)
-                    if bp is None:
-                        bp = getattr(sec, "basic_price", None)
-                    if sym and bp is not None:
-                        self._ingest_event(
-                            {
-                                "T": "sec_def",
-                                "symbol": sym,
-                                "basicPrice": float(bp),
-                            }
-                        )
-                except Exception:  # noqa: BLE001
-                    pass
+                    if isinstance(data, dict):
+                        self.handle_raw_message(data)
+                except Exception as exc:  # noqa: BLE001
+                    self._note_parse_error(type(exc).__name__, ())
+                await orig_dispatch(data)
+
+            client._dispatch_message = tracked_dispatch  # type: ignore[method-assign]
 
             await client.connect()
-            await client.subscribe_trades(chunk, on_trade=on_trade, board_id="G1", encoding="json")
-            try:
-                await client.subscribe_sec_def(
-                    chunk, on_sec_def=on_sec_def, board_id="G1", encoding="json"
-                )
-                self._sec_def_ok = True
-            except Exception:  # noqa: BLE001
-                self._sec_def_ok = False
+            # Không truyền on_trade/on_sec_def — ingest từ raw dict ở trên
             if first:
-                # Thử index/session — nếu entitlement lỗi thì bỏ qua (không crash)
+                # Ưu tiên chỉ số + phiên trước khi chiếm hạn mức bằng trades
                 try:
                     await client.subscribe_market_index(
                         market_index="VNINDEX", encoding="json"
@@ -460,15 +531,30 @@ class RealtimeHub:
                     self._session_channel_ok = True
                 except Exception:  # noqa: BLE001
                     self._session_channel_ok = False
+            await client.subscribe_trades(chunk, board_id="G1", encoding="json")
+            # sec_def chỉ khi còn hạn mức kênh (2*len + index/session <= max)
+            extras = 2 if first else 0
+            if len(chunk) * 2 + extras <= self.max_per_conn:
+                try:
+                    await client.subscribe_sec_def(chunk, board_id="G1", encoding="json")
+                    self._sec_def_ok = True
+                except Exception:  # noqa: BLE001
+                    self._sec_def_ok = self._sec_def_ok or False
 
-            self._mode = "live"
+            self._ws_connected = True
+            self._connected_mono = time.monotonic()
+            self._t_dist_deadline = self._connected_mono + T_DISTRIBUTION_WINDOW_SEC
+            # Chưa có tick → connecting (không tuyên bố live)
+            self._mode = "connecting"
+            self._degrade_reason = "no_ticks_yet"
             with self._lock:
                 self._subscribed |= set(chunk)
                 self._stats["symbols_subscribed"] = len(self._subscribed)
 
             while not self._stop.is_set():
                 await asyncio.sleep(0.5)
-                # đồng bộ subscribe khi có mã đang xem ngoài liquid
+                # Cập nhật mode trung thực theo tuổi tick
+                self._refresh_honest_mode()
                 desired = set(self._desired_symbols())
                 missing = [s for s in desired if s not in self._subscribed]
                 if missing and len(self._subscribed) < self.max_symbols:
@@ -476,18 +562,22 @@ class RealtimeHub:
                     if add:
                         try:
                             await client.subscribe_trades(
-                                add, on_trade=on_trade, board_id="G1", encoding="json"
+                                add, board_id="G1", encoding="json"
                             )
                             with self._lock:
                                 self._subscribed |= set(add)
-                        except Exception:  # noqa: BLE001
-                            pass
+                                self._stats["symbols_subscribed"] = len(self._subscribed)
+                        except Exception as exc:  # noqa: BLE001
+                            self._note_parse_error(
+                                f"subscribe:{type(exc).__name__}", ()
+                            )
 
         try:
             await asyncio.gather(
                 *[one(c, i == 0) for i, c in enumerate(chunks)]
             )
         finally:
+            self._ws_connected = False
             for c in clients:
                 try:
                     await c.disconnect()
@@ -591,72 +681,308 @@ class RealtimeHub:
                 return None, True
         return scaled, False
 
-    # ------------------------------------------------------------------ ingest
-    def _ingest_event(self, ev: dict[str, Any]) -> None:
-        kind = ev.get("T") or ev.get("type")
-        if kind in ("s", "session"):
-            phase = str(ev.get("phase") or ev.get("status") or "")
-            if phase:
-                self._dnse_session_phase = phase
+    # ------------------------------------------------------------------ raw WS ingest (probe-style)
+    def _note_parse_error(self, kind: str, missing: tuple[str, ...] | list[str]) -> None:
+        """Đếm lỗi + log mỗi loại đúng một lần (không secrets)."""
+        miss = tuple(sorted(str(m) for m in missing if m))
+        key = f"{kind}|{','.join(miss)}"
+        with self._lock:
+            self._stats["parse_errors"] = int(self._stats.get("parse_errors") or 0) + 1
+            desc = kind if not miss else f"{kind} missing={','.join(miss)}"
+            self._stats["last_parse_error"] = desc
+        if key not in self._logged_parse_errors:
+            self._logged_parse_errors.add(key)
+            _log.warning("realtime parse: %s", desc)
+
+    def _bump_msg_type(self, t_val: str | None) -> None:
+        key = str(t_val) if t_val is not None else "_none"
+        with self._lock:
+            mt = self._stats.setdefault("msg_types", {})
+            if not isinstance(mt, dict):
+                mt = {}
+                self._stats["msg_types"] = mt
+            mt[key] = int(mt.get(key) or 0) + 1
+
+    def handle_raw_message(self, data: dict[str, Any]) -> None:
+        """Ingest dict thô từ WS (``T`` / ``matchPrice``…) — giống probe.
+
+        Gọi từ wrap ``_dispatch_message`` hoặc FakeStream. Không nuốt lỗi.
+        """
+        with self._lock:
+            self._stats["raw_msgs"] = int(self._stats.get("raw_msgs") or 0) + 1
+
+        action = data.get("action") or data.get("a")
+        msg_type = data.get("T")
+        if msg_type is not None or action in (None, ""):
+            self._bump_msg_type(str(msg_type) if msg_type is not None else None)
+
+        if msg_type is None and action:
+            # Chẩn đoán: đếm action + giữ mẫu ack/error (cắt ngắn)
+            with self._lock:
+                ac = self._stats.setdefault("actions", {})
+                ac[str(action)] = int(ac.get(str(action)) or 0) + 1
+                s_ = str(data)
+                if action in ("error", "subscribed") and (
+                    action == "error" or "market_index" in s_ or "session" in s_
+                ):
+                    self._stats.setdefault("action_samples", {})[str(action)] = s_[:300]
+
+        # Ping/pong / subscribed — bỏ qua parse thị trường
+        if action in ("ping", "pong", "subscribed", "auth", "error"):
             return
-        if kind in ("sec_def", "security_definition"):
-            sym = str(ev.get("symbol") or "").upper()
-            bp = ev.get("basicPrice")
-            if bp is None:
-                bp = ev.get("basic_price")
-            if bp is None:
-                bp = ev.get("prev_close")
-            if sym and bp is not None:
-                try:
-                    with self._lock:
-                        self._set_tick_prev(sym, float(bp))
-                        q = self._quotes.get(sym)
-                        if q is not None:
-                            prev, src = self._resolve_prev(sym)
-                            q.prev_close = prev
-                            q.prev_close_source = src
-                            if prev is not None and q.price is not None and prev != 0:
-                                q.change = q.price - prev
-                                q.change_pct = (q.price - prev) / prev * 100.0
-                            else:
-                                q.change = None
-                                q.change_pct = None
-                except (TypeError, ValueError):
-                    pass
+
+        if msg_type == "t":
+            self._parse_raw_trade(data)
             return
-        if kind in ("mi", "index"):
-            # chỉ số — không áp price_scale cổ phiếu
-            sym = str(ev.get("symbol") or "VNINDEX").upper()
-            price = ev.get("price")
-            if price is not None:
-                self._apply_tick(
-                    sym, float(price), volume=None, high=None, low=None, raw_scaled=True
-                )
+        if msg_type in SEC_DEF_MSG_TYPES or (
+            msg_type is not None
+            and "basicPrice" in data
+            and data.get("symbol")
+            and msg_type not in ("t", "mi", "s")
+        ):
+            # T="sd" (SDK 2.4.1); cũng nhận sec_def / dict có basicPrice trong cửa sổ map
+            self._parse_raw_sec_def(data, msg_type=str(msg_type) if msg_type else "sd")
             return
-        sym = str(ev.get("symbol") or "").upper()
+        if msg_type in ("mi", "index"):
+            self._parse_raw_index(data)
+            return
+        if msg_type in ("s", "session"):
+            self._parse_raw_session(data)
+            return
+        # Trong 60s đầu: chỉ đếm T lạ (đã bump); sau đó bỏ qua lặng lẽ
+        if (
+            msg_type is not None
+            and self._t_dist_deadline is not None
+            and time.monotonic() < self._t_dist_deadline
+        ):
+            return
+
+    def _parse_raw_trade(self, data: dict[str, Any]) -> None:
+        missing: list[str] = []
+        sym = str(data.get("symbol") or data.get("Symbol") or "").upper()
         if not sym:
+            missing.append("symbol")
+        mp = data.get("matchPrice")
+        if mp is None:
+            mp = data.get("price")  # fake/test đã scale sẵn
+        if mp is None:
+            missing.append("matchPrice")
+        if missing:
+            self._note_parse_error("KeyError", missing)
             return
-        # Fake/test: cho phép đính basicPrice trên tick (Trade thật không có field này)
-        bp = ev.get("basicPrice")
+        try:
+            price = float(mp)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            self._note_parse_error("ValueError", ("matchPrice",))
+            return
+        # totalVolumeTraded = KL luỹ kế phiên (lot HOSE) → × HOSE_LOT_SIZE ra CP.
+        # Field "volume" (fake/test) coi là đã là cổ phiếu — không nhân lot.
+        # Không cộng dồn từ lúc hub start: luôn lấy cumulative DNSE.
+        raw_tvt = data.get("totalVolumeTraded")
+        raw_vol_field = data.get("volume")
+        vol_already_shares = bool(
+            raw_tvt is None
+            or data.get("volume_unit") == "shares"
+            or data.get("_volume_shares")
+            or data.get("volume_scale") == 1
+        )
+        vol = raw_tvt if raw_tvt is not None else raw_vol_field
+        high = data.get("highestPrice")
+        if high is None:
+            high = data.get("high")
+        low = data.get("lowestPrice")
+        if low is None:
+            low = data.get("low")
+        # Fake/test: basicPrice trên tick
+        bp = data.get("basicPrice")
         if bp is None:
-            bp = ev.get("basic_price")
+            bp = data.get("basic_price")
         if bp is not None:
             try:
                 with self._lock:
                     self._set_tick_prev(sym, float(bp))
             except (TypeError, ValueError):
-                pass
-        price = ev.get("price")
-        if price is None:
+                self._note_parse_error("ValueError", ("basicPrice",))
+        try:
+            vol_f: float | None
+            if vol is None:
+                vol_f = None
+            else:
+                raw_vol = float(vol)
+                # Lot → cổ phiếu (khớp snapshot EOD / grossTradeAmount)
+                if vol_already_shares:
+                    vol_f = raw_vol
+                else:
+                    vol_f = raw_vol * float(self._volume_scale)
+            self._apply_tick(
+                sym,
+                price,
+                volume=vol_f,
+                high=float(high) if high is not None else None,
+                low=float(low) if low is not None else None,
+                raw_scaled=False,
+            )
+            with self._lock:
+                self._stats["parsed_trades"] = int(self._stats.get("parsed_trades") or 0) + 1
+        except Exception as exc:  # noqa: BLE001
+            self._note_parse_error(type(exc).__name__, ())
+
+    def _parse_raw_sec_def(self, data: dict[str, Any], *, msg_type: str) -> None:
+        missing: list[str] = []
+        sym = str(data.get("symbol") or "").upper()
+        if not sym:
+            missing.append("symbol")
+        bp = data.get("basicPrice")
+        if bp is None:
+            bp = data.get("basic_price")
+        if bp is None:
+            bp = data.get("prev_close")
+        if bp is None:
+            missing.append("basicPrice")
+        if missing:
+            self._note_parse_error("KeyError", missing)
             return
-        self._apply_tick(
-            sym,
-            float(price),
-            volume=ev.get("volume"),
-            high=ev.get("high"),
-            low=ev.get("low"),
-            raw_scaled=False,
+        try:
+            with self._lock:
+                self._set_tick_prev(sym, float(bp))  # type: ignore[arg-type]
+                self._sec_def_ok = True
+                q = self._quotes.get(sym)
+                if q is not None:
+                    prev, src = self._resolve_prev(sym)
+                    q.prev_close = prev
+                    q.prev_close_source = src
+                    if prev is not None and q.price is not None and prev != 0:
+                        q.change = q.price - prev
+                        q.change_pct = (q.price - prev) / prev * 100.0
+                    else:
+                        q.change = None
+                        q.change_pct = None
+            _log.info(
+                "realtime sec_def mapped: T=%s → basicPrice (prev_close_source=tick)",
+                msg_type,
+            )
+        except (TypeError, ValueError):
+            self._note_parse_error("ValueError", ("basicPrice",))
+
+    def _parse_raw_index(self, data: dict[str, Any]) -> None:
+        """MarketIndex T=\"mi\" (SDK 2.4.1) — valueIndexes / priorValueIndexes / indexName.
+
+        Log tên field đúng một lần (không secrets). Nến 1 phút trong RAM.
+        """
+        if not self._mi_fields_logged:
+            keys = sorted(str(k) for k in data.keys())
+            self._mi_fields_logged = True
+            with self._lock:
+                self._stats["mi_fields"] = keys
+            _log.info("realtime mi fields (once): %s", ",".join(keys))
+
+        # MarketIndex: valueIndexes / indexName (wire đã xác nhận 2026-10-15)
+        sym = str(
+            data.get("indexName") or data.get("symbol") or "VNINDEX"
+        ).upper()
+        if sym in ("VNINDEX", "VN-INDEX", "VN INDEX"):
+            sym = "VNINDEX"
+        price = data.get("valueIndexes")
+        if price is None:
+            price = data.get("price")
+        if price is None:
+            self._note_parse_error("KeyError", ("valueIndexes",))
+            return
+        prev = data.get("priorValueIndexes")
+        if prev is None:
+            prev = data.get("prev_close") or data.get("basicPrice")
+        vol = data.get("totalVolumeTraded")
+        gta = data.get("grossTradeAmount")
+        try:
+            self._apply_index_tick(
+                sym,
+                float(price),
+                prev_close=float(prev) if prev is not None else None,
+                volume=float(vol) if vol is not None else None,
+                value=float(gta) if gta is not None else None,
+            )
+            with self._lock:
+                self._stats["parsed_index"] = int(self._stats.get("parsed_index") or 0) + 1
+        except (TypeError, ValueError):
+            self._note_parse_error("ValueError", ("valueIndexes",))
+
+    def _parse_raw_session(self, data: dict[str, Any]) -> None:
+        # Session: eventId / tradingSessionId (SDK 2.4.1)
+        phase = (
+            data.get("eventId")
+            or data.get("phase")
+            or data.get("status")
+            or data.get("tradingSessionId")
         )
+        if phase is not None and str(phase).strip():
+            self._dnse_session_phase = str(phase)
+            self._session_channel_ok = True
+
+    def _tick_age_sec(self) -> float | None:
+        if self._last_tick_mono is None:
+            return None
+        return time.monotonic() - self._last_tick_mono
+
+    def _silence_age_sec(self) -> float | None:
+        """Tuổi im lặng: từ tick cuối, hoặc từ lúc connect nếu chưa có tick."""
+        age = self._tick_age_sec()
+        if age is not None:
+            return age
+        if self._connected_mono is not None:
+            return time.monotonic() - self._connected_mono
+        return None
+
+    def _resolve_honest_mode(self) -> tuple[HubMode, str | None]:
+        """live chỉ khi phiên liên tục + ≥1 tick trong 30s gần nhất."""
+        if self._mode == "unit_mismatch":
+            return "unit_mismatch", None
+        if self._mode == "no_realtime" or (
+            not self._ws_connected and self._fake is None
+        ):
+            return "no_realtime", self._degrade_reason
+        if not self._ws_connected and self._fake is not None and self._fake.disconnected:
+            return "no_realtime", self._degrade_reason or "connect_error:fake_disconnected"
+
+        sess = self.session_now()
+        silence = self._silence_age_sec()
+        continuous = sess.phase == "continuous"
+        recent = silence is not None and silence <= LIVE_TICK_MAX_AGE_SEC
+        has_tick = self._last_tick_mono is not None
+
+        if continuous and has_tick and recent:
+            return "live", None
+        if continuous:
+            if silence is not None and silence > STALE_AFTER_SEC:
+                return "stale", "no_ticks"
+            return "connecting", "no_ticks_yet"
+        # Ngoài phiên liên tục: không tuyên bố live
+        if sess.phase == "closed":
+            return "closed", None
+        if has_tick and recent:
+            return "live", None
+        if silence is not None and silence > STALE_AFTER_SEC:
+            return "stale", "no_ticks"
+        return "connecting", "no_ticks_yet"
+
+    def _refresh_honest_mode(self) -> None:
+        if self._mode == "unit_mismatch":
+            return
+        if self._mode == "no_realtime" and not self._ws_connected:
+            return
+        mode, reason = self._resolve_honest_mode()
+        self._mode = mode
+        if mode in ("connecting", "stale", "no_realtime"):
+            self._degrade_reason = reason
+        elif mode == "live":
+            self._degrade_reason = None
+
+    # ------------------------------------------------------------------ ingest (legacy / nội bộ)
+    def _ingest_event(self, ev: dict[str, Any]) -> None:
+        """Tương thích test cũ — uỷ quyền sang ``handle_raw_message``."""
+        # Chuẩn hoá price → matchPrice nếu chỉ có price (test cũ)
+        if ev.get("T") in ("t", None) and "matchPrice" not in ev and "price" in ev:
+            ev = {**ev, "T": ev.get("T") or "t", "matchPrice": ev.get("price")}
+        self.handle_raw_message(ev)
 
     def _apply_tick(
         self,
@@ -734,9 +1060,73 @@ class RealtimeHub:
                 q.basis = "live"
                 q.source = "dnse" if self._fake is None else "fake"
             self._quotes[symbol] = q
-            self._last_tick_mono = time.monotonic()
+            recv = time.monotonic()
+            self._last_tick_mono = recv
+            self._receive_mono[symbol] = recv
+            if q.state == "live":
+                self._traded_session.add(symbol)
             self._stats["ticks"] = int(self._stats.get("ticks") or 0) + 1
             self._update_candle(symbol, scaled, volume)
+        # Ngoài lock: cập nhật mode hub (live nếu vừa có tick trong phiên)
+        self._refresh_honest_mode()
+
+    def _apply_index_tick(
+        self,
+        symbol: str,
+        price: float,
+        *,
+        prev_close: float | None,
+        volume: float | None = None,
+        value: float | None = None,
+    ) -> None:
+        """Nến chỉ số — kênh market_index (T=mi) hoặc fake.
+
+        Ngoài giờ vẫn giữ nến phiên gần nhất trong RAM (không xoá).
+        """
+        sess = self.session_now()
+        wall = self._now_fn()
+        ts = wall.isoformat(timespec="seconds")
+        with self._lock:
+            self._index_ok = True
+            prev = prev_close
+            q = self._index_quotes.get(symbol) or QuoteTick(symbol=symbol, price=None)
+            q.price = price
+            if prev is not None and prev != 0:
+                q.prev_close = prev
+                q.prev_close_source = "tick"
+                q.change = price - prev
+                q.change_pct = (price - prev) / prev * 100.0
+            else:
+                # Giữ prev cũ nếu có; change tính lại khi có đủ
+                if q.prev_close is not None and q.prev_close != 0:
+                    q.change = price - q.prev_close
+                    q.change_pct = (price - q.prev_close) / q.prev_close * 100.0
+                else:
+                    q.change = None
+                    q.change_pct = None
+            if volume is not None:
+                q.volume = float(volume)
+            if value is not None:
+                self._index_value[symbol] = float(value)
+            q.ts = ts
+            # Trong phiên (kể cả ATO/ATC/lunch có mi) → live; chỉ closed → eod nhãn
+            if sess.phase == "closed":
+                q.state = "closed"
+                # Giữ basis=live nếu đã có nến phiên hôm nay (nearest session)
+                if self._candles.get(symbol):
+                    q.basis = "live"
+                    q.state = "stale"
+                else:
+                    q.basis = "eod"
+            else:
+                q.state = "live"
+                q.basis = "live"
+            q.source = "dnse" if self._fake is None else "fake"
+            self._index_quotes[symbol] = q
+            self._receive_mono[symbol] = time.monotonic()
+            # Nến 1 phút theo epoch phút tường (không theo _now_fn giả) — live OK;
+            # test fake vẫn có ≥1 nến khi có mi.
+            self._update_candle(symbol, price, volume)
 
     def _update_candle(self, symbol: str, price: float, volume: float | None) -> None:
         minute = int(time.time()) // 60
@@ -788,17 +1178,51 @@ class RealtimeHub:
         sess = self.session_now()
         behind = self._sessions_behind()
         asof = getattr(self._store, "asof", None) or self._snapshot_asof
+        # Mode trung thực trước khi snapshot stats
+        if self._mode != "unit_mismatch":
+            self._refresh_honest_mode()
+        mode, reason_h = self._resolve_honest_mode()
+        if self._mode != "unit_mismatch":
+            self._mode = mode
+            if mode in ("connecting", "stale", "no_realtime"):
+                self._degrade_reason = reason_h
+            elif mode == "live":
+                self._degrade_reason = None
+
         with self._lock:
-            n_live = sum(1 for q in self._quotes.values() if q.state == "live")
+            now_m = time.monotonic()
+            n_live = 0
+            for sym, q in self._quotes.items():
+                if q.state != "live":
+                    continue
+                recv = self._receive_mono.get(sym)
+                if recv is not None and (now_m - recv) <= LIVE_TICK_MAX_AGE_SEC:
+                    n_live += 1
             n_sub = len(self._subscribed) or len(self._liquid)
             age: float | None
             if self._last_tick_mono is None:
                 age = None
             else:
-                age = round(time.monotonic() - self._last_tick_mono, 3)
-            label = UNIT_MISMATCH_LABEL if self._mode == "unit_mismatch" else "tạm tính"
+                age = round(now_m - self._last_tick_mono, 3)
+            if self._mode == "unit_mismatch":
+                label = UNIT_MISMATCH_LABEL
+            elif self._mode == "live":
+                label = LIVE_LABEL
+            elif self._mode == "connecting":
+                label = CONNECTING_NO_TICKS_LABEL
+            elif self._mode == "stale":
+                label = STALE_NO_TICKS_LABEL
+            elif self._mode == "closed":
+                label = "đóng cửa"
+            else:
+                label = "tạm tính"
             prev_src = self._hub_prev_close_source()
-            return {
+            stats_out = dict(self._stats)
+            # msg_types copy nông
+            mt = stats_out.get("msg_types")
+            if isinstance(mt, dict):
+                stats_out["msg_types"] = dict(mt)
+            out: dict[str, Any] = {
                 "enabled": self.enabled,
                 "mode": self._mode,
                 "state": self._mode,
@@ -820,11 +1244,11 @@ class RealtimeHub:
                 "prev_close_source": prev_src,
                 "snapshot_asof": asof,
                 "sessions_behind": behind,
-                "index_channel": "ok" if self._index_ok else "chưa đo",
+                "index_channel": "ok" if (self._index_ok and int(self._stats.get("parsed_index") or 0) > 0) else ("chờ dữ liệu" if self._index_ok else "chưa đo"),
                 "session_channel": "ok" if self._session_channel_ok else "chưa đo",
                 "sec_def_channel": "ok" if self._sec_def_ok else "chưa đo",
                 "last_error": self._last_error,
-                "stats": dict(self._stats),
+                "stats": stats_out,
                 "label": label,
                 "disclaimer_realtime": (
                     "Giá phiên chỉ để hiển thị và phân tích trong phiên (tạm tính). "
@@ -834,6 +1258,30 @@ class RealtimeHub:
                     + ". Điểm M2–M7 luôn dùng giá đóng cửa EOD."
                 ),
             }
+            # reason khi chưa live thật / degrade
+            if self._mode in ("no_realtime", "connecting", "stale"):
+                reason = self._degrade_reason or (
+                    "missing_key" if self._mode == "no_realtime" else "no_ticks_yet"
+                )
+                if reason.startswith("connect_error:"):
+                    code = reason.split(":", 1)[1].strip() or "unknown"
+                    code = "".join(c for c in code if c.isalnum() or c in ("_", "-"))[:64]
+                    reason = f"connect_error:{code or 'unknown'}"
+                elif reason not in (
+                    "disabled",
+                    "missing_key",
+                    "sdk_missing",
+                    "no_ticks_yet",
+                    "no_ticks",
+                ) and not reason.startswith("connect_error:"):
+                    if self._mode == "stale":
+                        reason = "no_ticks"
+                    elif self._mode == "connecting":
+                        reason = "no_ticks_yet"
+                    else:
+                        reason = "missing_key"
+                out["reason"] = reason
+            return out
 
     def get_quote(self, symbol: str) -> QuoteTick:
         sess = self.session_now()
@@ -882,10 +1330,24 @@ class RealtimeHub:
             elif self._mode == "no_realtime":
                 out.state = "no_realtime"
                 out.basis = "eod"
-                if prev is not None and prev != 0 and out.price is not None:
+                # Phiên mở nhưng không có luồng → không hiện % giả (+0%)
+                if sess.phase != "closed":
+                    out.change = None
+                    out.change_pct = None
+                elif prev is not None and prev != 0 and out.price is not None:
                     out.change = out.price - prev
                     out.change_pct = (out.price - prev) / prev * 100.0
                 else:
+                    out.change = None
+                    out.change_pct = None
+            elif self._mode in ("connecting", "stale") and out.state not in (
+                "live",
+                "stale",
+            ):
+                # Đã kết nối nhưng chưa có tick (hoặc im lặng) — không tuyên bố trực tiếp
+                out.state = self._mode
+                out.basis = "eod"
+                if sess.phase != "closed":
                     out.change = None
                     out.change_pct = None
             elif out.price is not None:
@@ -895,7 +1357,58 @@ class RealtimeHub:
                 else:
                     out.change = None
                     out.change_pct = None
+                # Stale theo thời điểm nhận (monotonic), không so timestamp tick với đồng hồ trình duyệt
+                if sess.phase != "closed" and out.state == "live":
+                    recv = self._receive_mono.get(symbol)
+                    if recv is not None:
+                        age = time.monotonic() - recv
+                        if age > DISPLAY_STALE_AFTER_SEC:
+                            out.state = "stale"
             return out
+
+    def receive_age_sec(self, symbol: str) -> float | None:
+        """Tuổi tick theo receive monotonic — dùng cho test/UI."""
+        with self._lock:
+            recv = self._receive_mono.get(symbol)
+        if recv is None:
+            return None
+        return time.monotonic() - recv
+
+    def has_traded_session(self, symbol: str) -> bool:
+        with self._lock:
+            return symbol in self._traded_session
+
+    def get_index_quote(self, symbol: str = "VNINDEX") -> QuoteTick | None:
+        with self._lock:
+            q = self._index_quotes.get(symbol)
+            return QuoteTick(**q.__dict__) if q else None
+
+    def get_index_value(self, symbol: str = "VNINDEX") -> float | None:
+        """GTGD chỉ số (tỷ VND) từ mi.grossTradeAmount."""
+        with self._lock:
+            v = self._index_value.get(symbol)
+            return float(v) if v is not None else None
+
+    def available_indices(self) -> list[str]:
+        """Chỉ trả kênh thật đã nhận tick — không bịa VN30/HNX."""
+        with self._lock:
+            return sorted(self._index_quotes.keys())
+
+    def set_index_prev_from_eod(self, symbol: str, prev_close: float) -> None:
+        """Điền prev_close từ series_eod khi mi thiếu priorValueIndexes."""
+        if prev_close <= 0:
+            return
+        with self._lock:
+            q = self._index_quotes.get(symbol)
+            if q is None:
+                return
+            if q.prev_close is not None and q.prev_close != 0:
+                return
+            q.prev_close = float(prev_close)
+            q.prev_close_source = "snapshot"
+            if q.price is not None and prev_close != 0:
+                q.change = q.price - prev_close
+                q.change_pct = (q.price - prev_close) / prev_close * 100.0
 
     def get_quotes(self, symbols: list[str]) -> list[dict[str, Any]]:
         """Tương thích QuoteProvider — poll fallback."""

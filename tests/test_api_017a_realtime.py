@@ -115,7 +115,9 @@ def test_breadth_fixture():
         QuoteTick("D", 10, change_pct=None),
     ]
     b = compute_breadth_from_quotes(qs)
-    assert b == {"up": 1, "down": 1, "flat": 2}
+    assert b["up"] == 1 and b["down"] == 1 and b["flat"] == 2
+    assert b.get("unmatched", 0) == 0
+    assert b["up"] + b["down"] + b["flat"] + b.get("unmatched", 0) == 4
 
 
 def test_realtime_status(api_env):
@@ -147,7 +149,20 @@ def test_realtime_market(api_env):
     assert "breadth" in body
     assert "lists" in body
     assert "heatmap" in body
-    assert body.get("label") == "tạm tính"
+    label = body.get("label") or ""
+    assert isinstance(label, str) and (
+        label
+        in (
+            "tạm tính",
+            "trực tiếp (tạm tính)",
+            "Đang kết nối — chưa nhận tick giá",
+            "Luồng giá chậm — hơn 90 giây không có tick",
+        )
+        or "tạm tính" in label
+        or label.startswith("đóng cửa")
+        or "tick" in label.lower()
+        or "kết nối" in label.lower()
+    )
     assert "up" in body["breadth"]
 
 
@@ -193,7 +208,7 @@ def test_disconnect_fallback_no_realtime(api_env):
 
     time.sleep(0.15)
     st = client.get("/api/realtime/status").json()
-    assert st["mode"] in ("no_realtime", "live")  # race ok
+    assert st["mode"] in ("no_realtime", "live", "connecting", "stale")  # race ok
     # quotes vẫn 200
     r = client.get("/api/quotes", params={"symbols": "AAA"})
     assert r.status_code == 200
@@ -469,17 +484,282 @@ def test_tick_basic_price_overrides_stale_snapshot(api_env):
 
 
 def test_insession_excludes_no_ref(api_env):
-    """Breadth không đếm mã thiếu tham chiếu; excluded_no_ref > 0 khi snapshot cũ."""
+    """Breadth: mã đã khớp nhưng thiếu tham chiếu → excluded_no_ref (không vào up/down)."""
     from stockai.api.insession import build_market_analysis
 
     _client, hub, _fake, store = api_env
     _trading_now(hub)
+    # Phiên mở + chưa khớp → unmatched; cần đánh dấu đã khớp để xét has_ref
+    for sym in ("AAA", "BBB", "CCC"):
+        hub._traded_session.add(sym)  # noqa: SLF001
     payload = build_market_analysis(hub, store)
     assert payload["breadth"]["excluded_no_ref"]["value"] >= 1
-    # up+down+flat chỉ mã có ref → ở đây 0 vì snapshot cũ
-    total = (
-        payload["breadth"]["up"]["value"]
-        + payload["breadth"]["down"]["value"]
-        + payload["breadth"]["flat"]["value"]
+    # up+down chỉ mã có ref → ở đây 0 vì snapshot cũ; flat chứa excluded
+    assert payload["breadth"]["up"]["value"] == 0
+    assert payload["breadth"]["down"]["value"] == 0
+
+
+# ----- 017a-fix6: ingest raw dict (probe-style) + mode trung thực -----
+
+
+def test_fix6_raw_dispatch_match_price_ticks_up(api_env):
+    """Dict thô T=t + matchPrice (nghìn) → quotes_live, ticks, last_tick_age."""
+    client, hub, _fake, _store = api_env
+    _trading_now(hub)
+    hub._price_scale_effective = 1000.0  # noqa: SLF001
+    hub._scale_locked = True  # noqa: SLF001
+    hub.price_scale = 1000.0
+    pc = _snapshot_close(hub)
+    raw = pc / 1000.0
+    # Giống payload probe / wire DNSE 2.4.1
+    hub.handle_raw_message(
+        {
+            "T": "t",
+            "symbol": "AAA",
+            "matchPrice": raw,
+            "totalVolumeTraded": 12_345,
+            "highestPrice": raw * 1.01,
+            "lowestPrice": raw * 0.99,
+        }
     )
-    assert total == 0
+    st = client.get("/api/realtime/status").json()
+    assert st["mode"] == "live"
+    assert st["quotes_live"] >= 1
+    assert st["stats"]["ticks"] >= 1
+    assert st["stats"]["parsed_trades"] >= 1
+    assert st["stats"]["raw_msgs"] >= 1
+    assert st["stats"]["msg_types"].get("t", 0) >= 1
+    assert st["last_tick_age_seconds"] is not None
+    assert st["last_tick_age_seconds"] < 5
+    q = hub.get_quote("AAA")
+    assert q.state == "live"
+    # totalVolumeTraded = lot HOSE → ×10 cổ phiếu
+    assert q.volume == 12_345 * 10
+    assert "trực tiếp" in (st.get("label") or "")
+
+
+def test_fix6_missing_fields_parse_errors(api_env):
+    """Thiếu matchPrice → parse_errors tăng + mô tả; không nuốt."""
+    client, hub, _fake, _store = api_env
+    _trading_now(hub)
+    before = int(hub.status()["stats"].get("parse_errors") or 0)
+    hub.handle_raw_message({"T": "t", "symbol": "AAA"})  # thiếu matchPrice
+    st = client.get("/api/realtime/status").json()
+    assert st["stats"]["parse_errors"] == before + 1
+    err = st["stats"].get("last_parse_error") or ""
+    assert "matchPrice" in err
+    assert st["mode"] != "live"  # chưa có tick hợp lệ
+
+
+def test_fix6_sec_def_sd_basic_price(api_env):
+    """T=sd (SDK 2.4.1) + basicPrice → prev_close_source=tick."""
+    client, hub, _fake, _store = api_env
+    _trading_now(hub)
+    hub._price_scale_effective = 1.0  # noqa: SLF001
+    hub._scale_locked = True  # noqa: SLF001
+    pc = _snapshot_close(hub)
+    hub.handle_raw_message({"T": "sd", "symbol": "AAA", "basicPrice": pc})
+    hub.handle_raw_message(
+        {
+            "T": "t",
+            "symbol": "AAA",
+            "matchPrice": pc * 1.01,
+            "totalVolumeTraded": 10,
+        }
+    )
+    assert hub.get_quote("AAA").prev_close_source == "tick"
+    assert client.get("/api/realtime/status").json()["prev_close_source"] == "tick"
+
+
+def test_fix6_31s_no_tick_connecting(api_env):
+    """Phiên liên tục + >30s không tick → connecting / no_ticks_yet."""
+    client, hub, _fake, _store = api_env
+    _trading_now(hub)
+    hub._price_scale_effective = 1.0  # noqa: SLF001
+    hub._scale_locked = True  # noqa: SLF001
+    pc = _snapshot_close(hub)
+    hub.handle_raw_message(
+        {"T": "t", "symbol": "AAA", "matchPrice": pc * 1.01, "totalVolumeTraded": 1}
+    )
+    assert hub.status()["mode"] == "live"
+    import time as _time
+
+    hub._last_tick_mono = _time.monotonic() - 31.0  # noqa: SLF001
+    st = client.get("/api/realtime/status").json()
+    assert st["mode"] == "connecting"
+    assert st.get("reason") == "no_ticks_yet"
+    label = (st.get("label") or "").lower()
+    assert "trực tiếp" not in label
+    assert "kết nối" in label or "tick" in label
+
+
+def test_fix6_91s_no_tick_stale(api_env):
+    """>90s không tick → stale / no_ticks."""
+    client, hub, _fake, _store = api_env
+    _trading_now(hub)
+    hub._price_scale_effective = 1.0  # noqa: SLF001
+    hub._scale_locked = True  # noqa: SLF001
+    pc = _snapshot_close(hub)
+    hub.handle_raw_message(
+        {"T": "t", "symbol": "AAA", "matchPrice": pc * 1.01, "totalVolumeTraded": 1}
+    )
+    import time as _time
+
+    hub._last_tick_mono = _time.monotonic() - 91.0  # noqa: SLF001
+    st = client.get("/api/realtime/status").json()
+    assert st["mode"] == "stale"
+    assert st.get("reason") == "no_ticks"
+    assert "trực tiếp" not in (st.get("label") or "")
+
+
+def test_dnse_sdk_openapi_pin():
+    """Ghim dnse-sdk-openapi==2.4.1 — import được (offline, không gọi mạng)."""
+    import importlib.metadata as md
+
+    import dnse  # noqa: F401
+
+    ver = md.version("dnse-sdk-openapi")
+    assert ver == "2.4.1", f"cần dnse-sdk-openapi==2.4.1, đang {ver}"
+
+
+# ----- 017a-fix7: index mi candles + volume lot→CP + vol_ratio -----
+
+
+def test_fix7_mi_builds_index_candles(api_env):
+    """Chuỗi T=mi giả → candles_1m ≥1, basis=live, change_pct vs priorValueIndexes."""
+    from stockai.api.insession import build_market_analysis
+
+    _client, hub, _fake, store = api_env
+    _trading_now(hub)
+    # Hai mi cùng phút + một mi phút khác (epoch khác nhau khó ép) — vẫn ≥1 nến
+    hub.handle_raw_message(
+        {
+            "T": "mi",
+            "indexName": "VNINDEX",
+            "valueIndexes": 1702.19,
+            "priorValueIndexes": 1704.87,
+            "totalVolumeTraded": 200_000_000,
+            "grossTradeAmount": 4700.5,
+        }
+    )
+    hub.handle_raw_message(
+        {
+            "T": "mi",
+            "indexName": "VNINDEX",
+            "valueIndexes": 1703.0,
+            "priorValueIndexes": 1704.87,
+            "totalVolumeTraded": 201_000_000,
+            "grossTradeAmount": 4710.0,
+        }
+    )
+    q = hub.get_index_quote("VNINDEX")
+    assert q is not None
+    assert q.price == pytest.approx(1703.0)
+    assert q.prev_close == pytest.approx(1704.87)
+    assert q.basis == "live"
+    assert q.change_pct == pytest.approx((1703.0 - 1704.87) / 1704.87 * 100.0, abs=0.01)
+    candles = hub.candles("VNINDEX")
+    assert len(candles) >= 1
+    assert candles[-1]["c"] == pytest.approx(1703.0)
+    assert hub.status()["stats"].get("parsed_index", 0) >= 2
+    assert hub.status()["stats"].get("mi_fields")  # đã log field names
+
+    payload = build_market_analysis(hub, store)
+    idx = payload["index"]
+    assert idx["price"]["basis"] == "live"
+    assert len(idx["candles_1m"]) >= 1
+    assert idx["prev_close"]["value"] == pytest.approx(1704.87)
+    assert idx.get("value", {}).get("value") == pytest.approx(4710.0)
+
+
+def test_fix7_volume_lot_to_shares_vs_gross(api_env):
+    """totalVolumeTraded (lot) ×10 ≈ grossTradeAmount(tỷ)×1e9 / matchPrice(VND)."""
+    _client, hub, _fake, _store = api_env
+    _trading_now(hub)
+    hub._price_scale_effective = 1000.0  # noqa: SLF001
+    hub._scale_locked = True  # noqa: SLF001
+    hub.price_scale = 1000.0
+    pc = _snapshot_close(hub)
+    # matchPrice nghìn; gross tỷ; totalVolumeTraded lot
+    match_nghin = pc / 1000.0
+    match_vnd = pc
+    lots = 22105.0
+    gta = lots * 10 * match_vnd / 1e9  # đúng công thức ngược
+    hub.handle_raw_message(
+        {
+            "T": "t",
+            "symbol": "AAA",
+            "matchPrice": match_nghin,
+            "totalVolumeTraded": lots,
+            "grossTradeAmount": gta,
+        }
+    )
+    q = hub.get_quote("AAA")
+    assert q.volume == pytest.approx(lots * 10)
+    qty_from_gta = gta * 1e9 / match_vnd
+    assert abs(q.volume - qty_from_gta) / qty_from_gta < 0.05
+
+
+def test_fix7_late_hub_uses_cumulative_not_sum(api_env):
+    """Hub start giữa phiên: lấy totalVolumeTraded cumulative, không cộng delta."""
+    _client, hub, _fake, _store = api_env
+    _trading_now(hub)
+    hub._price_scale_effective = 1.0  # noqa: SLF001
+    hub._scale_locked = True  # noqa: SLF001
+    pc = _snapshot_close(hub)
+    hub.handle_raw_message(
+        {
+            "T": "t",
+            "symbol": "AAA",
+            "matchPrice": pc * 1.01,
+            "totalVolumeTraded": 50_000,  # lot — đã giao từ đầu phiên
+        }
+    )
+    hub.handle_raw_message(
+        {
+            "T": "t",
+            "symbol": "AAA",
+            "matchPrice": pc * 1.02,
+            "totalVolumeTraded": 55_000,  # cumulative mới
+        }
+    )
+    q = hub.get_quote("AAA")
+    # Phải là 55000×10, không phải (50000+55000)×10
+    assert q.volume == pytest.approx(55_000 * 10)
+
+
+def test_fix7_unmatched_excluded_from_volume_spike(api_env):
+    """Mã không tick hôm nay → relative_vol=null, không vào volume_spike."""
+    from stockai.api.insession import build_market_analysis
+
+    _client, hub, _fake, store = api_env
+    _trading_now(hub)
+    hub._price_scale_effective = 1.0  # noqa: SLF001
+    hub._scale_locked = True  # noqa: SLF001
+    # Seed volume EOD lớn trên quote (giả lập không tick) — không được vào spike
+    for sym in ("AAA", "BBB", "CCC"):
+        q = hub._quotes.get(sym)  # noqa: SLF001
+        if q is not None:
+            q.volume = 100_000_000.0  # EOD-like
+            q.state = "closed"
+            q.basis = "eod"
+    # Chỉ AAA có tick thật
+    pc = _snapshot_close(hub)
+    hub.handle_raw_message(
+        {
+            "T": "t",
+            "symbol": "AAA",
+            "matchPrice": pc * 1.01,
+            "totalVolumeTraded": 1000,
+            "basicPrice": pc,
+        }
+    )
+    assert hub.has_traded_session("AAA")
+    assert not hub.has_traded_session("BBB")
+    payload = build_market_analysis(hub, store)
+    spike_syms = {r["symbol"] for r in payload["lists"]["volume_spike"]}
+    assert "BBB" not in spike_syms
+    assert "CCC" not in spike_syms
+    # relative_vol trên heatmap/list: mã chưa khớp không có relative_vol từ EOD
+    for row in payload["lists"]["volume_spike"]:
+        assert row["symbol"] in hub._traded_session  # noqa: SLF001

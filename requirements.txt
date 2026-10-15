@@ -24,4 +24,5 @@ fastapi
 uvicorn
 httpx
 # Feature 017a: DNSE LightSpeed market data (import `dnse`; KHÔNG dùng PyPI package tên "dnse" 0.5.x)
-dnse-sdk-openapi>=2.0.0
+# Ghim 2.4.1 — RealtimeHub bọc API nội bộ TradingClient._dispatch_message (raw T/matchPrice).
+dnse-sdk-openapi==2.4.1

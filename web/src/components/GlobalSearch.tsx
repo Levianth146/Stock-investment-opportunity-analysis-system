@@ -6,6 +6,8 @@ import type { Profile } from "../api/types";
 import { score } from "../fmt";
 import { searchRankings } from "../search";
 import { sectorVi } from "../sectors";
+import { toggleWatch } from "../watchlist/storage";
+import { showToast } from "../toast";
 
 export function GlobalSearch({ profile = "long_term" }: { profile?: Profile }) {
   const nav = useNavigate();
@@ -114,6 +116,22 @@ export function GlobalSearch({ profile = "long_term" }: { profile?: Profile }) {
                 <span className="muted gs-name">{h.name || "—"}</span>
                 <span className="muted gs-sec">{sectorVi(h.sector)}</span>
                 <span className="tabular gs-score">{score(h.score)}</span>
+              </button>
+              <button
+                type="button"
+                className="gs-watch"
+                aria-label={`Thêm ${h.ticker} vào theo dõi`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const { added } = toggleWatch(h.ticker);
+                  showToast(
+                    added
+                      ? `Đã thêm ${h.ticker} vào theo dõi.`
+                      : `Đã cập nhật theo dõi ${h.ticker}.`,
+                  );
+                }}
+              >
+                +
               </button>
             </li>
           ))}

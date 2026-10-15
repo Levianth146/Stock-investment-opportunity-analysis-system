@@ -27,6 +27,12 @@ risk_gate:
   R_threshold: 70
   max_rating: "Nắm giữ"
 
+# Chốt chặn độ tin cậy dữ liệu (áp sau risk gate)
+data_gate:
+  limited_max_rating: "Mua"          # tier limited (thanh khoản thấp) không được "Mua mạnh"
+  implausible_upside_pct: 100        # giá mục tiêu M4 cao hơn giá >100% → nghi lệch dữ liệu/value trap
+  implausible_max_rating: "Nắm giữ"
+
 # Module lỗi/thiếu thì dùng điểm trung tính và gắn cờ (không làm sập pipeline)
 neutral_score_when_missing: 50
 neutral_R_when_missing: 50

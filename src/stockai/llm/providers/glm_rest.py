@@ -23,12 +23,29 @@ class GlmRestError(RuntimeError):
         quota_exhausted: bool = False,
         code_1113: bool = False,
         body: str = "",
+        retry_after: float | None = None,
     ):
         super().__init__(message)
         self.status_code = status_code
         self.quota_exhausted = quota_exhausted
         self.code_1113 = code_1113
         self.body = body
+        self.retry_after = retry_after
+
+
+def _parse_retry_after(resp: Any) -> float | None:
+    """Đọc header Retry-After (giây). Trả None nếu thiếu/không parse được."""
+    try:
+        headers = getattr(resp, "headers", None) or {}
+        raw = headers.get("Retry-After") or headers.get("retry-after")
+    except Exception:
+        return None
+    if raw is None:
+        return None
+    try:
+        return float(str(raw).strip())
+    except (TypeError, ValueError):
+        return None
 
 
 def _api_key() -> str | None:
@@ -129,7 +146,12 @@ def chat_completions_json(
                 body=raw_body[:800],
             )
         if resp.status_code == 429:
-            raise GlmRestError("rate_limited", status_code=429, body=raw_body[:800])
+            raise GlmRestError(
+                "rate_limited",
+                status_code=429,
+                body=raw_body[:800],
+                retry_after=_parse_retry_after(resp),
+            )
         raise GlmRestError(
             f"http_{resp.status_code}",
             status_code=resp.status_code,

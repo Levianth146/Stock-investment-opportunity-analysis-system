@@ -43,8 +43,10 @@ debate:
     paid_models: [glm-5.3-flash]   # chỉ khi use_paid_models: true
     use_paid_models: false
     timeout_sec: 30
+    min_interval_sec: 20         # 014m: khoảng cách tối thiểu giữa 2 lần gọi GLM
     base_url: https://api.z.ai/api/paas/v4/
     # POST {base_url}/chat/completions ; Bearer ← ZAI_API_KEY
+    # 429: Retry-After hoặc backoff 15s→30s→60s (max 3); không đếm vào circuit
   # Bảng giá tham khảo (USD / 1M token) — báo cáo ops / batch estimate
   # Lưu ý: giá Gemini Flash tăng từ 01/01/2027 (cập nhật bảng khi tới hạn).
   pricing:

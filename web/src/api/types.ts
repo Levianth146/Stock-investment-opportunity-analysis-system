@@ -286,6 +286,9 @@ export interface NewsItem {
 export interface NewsResponse extends ApiEnvelope {
   symbol: string;
   items: NewsItem[];
+  other_items?: NewsItem[];
+  latest_news_date?: string | null;
+  total_news?: number;
 }
 
 export interface DebateAiAttempt {
@@ -446,4 +449,102 @@ export interface MarketIndex {
 export interface MarketResponse extends ApiEnvelope {
   index: MarketIndex | null;
   flags?: string[];
+}
+
+export interface RealtimeMarketResponse extends ApiEnvelope {
+  as_of_ts?: string;
+  label?: string;
+  session?: { phase?: string; as_of_ts?: string };
+  realtime?: { mode?: string; state?: string };
+  index?: {
+    symbol?: string;
+    name?: string;
+    price?: { value?: number | null; basis?: string };
+    prev_close?: { value?: number | null };
+    change_pct?: { value?: number | null };
+    candles_1m?: Array<{ t: number; c: number }>;
+    series_eod?: Array<{ time: string; close: number | null }>;
+    available?: string[];
+    label?: string;
+    source?: string;
+  };
+  breadth?: Record<string, unknown>;
+  lists?: Record<string, unknown>;
+  heatmap?: Array<{
+    symbol: string;
+    sector: string;
+    change_pct?: { value?: number | null; basis?: string | null };
+    market_cap?: { value?: number | null };
+    market_cap_ref?: number | null;
+    label?: string | null;
+  }>;
+}
+
+export interface CompanyProfile {
+  symbol: string;
+  name?: string | null;
+  short_name?: string | null;
+  intro?: string | null;
+  listing_date?: string | null;
+  first_price?: number | null;
+  state_pct?: number | null;
+  foreign_pct?: number | null;
+  foreign_max_pct?: number | null;
+  free_float_pct?: number | null;
+  issue_share?: number | null;
+  source?: string;
+  data_date?: string;
+}
+
+export interface CompanyProfileResponse extends ApiEnvelope {
+  symbol: string;
+  available: boolean;
+  profile: CompanyProfile | null;
+}
+
+export interface DividendEvent {
+  ex_date: string | null;
+  record_date?: string | null;
+  pay_date?: string | null;
+  kind: "cash" | "stock" | string;
+  percent_of_par?: number | null;
+  dps_vnd?: number | null;
+  title?: string | null;
+}
+
+export interface DividendsResponse extends ApiEnvelope {
+  symbol: string;
+  available: boolean;
+  reason?: string;
+  events: DividendEvent[];
+  dps_ttm_vnd?: number | null;
+  source?: string | null;
+  fetched_at?: string | null;
+}
+
+export interface WatchlistItem {
+  symbol: string;
+  name?: string | null;
+  sector?: string | null;
+  price?: { value?: number | null; basis?: string };
+  change_pct?: { value?: number | null };
+  score?: number | null;
+  rank?: number | null;
+  total_scored?: number | null;
+  dividend_yield?: { value?: number | null };
+  sector_ref?: {
+    value?: number | null;
+    gap_pct?: number | null;
+    unreliable?: boolean;
+    label?: string | null;
+  };
+  state?: string;
+  label?: string;
+  data_asof?: string;
+}
+
+export interface WatchlistSummaryResponse extends ApiEnvelope {
+  profile?: Profile;
+  items: WatchlistItem[];
+  label?: string;
 }

@@ -64,7 +64,26 @@ Tắt nhanh: `realtime.enabled: false` rồi restart API.
 
 Biến môi trường (chỉ market data): `DNSE_API_KEY`, `DNSE_API_SECRET_KEY` (hoặc `DNSE_API_SECRET`).
 
-Gói Python: `dnse-sdk-openapi>=2.0` (import `dnse`). **Không** cài PyPI package tên `dnse` 0.5.x — khác SDK.
+Gói Python: `dnse-sdk-openapi==2.4.1` (import `dnse`). **Không** cài PyPI package tên `dnse` 0.5.x — khác SDK.
+
+### Ingest WS (017a-fix6)
+
+Hub **không** dùng callback `on_trade`/`on_sec_def` của SDK (model `Trade` map `matchPrice` → attribute `.price`; đọc `.matchPrice` luôn `None` + `except: pass` → `ticks=0`).
+
+Thay vào đó bọc **API nội bộ** `TradingClient._dispatch_message` (vẫn gọi bản gốc), đọc dict thô:
+
+| `T` | Ý nghĩa | Field chính |
+|-----|---------|-------------|
+| `t` | trade | `symbol`, `matchPrice` (nghìn VND), `totalVolumeTraded` (**lot** HOSE, hub ×10 → CP), `grossTradeAmount` (tỷ VND, luỹ kế phiên), `highestPrice`/`lowestPrice` |
+| `sd` | security definition | `basicPrice` → `prev_close_source=tick` |
+| `mi` | market index | `valueIndexes`, `priorValueIndexes`, `indexName`, `totalVolumeTraded`, `grossTradeAmount` → nến 1 phút RAM, `basis=live` |
+| `s` | session | `eventId` / `tradingSessionId` |
+
+**Khối lượng (017a-fix7):** `totalVolumeTraded` trên `T=t` là **KL luỹ kế phiên theo lot** (không phải từng lệnh; không cộng từ lúc hub start). Hub nhân `HOSE_LOT_SIZE=10` → cổ phiếu để khớp snapshot EOD. Đối chiếu: `qty ≈ grossTradeAmount(tỷ)×1e9 / matchPrice(VND)`.
+
+**relative_vol / volume_spike:** `KL_hôm_nay / (TB20 × session_fraction)`; chỉ mã đã có tick hôm nay; ngoài giờ nhãn `phiên dd/mm, KL/TB20` (không nhân fraction).
+
+`mode=live` chỉ khi phiên `continuous` và có ≥1 tick trong 30s; >30s không tick → `connecting` (`reason=no_ticks_yet`); >90s → `stale` (`reason=no_ticks`). Không tuyên bố «trực tiếp» khi chưa có tick.
 
 ## Đo thực tế (giờ giao dịch)
 

@@ -79,3 +79,45 @@ def to_rating(score: float, R: float, cfg: dict) -> tuple[str, list[str]]:
         label = gate["max_rating"]
         flags.append("rating_capped_by_risk_gate")
     return label, flags
+
+
+def _cap(label: str, max_label: str) -> str:
+    return max_label if RATING_ORDER.index(label) > RATING_ORDER.index(max_label) else label
+
+
+def apply_data_gate(label: str, tier: str | None, upside_pct: float | None, cfg: dict) -> tuple[str, list[str]]:
+    """Chốt chặn độ tin cậy dữ liệu (sau risk gate).
+
+    - tier 'limited' (thanh khoản thấp/dữ liệu mỏng): không vượt ``limited_max_rating``.
+    - upside ngầm định của giá mục tiêu M4 > ``implausible_upside_pct``: nhiều khả năng do dữ liệu/multiple
+      lệch (value trap) → không vượt ``implausible_max_rating``.
+    """
+    flags: list[str] = []
+    g = cfg.get("data_gate") or {}
+    lim = g.get("limited_max_rating")
+    if lim and tier == "limited":
+        new = _cap(label, lim)
+        if new != label:
+            label = new
+            flags.append("rating_capped_limited_tier")
+    thr = g.get("implausible_upside_pct")
+    mx = g.get("implausible_max_rating")
+    if thr is not None and mx and upside_pct is not None and upside_pct > float(thr):
+        new = _cap(label, mx)
+        if new != label:
+            label = new
+            flags.append("rating_capped_implausible_upside")
+    return label, flags
+
+
+def implied_upside_pct(upstream: dict) -> float | None:
+    """(target.base / price_close − 1) × 100 từ output M4; None nếu thiếu."""
+    m4 = upstream.get("m4") or {}
+    try:
+        base = (m4.get("target") or {}).get("base")
+        px = ((m4.get("metrics") or {}).get("price_close") or {}).get("value")
+        if base is None or not px or float(px) <= 0:
+            return None
+        return (float(base) / float(px) - 1.0) * 100.0
+    except (TypeError, ValueError):
+        return None

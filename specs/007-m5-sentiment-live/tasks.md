@@ -1,4 +1,4 @@
-﻿# Tasks: M5 Sentiment Live (Ä‘iá»ƒm S)
+# Tasks: M5 Sentiment Live (Ä‘iá»ƒm S)
 
 **Input**: Design documents from `/specs/007-m5-sentiment-live/`
 

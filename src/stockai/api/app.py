@@ -29,6 +29,11 @@ from stockai.api.deps import (
     init_app_state,
 )
 from stockai.api.insession import build_market_analysis
+from stockai.api.dividends import dividends_for
+from stockai.api.profiles import company_profile
+from stockai.api.market_stream import MarketDeltaState, shared_market
+from stockai.api.realtime import SSE_COALESCE_SEC
+from stockai.api.watchlist import build_watchlist_summary
 from stockai.api.spa import mount_spa, resolve_web_dist
 from stockai.api.store import (
     DISCLAIMER,
@@ -189,6 +194,12 @@ def create_app(
             store,
         )
 
+    @app.get("/api/llm/status", response_model=None)
+    def llm_status(request: Request) -> dict:
+        """Trạng thái LLM công khai (ok | quota_blocked | no_key). Không lộ key."""
+        store = get_store(request)
+        return _envelope(llm_public_status(), store)
+
     @app.post("/api/analyze", response_model=None)
     def analyze(request: Request, payload: AnalyzeRequest) -> Any:
         store = get_store(request)
@@ -199,12 +210,6 @@ def create_app(
         if payload.as_of is not None and payload.as_of.isoformat() != store.asof:
             return _err(409, f"Snapshot hiện có ngày {store.asof}; bỏ as_of để dùng ngày này", store)
         return _envelope(analyze_snapshot(store, payload.ticker, payload.profile), store)
-
-    @app.get("/api/llm/status", response_model=None)
-    def llm_status(request: Request) -> dict:
-        """Trạng thái LLM công khai (ok | quota_blocked | no_key). Không lộ key."""
-        store = get_store(request)
-        return _envelope(llm_public_status(), store)
 
     @app.get("/api/rankings", response_model=None)
     def rankings(
@@ -395,6 +400,32 @@ def create_app(
             return store.income_flow(sym, period=period)
         except KeyError:
             return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/profile", response_model=None)
+    def ticker_profile(request: Request, symbol: str) -> Any:
+        """Hồ sơ công ty: giới thiệu, niêm yết, sở hữu (cache M1, không realtime)."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return _envelope(company_profile(store.root, sym), store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/dividends", response_model=None)
+    def ticker_dividends(request: Request, symbol: str) -> Any:
+        """Lịch sử cổ tức (tiền mặt/cổ phiếu) từ file fetch; thiếu thì available=false."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return _envelope(dividends_for(store.root, sym), store)
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
 
@@ -624,17 +655,47 @@ def create_app(
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
 
+    @app.get("/api/watchlist/summary", response_model=None)
+    def watchlist_summary(
+        request: Request,
+        symbols: str = Query(..., description="Danh sách mã, cách nhau bởi dấu phẩy, tối đa 50"),
+        profile: str = Query("long_term"),
+    ) -> Any:
+        """Tóm tắt danh sách theo dõi — giá live + điểm M7 EOD; không cost basis."""
+        store = get_store(request)
+        raw = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        if not raw:
+            return _err(400, "symbols bắt buộc", store)
+        if len(raw) > 50:
+            return _err(400, "symbols quá nhiều (tối đa 50 mã)", store)
+        clean: list[str] = []
+        for s in raw:
+            if not _SYMBOL_RE.fullmatch(s) or not is_valid_symbol(s):
+                return _err(400, f"Mã không hợp lệ: {s}", store)
+            if not store.has_ticker(s):
+                return _err(400, f"Không tìm thấy mã: {s}", store)
+            clean.append(s)
+        if profile not in PROFILES:
+            return _err(400, "profile không hợp lệ", store)
+        hub = get_realtime_hub(request)
+        try:
+            payload = build_watchlist_summary(hub, store, clean, profile=profile)
+            return _envelope(payload, store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
     @app.get("/api/stream", response_model=None)
     async def realtime_stream(
         request: Request,
         symbols: str = Query(..., description="Tối đa 20 mã, cách nhau bởi dấu phẩy"),
     ) -> Any:
-        """SSE giá phiên — heartbeat 15s; refcount unsubscribe khi client rời."""
+        """SSE giá phiên — coalesce ≤1/s/mã; heartbeat 15s; refcount khi client rời."""
         store = get_store(request)
         cfg = get_api_cfg(request)
         rt = cfg.get("realtime") if isinstance(cfg.get("realtime"), dict) else {}
         max_sym = int(rt.get("sse_max_symbols") or 20)
         hb_sec = float(rt.get("sse_heartbeat_sec") or 15)
+        coalesce_sec = float(rt.get("sse_coalesce_sec") or SSE_COALESCE_SEC)
 
         raw = [s.strip().upper() for s in symbols.split(",") if s.strip()]
         if not raw:
@@ -656,15 +717,15 @@ def create_app(
 
         hub = get_realtime_hub(request)
         hub.acquire_view(clean)
-        # TestClient: giới hạn số event để không treo generator vô hạn
         max_events = int(cfg.get("_sse_max_events") or 0)
 
         async def event_gen() -> AsyncIterator[str]:
             last_hb = time.monotonic()
-            last_payload: dict[str, Any] = {}
+            last_by_sym: dict[str, tuple[Any, Any]] = {}
+            last_sent_mono: dict[str, float] = {}
+            pending: dict[str, dict[str, Any]] = {}
             sent = 0
             try:
-                # snapshot đầu
                 items = hub.get_quotes(clean)
                 first = {
                     "type": "quotes",
@@ -672,7 +733,11 @@ def create_app(
                     "label": "tạm tính",
                     "asof": store.asof,
                 }
-                last_payload = first
+                now0 = time.monotonic()
+                for it in items:
+                    sym = str(it.get("symbol") or "")
+                    last_by_sym[sym] = (it.get("price"), it.get("state"))
+                    last_sent_mono[sym] = now0
                 yield f"data: {json.dumps(first, ensure_ascii=False)}\n\n"
                 sent += 1
                 if max_events and sent >= max_events:
@@ -682,30 +747,36 @@ def create_app(
                     if await request.is_disconnected():
                         break
                     loops += 1
-                    # Chế độ test: thoát sớm dù chưa đủ event đổi giá
                     if max_events and loops > 4:
                         break
-                    await asyncio.sleep(0.05 if max_events else 0.5)
+                    await asyncio.sleep(0.05 if max_events else 0.25)
                     items = hub.get_quotes(clean)
-                    payload = {
-                        "type": "quotes",
-                        "items": items,
-                        "label": "tạm tính",
-                        "asof": store.asof,
-                    }
-                    # chỉ gửi khi đổi giá/state
-                    sig = [(it.get("symbol"), it.get("price"), it.get("state")) for it in items]
-                    prev_sig = [
-                        (it.get("symbol"), it.get("price"), it.get("state"))
-                        for it in (last_payload.get("items") or [])
-                    ]
-                    if sig != prev_sig:
-                        last_payload = payload
+                    now = time.monotonic()
+                    for it in items:
+                        sym = str(it.get("symbol") or "")
+                        sig = (it.get("price"), it.get("state"))
+                        if last_by_sym.get(sym) != sig:
+                            pending[sym] = it
+                            last_by_sym[sym] = sig
+                    ready: list[dict[str, Any]] = []
+                    for sym, it in list(pending.items()):
+                        last_t = last_sent_mono.get(sym, 0.0)
+                        if now - last_t >= coalesce_sec:
+                            ready.append(it)
+                            last_sent_mono[sym] = now
+                            pending.pop(sym, None)
+                    if ready:
+                        payload = {
+                            "type": "quotes",
+                            "items": ready,
+                            "label": "tạm tính",
+                            "asof": store.asof,
+                            "coalesced": True,
+                        }
                         yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
                         sent += 1
                         if max_events and sent >= max_events:
                             break
-                    now = time.monotonic()
                     if now - last_hb >= hb_sec:
                         last_hb = now
                         yield f": heartbeat\n\n"
@@ -723,6 +794,76 @@ def create_app(
             finally:
                 hub.release_view(clean)
                 sse_lim.release(ip)
+
+        return StreamingResponse(
+            event_gen(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
+
+    @app.get("/api/stream/market", response_model=None)
+    async def market_stream(request: Request) -> Any:
+        """SSE trang chủ: ``full`` khi kết nối, sau đó ``delta`` (seq tăng dần); heartbeat 15s."""
+        store = get_store(request)
+        cfg = get_api_cfg(request)
+        rt = cfg.get("realtime") if isinstance(cfg.get("realtime"), dict) else {}
+        hb_sec = float(rt.get("sse_heartbeat_sec") or 15)
+        tick_sec = float(rt.get("market_stream_interval_sec") or 1.5)
+        idle_sec = float(rt.get("market_stream_idle_sec") or 15)
+        lists_every = float(rt.get("market_stream_lists_sec") or 4)
+        lim = request.app.state.market_sse_limiter
+        ip = client_ip(request)
+        if not lim.try_acquire(ip):
+            return _err(429, "Quá nhiều kết nối stream từ IP này", store)
+        hub = get_realtime_hub(request)
+        max_events = int(cfg.get("_sse_max_events") or 0)
+
+        async def event_gen() -> AsyncIterator[str]:
+            state = MarketDeltaState(lists_every=lists_every)
+            last_hb = time.monotonic()
+            sent = 0
+            try:
+                payload = await asyncio.to_thread(shared_market, hub, store, min_age=0.0)
+                yield f"data: {json.dumps(state.full(payload), ensure_ascii=False)}\n\n"
+                sent += 1
+                loops = 0
+                while True:
+                    if max_events and sent >= max_events:
+                        break
+                    if await request.is_disconnected():
+                        break
+                    loops += 1
+                    if max_events and loops > 40:
+                        break
+                    open_now = hub.session_now().phase != "closed"
+                    wait = (0.05 if max_events else (tick_sec if open_now else idle_sec))
+                    await asyncio.sleep(wait)
+                    payload = await asyncio.to_thread(
+                        shared_market, hub, store, min_age=0.0 if max_events else 1.0
+                    )
+                    if max_events:
+                        ev = state.delta(payload, now=time.monotonic() + 100.0 * loops)
+                    else:
+                        ev = state.delta(payload)
+                    if ev is not None:
+                        last_hb = time.monotonic()
+                        yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+                        sent += 1
+                    elif time.monotonic() - last_hb >= (0.0 if max_events else hb_sec):
+                        last_hb = time.monotonic()
+                        yield ": heartbeat\n\n"
+                        yield (
+                            "data: "
+                            + json.dumps({"type": "heartbeat", "ts": time.time(), "seq": state.seq})
+                            + "\n\n"
+                        )
+                        sent += 1
+            finally:
+                lim.release(ip)
 
         return StreamingResponse(
             event_gen(),
@@ -791,11 +932,14 @@ def create_app(
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
 
-    # Prefer the new web build when available; otherwise serve the existing frontend.
-    web_dist = resolve_web_dist(cfg, repo_root()) if cfg.get("web_dist_dir") else None
-    if web_dist is not None:
-        mount_spa(app, web_dist)
-    else:
+    # SPA React (web/dist) ưu tiên; không có thì lùi về frontend tĩnh của develop (frontend/dist).
+    spa_mounted = False
+    if cfg.get("web_dist_dir"):
+        dist = resolve_web_dist(cfg, repo_root())
+        if dist is not None:
+            mount_spa(app, dist)
+            spa_mounted = True
+    if not spa_mounted:
         # Register the build after API routes so unknown /api paths remain JSON 404s.
         frontend_dir = Path(str(cfg.get("frontend_dir") or "frontend/dist"))
         if not frontend_dir.is_absolute():

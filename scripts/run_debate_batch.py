@@ -27,9 +27,11 @@ from stockai.llm.generate import (  # noqa: E402
     get_network_call_count,
     load_dotenv_keys,
     load_llm_cfg,
+    min_interval_sec_for,
     reset_circuit_state,
     reset_network_call_count,
     set_max_live_calls,
+    should_stop_batch,
 )
 from stockai.m2_fundamental.run import run as run_m2  # noqa: E402
 from stockai.m3_technical.run import run as run_m3  # noqa: E402
@@ -81,6 +83,11 @@ def _parse_args() -> argparse.Namespace:
         "--prefer-model",
         default="",
         help="Ưu tiên model Gemini đầu danh sách (vd gemini-3.6-flash)",
+    )
+    p.add_argument(
+        "--providers",
+        default="",
+        help="CSV thứ tự provider (vd gemini,glm hoặc glm); mặc định từ config/llm.yaml",
     )
     return p.parse_args()
 
@@ -211,6 +218,37 @@ def _source_label(flags: list[str]) -> str:
     return "UNKNOWN"
 
 
+def _format_models_tried(tried: list) -> str:
+    """Chuỗi ngắn: provider/model:reason, ..."""
+    parts: list[str] = []
+    for row in tried:
+        if not isinstance(row, dict):
+            continue
+        p = str(row.get("provider") or "?")
+        m = str(row.get("model") or "?")
+        r = str(row.get("reason") or "?")
+        parts.append(f"{p}/{m}:{r}")
+    return ", ".join(parts) if parts else "-"
+
+
+def _missing_ai_cause(flags: list, status: str, tried: list) -> str:
+    """Nguyên nhân mã chưa có AI (LLM) — ngắn gọn cho báo cáo cuối batch."""
+    for f in flags:
+        if isinstance(f, str) and f.startswith("debate_fallback_reason:"):
+            return f.split(":", 1)[1][:160]
+    if any(isinstance(f, str) and "llm_max_live_calls" in f for f in flags):
+        return "max_live_calls"
+    if any(isinstance(f, str) and "quota_exhausted" in f for f in flags):
+        return "quota_exhausted_all_tried"
+    if any(isinstance(f, str) and f.startswith("llm_quota_skip_") for f in flags):
+        return "all_models_quota_or_circuit"
+    if tried:
+        return "failover_exhausted:" + _format_models_tried(tried)[:120]
+    if status.startswith("error"):
+        return status
+    return status or "unknown"
+
+
 def main() -> int:
     args = _parse_args()
     if args.template_only:
@@ -230,6 +268,10 @@ def main() -> int:
     if not args.template_only:
         set_max_live_calls(args.max_live_calls)
     llm_cfg = load_llm_cfg(args.config)
+    if args.providers.strip() and isinstance(llm_cfg.get("debate"), dict):
+        provs = [x.strip().lower() for x in args.providers.split(",") if x.strip()]
+        if provs:
+            llm_cfg["debate"]["providers"] = provs
     if args.prefer_model.strip() and isinstance(llm_cfg.get("debate"), dict):
         g = dict(llm_cfg["debate"].get("gemini") or {})
         pref = args.prefer_model.strip()
@@ -241,6 +283,12 @@ def main() -> int:
         g["models"] = models
         g["model"] = pref
         llm_cfg["debate"]["gemini"] = g
+    debate_sec = llm_cfg.get("debate") if isinstance(llm_cfg.get("debate"), dict) else {}
+    providers_order = list(debate_sec.get("providers") or ["gemini", "glm"])
+    # 014m: khoảng cách giữa các mã — ưu tiên GLM min_interval; fallback --pause-sec
+    batch_min_interval = min_interval_sec_for("glm", debate_sec)
+    if batch_min_interval <= 0:
+        batch_min_interval = float(args.pause_sec or 0.0)
     snap_dir = Path(args.snapshots_dir)
     debate_cache = str((llm_cfg.get("debate") or {}).get("cache_dir") or "data/llm_cache")
     prefetch = int(args.top or 0) > 0
@@ -279,12 +327,41 @@ def main() -> int:
     print(
         f"as_of={args.as_of} tickers={len(tickers)} dir={snap_dir} "
         f"profile={args.profile} top={args.top or '-'} "
-        f"max_live_calls={args.max_live_calls if not args.template_only else 0}"
+        f"providers={','.join(providers_order)} "
+        f"max_live_calls={args.max_live_calls if not args.template_only else 0} "
+        f"min_interval_sec={batch_min_interval:.0f}"
     )
 
     import time as _time
 
+    stop_reason = ""
+    last_ticker_done_mono: float | None = None
     for idx, ticker in enumerate(tickers):
+        # 014m: chờ min_interval giữa các mã (in thời gian chờ)
+        if (
+            not args.template_only
+            and last_ticker_done_mono is not None
+            and batch_min_interval > 0
+        ):
+            elapsed = _time.monotonic() - last_ticker_done_mono
+            wait_for = batch_min_interval - elapsed
+            if wait_for > 0:
+                print(
+                    f"chờ {wait_for:.0f}s giữa mã "
+                    f"(min_interval={batch_min_interval:.0f}s) trước {ticker}"
+                )
+                _time.sleep(wait_for)
+        # Xóa meta debate của mã trước (tránh lẫn models_tried / cost)
+        for k in (
+            "_debate_cost_usd",
+            "_debate_model",
+            "_debate_provider",
+            "_debate_models_tried",
+            "_debate_flags",
+            "_debate_usage",
+            "_debate_cost_usd_last",
+        ):
+            scoring_cfg.pop(k, None)
         path = snap_dir / f"{ticker}_{args.as_of}.json"
         if prefetch and _has_valid_llm_cache(ticker, args.as_of, debate_cache):
             print(f"{ticker}: skipped valid_cache")
@@ -296,6 +373,8 @@ def main() -> int:
                     "latency_ms": 0,
                     "status": "skipped_cache",
                     "cost_usd": 0.0,
+                    "cause": "",
+                    "models_tried": [],
                 }
             )
             continue
@@ -312,6 +391,8 @@ def main() -> int:
                         "latency_ms": 0,
                         "status": "error",
                         "cost_usd": 0.0,
+                        "cause": "missing_or_bad_json",
+                        "models_tried": [],
                     }
                 )
                 continue
@@ -324,6 +405,7 @@ def main() -> int:
             bull, bear = result.get("bull") or [], result.get("bear") or []
             cost = float(scoring_cfg.get("_debate_cost_usd") or 0.0)
             model = str(scoring_cfg.get("_debate_model") or "-")
+            tried = list(scoring_cfg.get("_debate_models_tried") or [])
             # flags có thể chứa debate_cost_usd:...
             for f in flags:
                 if isinstance(f, str) and f.startswith("debate_cost_usd:"):
@@ -331,8 +413,12 @@ def main() -> int:
                         cost = float(f.split(":", 1)[1])
                     except ValueError:
                         pass
-            total_cost += cost
             src = _source_label(flags)
+            llm_used = "m7_debate_llm_used" in flags and not src.startswith("FALLBACK")
+            # Budget/cost chỉ khi kết quả LLM được dùng
+            if not llm_used:
+                cost = 0.0
+            total_cost += cost
             if "debate_cache_hit" in flags:
                 counts["cache_hit"] += 1
                 counts["skipped"] += 1
@@ -353,12 +439,16 @@ def main() -> int:
                     status = "ok_unknown"
                     counts["llm_ok"] += 1
                     counts["created"] += 1
+            cause = ""
+            if status in ("fallback", "quality_gate") or status.startswith("error"):
+                cause = _missing_ai_cause(flags, status, tried)
             print(
                 f"{ticker}: {status} source={src} model={model} "
                 f"bull={len(bull)} bear={len(bear)} "
                 f"score={result.get('score')} rating={result.get('rating')} "
                 f"latency_ms={latency_ms} cost_usd≈{cost:.6f}"
             )
+            print(f"  models_tried: {_format_models_tried(tried)}")
             rows_report.append(
                 {
                     "ticker": ticker,
@@ -366,6 +456,8 @@ def main() -> int:
                     "latency_ms": latency_ms,
                     "status": status,
                     "cost_usd": cost,
+                    "cause": cause,
+                    "models_tried": tried,
                 }
             )
             if args.print_debate:
@@ -375,18 +467,22 @@ def main() -> int:
                 print(f"  --- {src} BEAR ---")
                 for i, it in enumerate(bear):
                     print(f"    [{i}] {it.get('text')} refs={it.get('refs')}")
-            # Dừng batch khi hết hạn mức
-            if any(
-                isinstance(f, str) and "quota_exhausted" in f
-                for f in flags
-            ):
-                print(f"STOP quota_exhausted after {ticker}")
+            # Chỉ dừng cả batch khi mọi model có key bị chặn, hoặc hết max_live_calls
+            stop, why = should_stop_batch(llm_cfg, flags=flags)
+            if stop:
+                stop_reason = why
+                print(f"STOP {why} after {ticker}")
                 break
+            last_ticker_done_mono = _time.monotonic()
         except Exception as e:
             counts["error"] += 1
             counts["failed"] += 1
             print(f"{ticker}: error {type(e).__name__}: {e}")
             traceback.print_exc(limit=1)
+            tried_exc = list(getattr(e, "models_tried", None) or [])
+            fl_exc = list(getattr(e, "flags", None) or [])
+            cause = _missing_ai_cause(fl_exc, f"error:{type(e).__name__}", tried_exc)
+            print(f"  models_tried: {_format_models_tried(tried_exc)}")
             rows_report.append(
                 {
                     "ticker": ticker,
@@ -394,12 +490,18 @@ def main() -> int:
                     "latency_ms": 0,
                     "status": f"error:{type(e).__name__}",
                     "cost_usd": 0.0,
+                    "cause": cause,
+                    "models_tried": tried_exc,
                 }
             )
-            if "quota" in str(e).lower():
-                print("STOP quota exception")
+            stop, why = should_stop_batch(llm_cfg, flags=fl_exc, exc=e)
+            if stop:
+                stop_reason = why
+                print(f"STOP {why} after {ticker}")
                 break
-        if prefetch and idx + 1 < len(tickers) and float(args.pause_sec) > 0:
+            last_ticker_done_mono = _time.monotonic()
+        # prefetch --pause-sec chỉ khi template-only (LLM dùng min_interval ở đầu vòng)
+        if prefetch and idx + 1 < len(tickers) and float(args.pause_sec) > 0 and args.template_only:
             _time.sleep(float(args.pause_sec))
 
     print(
@@ -409,6 +511,7 @@ def main() -> int:
         f"llm_ok={counts['llm_ok']} fallback={counts['fallback']} "
         f"cache_hit={counts['cache_hit']} error={counts['error']} "
         f"est_cost_usd={total_cost:.6f}"
+        + (f" stop={stop_reason}" if stop_reason else "")
     )
     if rows_report:
         print("TABLE ticker\tmodel\tlatency_ms\tstatus\tcost_usd")
@@ -417,6 +520,19 @@ def main() -> int:
                 f"{r['ticker']}\t{r['model']}\t{r['latency_ms']}\t"
                 f"{r['status']}\t{r['cost_usd']:.6f}"
             )
+    # Thiếu AI = không dùng LLM (fallback / error / quality_gate); cache hit đã có AI
+    missing = [
+        r
+        for r in rows_report
+        if r.get("status") in ("fallback", "quality_gate")
+        or str(r.get("status") or "").startswith("error")
+    ]
+    if missing:
+        print("MISSING_AI tickers (chưa có luận điểm LLM):")
+        for r in missing:
+            print(f"  {r['ticker']}: {r.get('cause') or r.get('status')}")
+    else:
+        print("MISSING_AI: (none)")
     print(f"TOTAL_NETWORK_CALLS={get_network_call_count()}")
     print(format_error_reason_table())
     # Ghi chú giá Gemini Flash tăng 01/01/2027
