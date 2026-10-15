@@ -278,6 +278,7 @@ export function TickerPage() {
               </h1>
               <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                 <WatchStar symbol={symbol} />
+                <Link to={`/so-sanh?s=${symbol}&profile=${profile}`}>So sánh</Link>
                 <label>
                   <span className="muted">Kiểu đầu tư </span>
                   <select

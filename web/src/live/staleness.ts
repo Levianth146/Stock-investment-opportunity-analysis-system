@@ -2,6 +2,20 @@
 
 export const DISPLAY_STALE_MS = 20_000;
 
+/** Loại giá đang hiển thị: trực tiếp (trong phiên), chốt phiên hôm nay (tạm tính, chưa có EOD) hoặc EOD. */
+export type PriceKind = "live" | "close" | "eod";
+export function priceKind(
+  q?: { state?: string | null; basis?: string | null; price?: number | null } | null,
+): PriceKind {
+  if (!q || q.price == null) return "eod";
+  if (q.state === "live") return "live";
+  if (q.basis === "close") return "close";
+  return "eod";
+}
+export function priceKindWord(k: PriceKind): string {
+  return k === "live" ? "giá trực tiếp" : k === "close" ? "giá chốt phiên hôm nay (tạm tính)" : "giá đóng cửa";
+}
+
 /**
  * Xác định state hiển thị từ quote + tuổi nhận.
  * `receivedAt` là performance.now() (hoặc Date.now() proxy) lúc client nhận tick.

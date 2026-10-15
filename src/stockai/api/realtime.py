@@ -9,6 +9,7 @@ Nguyên tắc cứng:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import math
 import os
@@ -17,6 +18,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, Iterator, Literal
 
 from stockai.api.session_clock import (
@@ -177,6 +179,7 @@ class RealtimeHub:
         self._quotes: dict[str, QuoteTick] = {}
         # snapshot_close: luôn có (để auto-scale / drop rộng) — KHÔNG đồng nghĩa prev_close %.
         self._snapshot_close: dict[str, float] = {}
+        self._snapshot_prev_close: dict[str, float | None] = {}
         # Giá tham chiếu từ DNSE SecurityDefinition.basicPrice (ưu tiên cao nhất).
         self._tick_prev_close: dict[str, float] = {}
         self._snapshot_asof: str | None = getattr(store, "asof", None)
@@ -233,7 +236,21 @@ class RealtimeHub:
             "mi_fields": None,  # tên field T=mi (một lần)
         }
 
+        # Lưu giá trong phiên (sống qua restart API). Tắt nếu không cấu hình persist_dir.
+        pdir = rt.get("persist_dir")
+        self._persist_dir: Path | None = None
+        if pdir:
+            pp = Path(str(pdir))
+            if not pp.is_absolute():
+                pp = Path(getattr(store, "root", None) or Path.cwd()) / pp
+            self._persist_dir = pp
+        self._persist_interval = float(rt.get("persist_interval_sec") or 15.0)
+        self._persist_ticks = -1
+        self._data_date: str | None = None  # ngày (ICT) của dữ liệu phiên đang giữ
+        self._persist_thread: threading.Thread | None = None
+
         self._seed_from_snapshots()
+        self._restore_intraday()
 
     # ------------------------------------------------------------------ ref / asof
     def _sessions_behind(self) -> int | None:
@@ -243,7 +260,14 @@ class RealtimeHub:
     def _snapshot_is_fresh(self) -> bool:
         """Snapshot trùng phiên đóng gần nhất → được dùng làm giá tham chiếu %."""
         behind = self._sessions_behind()
-        return behind is not None and behind == 0
+        if behind is None:
+            return False
+        if behind == 0:
+            return True
+        # Sau giờ đóng cửa nhưng snapshot của phiên đó chưa có: snapshot (phiên trước đó)
+        # chính là giá tham chiếu của phiên mà hub đang giữ dữ liệu.
+        asof = str(getattr(self._store, "asof", None) or self._snapshot_asof or "")[:10]
+        return behind == 1 and self._data_date is not None and self._data_date > asof
 
     def _resolve_prev(self, symbol: str) -> tuple[float | None, PrevCloseSource]:
         """Ưu tiên: (a) basicPrice/tick → (b) snapshot tươi → (c) none."""
@@ -302,6 +326,10 @@ class RealtimeHub:
             except (TypeError, ValueError):
                 continue
             self._snapshot_close[t] = close
+            try:
+                self._snapshot_prev_close[t] = float(rows[-2].get("close")) if len(rows) > 1 else None
+            except (TypeError, ValueError):
+                self._snapshot_prev_close[t] = None
             # high/low/volume ngày từ nến EOD cuối nếu có
             high = last.get("high")
             low = last.get("low")
@@ -366,6 +394,7 @@ class RealtimeHub:
         if self._started:
             return
         self._started = True
+        self._start_persist()
         if self._fake is not None:
             # Chưa có tick → connecting (không tuyên bố "live"/"trực tiếp")
             self._ws_connected = True
@@ -410,6 +439,7 @@ class RealtimeHub:
 
     def stop(self) -> None:
         self._stop.set()
+        self._persist_save()
         if self._fake is not None:
             self._fake.disconnect()
 
@@ -1042,12 +1072,19 @@ class RealtimeHub:
             elif q.low is None or scaled < (q.low or scaled):
                 q.low = scaled if q.low is None else min(q.low, scaled)
             q.ts = ts
+            if sess.phase != "closed":
+                today = wall.date().isoformat()
+                if self._data_date != today:
+                    # Sang phiên mới: bỏ cờ "đã khớp" của phiên trước
+                    self._traded_session.clear()
+                    self._data_date = today
             if sess.phase == "closed":
                 q.state = "closed"
                 q.basis = "eod"
                 q.source = "snapshot"
-                # ngoài giờ: hiện đóng cửa snapshot (không bịa % từ giá cũ)
-                if snap is not None and self._mode != "live":
+                # ngoài giờ: hiện đóng cửa snapshot (không bịa % từ giá cũ);
+                # mã đã khớp trong phiên được giữ giá chốt phiên (xem get_quote).
+                if snap is not None and self._mode != "live" and symbol not in self._traded_session:
                     q.price = snap
                 if prev is not None and prev != 0 and q.price is not None:
                     q.change = q.price - prev
@@ -1149,6 +1186,151 @@ class RealtimeHub:
                     v=float(volume or 0.0),
                 )
             )
+
+    # ------------------------------------------------------------------ giá chốt phiên + lưu đĩa
+    def _close_active_locked(self, sess: Any | None = None) -> bool:
+        sess = sess or self.session_now()
+        if sess.phase != "closed":
+            return False
+        asof = str(getattr(self._store, "asof", None) or self._snapshot_asof or "")[:10]
+        return bool(self._data_date and self._data_date > asof and self._traded_session)
+
+    def close_active(self) -> bool:
+        """Đang ngoài giờ và hub giữ giá của một phiên mới hơn snapshot EOD."""
+        with self._lock:
+            return self._close_active_locked()
+
+    def session_close_date(self) -> str | None:
+        """Ngày (YYYY-MM-DD) của giá chốt phiên đang hiển thị, hoặc None."""
+        with self._lock:
+            return self._data_date if self._close_active_locked() else None
+
+    def _persist_file(self, day: str) -> Path | None:
+        if self._persist_dir is None:
+            return None
+        return self._persist_dir / f"intraday_{day}.json"
+
+    def _persist_save(self) -> None:
+        """Ghi snapshot trong phiên (atomic). Chỉ ghi khi có dữ liệu phiên."""
+        if self._persist_dir is None or self._data_date is None:
+            return
+        with self._lock:
+            day = self._data_date
+            quotes = {}
+            for sym, q in self._quotes.items():
+                if sym not in self._traded_session or q.price is None:
+                    continue
+                quotes[sym] = [q.price, q.prev_close, q.volume, q.high, q.low, q.ts]
+            if not quotes and not self._index_quotes:
+                return
+            index = {
+                sym: {
+                    "price": q.price, "prev_close": q.prev_close, "volume": q.volume,
+                    "ts": q.ts, "value": self._index_value.get(sym),
+                }
+                for sym, q in self._index_quotes.items()
+            }
+            candles = {
+                sym: [[b.t, b.o, b.h, b.l, b.c, b.v] for b in bars]
+                for sym, bars in self._candles.items()
+                if bars and (sym in self._traded_session or sym in self._index_quotes)
+            }
+            payload = {
+                "version": 1,
+                "date": day,
+                "saved_at": self._now_fn().isoformat(timespec="seconds"),
+                "price_scale": self._price_scale_effective,
+                "quotes": quotes,
+                "index": index,
+                "candles": candles,
+            }
+            ticks = int(self._stats.get("ticks") or 0) + int(self._stats.get("parsed_index") or 0)
+            if ticks == self._persist_ticks:
+                return
+            self._persist_ticks = ticks
+        path = self._persist_file(day)
+        if path is None:
+            return
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+            os.replace(tmp, path)
+        except OSError as exc:
+            _log.warning("intraday persist lỗi: %s", type(exc).__name__)
+
+    def _restore_intraday(self) -> None:
+        """Nạp file trong phiên mới nhất nếu mới hơn snapshot EOD và không ở tương lai."""
+        if self._persist_dir is None or not self._persist_dir.is_dir():
+            return
+        asof = str(getattr(self._store, "asof", None) or self._snapshot_asof or "")[:10]
+        today = self._now_fn().date().isoformat()
+        files = sorted(self._persist_dir.glob("intraday_*.json"), reverse=True)
+        for f in files:
+            day = f.stem.replace("intraday_", "")
+            if day > today or day <= asof:
+                continue
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if data.get("version") != 1 or data.get("date") != day:
+                continue
+            scale = data.get("price_scale")
+            if scale is not None and self._price_scale_effective is not None and float(scale) != float(self._price_scale_effective):
+                continue
+            with self._lock:
+                n = 0
+                for sym, row in (data.get("quotes") or {}).items():
+                    try:
+                        price, prev, vol, hi, lo, ts = row
+                    except (TypeError, ValueError):
+                        continue
+                    if sym not in self._liquid and sym not in self._snapshot_close:
+                        continue
+                    q = self._quotes.get(sym) or QuoteTick(symbol=sym, price=None)
+                    q.price, q.volume, q.high, q.low, q.ts = price, vol, hi, lo, ts
+                    q.state, q.basis, q.source = "stale", "live", "dnse"
+                    self._quotes[sym] = q
+                    self._traded_session.add(sym)
+                    n += 1
+                for sym, row in (data.get("index") or {}).items():
+                    q = QuoteTick(symbol=sym, price=row.get("price"), prev_close=row.get("prev_close"),
+                                  prev_close_source="tick" if row.get("prev_close") else "none",
+                                  volume=row.get("volume"), ts=row.get("ts"),
+                                  state="stale", basis="live", source="dnse")
+                    if q.price is not None and q.prev_close:
+                        q.change = q.price - q.prev_close
+                        q.change_pct = q.change / q.prev_close * 100.0
+                    self._index_quotes[sym] = q
+                    if row.get("value") is not None:
+                        self._index_value[sym] = float(row["value"])
+                for sym, bars in (data.get("candles") or {}).items():
+                    dq = self._candles[sym]
+                    for b in bars[-CANDLE_MAX_BARS:]:
+                        try:
+                            dq.append(MinuteBar(t=int(b[0]), o=b[1], h=b[2], l=b[3], c=b[4], v=b[5]))
+                        except (TypeError, ValueError, IndexError):
+                            continue
+                self._data_date = day
+                self._persist_ticks = -1
+                self._stats["restored_from"] = {"date": day, "symbols": n, "saved_at": data.get("saved_at")}
+            _log.info("realtime: khôi phục giá phiên %s (%d mã)", day, n)
+            return
+
+    def _start_persist(self) -> None:
+        if self._persist_dir is None or self._persist_thread is not None:
+            return
+
+        def _loop() -> None:
+            while not self._stop.wait(self._persist_interval):
+                try:
+                    self._persist_save()
+                except Exception as exc:  # noqa: BLE001
+                    _log.warning("intraday persist: %s", type(exc).__name__)
+
+        self._persist_thread = threading.Thread(target=_loop, name="stockai-rt-persist", daemon=True)
+        self._persist_thread.start()
 
     # ------------------------------------------------------------------ views / SSE refcount
     def acquire_view(self, symbols: list[str]) -> None:
@@ -1319,8 +1501,20 @@ class RealtimeHub:
             elif sess.phase == "closed":
                 out.state = "closed"
                 out.basis = "eod"
-                if snap is not None:
+                if self._close_active_locked(sess) and symbol in self._traded_session and q.price is not None:
+                    # Giá chốt phiên hôm nay từ DNSE (tạm tính) cho tới khi có snapshot EOD
+                    out.price = q.price
+                    out.basis = "close"
+                    out.source = "dnse"
+                elif snap is not None:
                     out.price = snap
+                    # Đang hiển thị chính giá EOD của phiên cuối → % thay đổi so với phiên liền trước nó,
+                    # không phải so với chính nó (luôn 0%).
+                    p2 = self._snapshot_prev_close.get(symbol)
+                    if p2 is not None and p2 != 0:
+                        prev = p2
+                        out.prev_close = p2
+                        out.prev_close_source = "snapshot"
                 if prev is not None and prev != 0 and out.price is not None:
                     out.change = out.price - prev
                     out.change_pct = (out.price - prev) / prev * 100.0
@@ -1334,6 +1528,11 @@ class RealtimeHub:
                 if sess.phase != "closed":
                     out.change = None
                     out.change_pct = None
+                elif out.price is not None and self._snapshot_prev_close.get(symbol):
+                    p2 = float(self._snapshot_prev_close[symbol])  # type: ignore[arg-type]
+                    out.prev_close, out.prev_close_source = p2, "snapshot"
+                    out.change = out.price - p2
+                    out.change_pct = (out.price - p2) / p2 * 100.0
                 elif prev is not None and prev != 0 and out.price is not None:
                     out.change = out.price - prev
                     out.change_pct = (out.price - prev) / prev * 100.0

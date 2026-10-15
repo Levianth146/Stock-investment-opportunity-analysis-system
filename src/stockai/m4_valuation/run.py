@@ -9,7 +9,8 @@ Khóa thiết kế:
 - Bank (is_bank): P/B chân chính; không dùng peers thay median ngành.
 - Sector nhỏ → median thị trường + m4_sector_fallback; chỉ PE (m4_pb_leg_dropped).
 - Scoring: percentile inverted trong pe_sorted/pb_sorted (không quét lại snapshots).
-- DCF tắt mặc định (enable_dcf: false).
+- DCF FCFF (dcf.py) bật qua enable_dcf; mặc định trong code là tắt, config/valuation.yaml bật. Không ảnh hưởng điểm V,
+  chỉ trộn vào giá mục tiêu theo dcf.blend_weight khi kết quả hợp lệ.
 - status=partial chỉ khi có cờ thiếu/suy giảm dữ liệu thật; cờ thông tin
   (m4_pb_uses_total_equity, m4_bank_primary_pb, m4_sector_weight_default) không ép partial.
 """
@@ -20,6 +21,7 @@ from typing import Any
 
 from stockai.contracts.schemas import validate
 from stockai.m4_valuation.config_loader import load_m4_cfg, resolve_path
+from stockai.m4_valuation.dcf import compute_dcf, merge_dcf_cfg
 from stockai.m4_valuation.multiples import MultipleInputs, derive_multiples
 from stockai.m4_valuation.sector_stats import (
     cheapness_percentile_score,
@@ -159,6 +161,7 @@ def _build_target(
     used_pe: bool,
     used_pb: bool,
     m4: dict,
+    dcf: dict | None = None,
 ) -> dict | None:
     bands = m4.get("target_bands") or {}
     try:
@@ -188,12 +191,48 @@ def _build_target(
         "book dùng total_equity (gồm minority) đến khi có parent_equity",
         "score percentile inverted từ pe_sorted/pb_sorted sector stats",
     ]
+    method = "relative_multiples_pe_pb"
+    if isinstance(dcf, dict) and dcf.get("status") == "ok" and dcf.get("usable_for_target"):
+        w_d = max(0.0, min(1.0, float(merge_dcf_cfg(m4.get("dcf")).get("blend_weight", 0.3))))
+        if w_d > 0 and isinstance(dcf.get("per_share"), (int, float)):
+            rel = base
+            base = (1.0 - w_d) * rel + w_d * float(dcf["per_share"])
+            method = "relative_multiples_pe_pb+dcf_fcff"
+            assumptions.append(
+                f"DCF FCFF {dcf['per_share']:.0f} đ/cp (WACC {dcf['wacc']:.1%}, tăng trưởng dài hạn "
+                f"{dcf['terminal_growth']:.1%}) trộn tỷ trọng {w_d:.0%}; tương đối {rel:.0f} đ/cp tỷ trọng {1 - w_d:.0%}"
+            )
     return {
         "base": round(base, 2),
         "bull": round(base * bull_m, 2),
         "bear": round(base * bear_m, 2),
-        "method": "relative_multiples_pe_pb",
+        "method": method,
         "assumptions": assumptions,
+    }
+
+
+def _target_reliability(target: dict | None, mi: MultipleInputs, m4: dict) -> dict | None:
+    """Giá mục tiêu lệch quá xa giá thị trường → định giá tương đối theo trung vị ngành kém tin cậy
+    (tập đoàn đa ngành, premium thương hiệu, EPS bất thường). Vẫn hiển thị số nhưng gắn cảnh báo."""
+    if not target:
+        return None
+    px = getattr(mi, "price_close", None)
+    base = target.get("base")
+    if not isinstance(px, (int, float)) or not isinstance(base, (int, float)) or px <= 0:
+        return None
+    g = m4.get("target_plausible") or {}
+    lo = float(g.get("ratio_min", 0.4))
+    hi = float(g.get("ratio_max", 2.5))
+    ratio = base / px
+    low = ratio < lo or ratio > hi
+    return {
+        "level": "low" if low else "normal",
+        "ratio_to_price": round(ratio, 3),
+        "reason": (
+            f"Giá mục tiêu bằng {ratio:.0%} giá hiện tại, lệch xa nên chỉ mang tính tham khảo: "
+            "định giá tương đối theo trung vị ngành có thể không phản ánh doanh nghiệp này."
+            if low else None
+        ),
     }
 
 
@@ -313,6 +352,21 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
         if "m4_insufficient_for_score" not in flags:
             flags.append("m4_insufficient_for_score")
 
+    dcf = None
+    if m4.get("enable_dcf"):
+        m6 = (upstream or {}).get("m6") if isinstance(upstream, dict) else None
+        beta_v = None
+        if isinstance(m6, dict) and isinstance(m6.get("metrics"), dict):
+            bm = m6["metrics"].get("beta")
+            beta_v = bm.get("value") if isinstance(bm, dict) else None
+        dcf = compute_dcf(snapshot, mi, m4.get("dcf"), beta=beta_v)
+        for f in dcf.get("flags") or []:
+            if f not in flags:
+                flags.append(f)
+        metrics["dcf_per_share"] = _metric(dcf.get("per_share"), "VND/share")
+        metrics["dcf_wacc"] = _metric(dcf.get("wacc"), "ratio")
+        metrics["dcf_terminal_growth"] = _metric(dcf.get("terminal_growth"), "ratio")
+
     target = _build_target(
         mi,
         med.median_pe,
@@ -322,6 +376,7 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
         used_pe,
         used_pb,
         m4,
+        dcf,
     )
 
     if score is None:
@@ -331,7 +386,20 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
         qf = _quality_flags(flags, w_pe=w_pe)
         status = "partial" if qf else "ok"
 
+    reliability = _target_reliability(target, mi, m4)
+    if reliability and reliability["level"] == "low":
+        flags.append("m4_target_far_from_price")
+
     evidence = _build_evidence(mi, med.median_pe, med.median_pb, flags)
+    if isinstance(dcf, dict) and dcf.get("status") == "ok":
+        up = dcf.get("upside_pct")
+        evidence.append({"text": (
+            f"DCF FCFF ước tính {dcf['per_share']:,.0f} đ/cp".replace(",", ".")
+            + (f", {'cao' if up >= 0 else 'thấp'} hơn giá hiện tại {abs(up):.0f}%" if isinstance(up, (int, float)) else "")
+            + ("" if dcf.get("usable_for_target") else "; lệch xa giá thị trường nên không đưa vào giá mục tiêu")
+            + ".")})
+    elif isinstance(dcf, dict) and dcf.get("reason"):
+        evidence.append({"text": f"DCF không có kết quả: {dcf['reason']}"})
 
     out: dict[str, Any] = {
         "module": "m4",
@@ -342,6 +410,10 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
         "flags": flags,
         "target": target,
     }
+    if dcf is not None:
+        out["dcf"] = dcf
+    if reliability is not None:
+        out["target_reliability"] = reliability
     errs = validate(out, "module_out")
     if errs:
         out["status"] = "error"

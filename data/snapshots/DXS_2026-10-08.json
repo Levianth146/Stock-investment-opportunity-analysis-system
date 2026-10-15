@@ -5,22 +5,15 @@
   "as_of": "2026-10-08",
   "window_start": "2021-10-09",
   "synthetic": false,
-  "fetched_at": "2026-10-11T14:19:16",
+  "fetched_at": "2026-10-15T17:58:39",
   "flags": [
    "prices_scaled_x1000_to_VND",
-   "fin_balance_year_error: fin-balance(DXS) lỗi sau 3 lần thử: balance/year DXS: VCI: API request failed: HTTPSConnectionPool(host='iq.vietcap.com.",
-   "fin_annual_unmatched:total_assets,total_equity,total_liabilities,current_assets,current_liabilities,inventory,short_term_debt,long_term_debt",
-   "fast_mode",
-   "vnf_mismatch:cash:2025",
-   "vnf_mismatch:cash:2024",
-   "vnf_mismatch:cash:2023",
-   "vnf_mismatch:cash:2022",
-   "vnf_mismatch:cash:2021",
-   "vnf_mismatch:cash:2020",
-   "vnf_filled:admin_expense,current_assets,current_liabilities,dividends_paid,ebitda,inventory,long_term_debt,pretax_profit,receivables,selling_expense,short_term_debt,total_assets,total_equity,total_liabilities,trade_payables,trade_receivables",
+   "vnf_crosscheck_ok:2025",
+   "vnf_filled:admin_expense,ebitda,pretax_profit,receivables,selling_expense,trade_payables,trade_receivables",
    "news_urls_partly_google_redirect",
+   "deep_fetch",
+   "sector_small_group",
    "universe_membership_current_not_point_in_time",
-   "quarterly_backfilled",
    "quality_tier_full"
   ],
   "data_status": {
@@ -28,7 +21,7 @@
    "index": "ok",
    "financials": "ok",
    "company": "ok",
-   "peers": "ok",
+   "peers": "partial",
    "news": "ok"
   }
  },
@@ -15010,27 +15003,27 @@
      "interest_expense": 96217032272.0,
      "depreciation": 43559271921.0,
      "eps": 589.0,
-     "cash": 416086372405.0,
+     "total_assets": 16842602199479.0,
+     "total_equity": 8832412512541.0,
+     "total_liabilities": 8010189686938.0,
+     "current_assets": 16165157847255.0,
+     "current_liabilities": 6882482807782.0,
+     "inventory": 5113028727140.0,
+     "cash": 795068290782.0,
+     "short_term_debt": 1967264418363.0,
+     "long_term_debt": 1026254758458.0,
      "cfo": -136768906197.0,
      "cfi": -284833850044.0,
      "cff": 800584674618.0,
      "capex": 67005933107.0,
+     "dividends_paid": 99570200000.0,
      "ebitda": 717733185980.0,
      "pretax_profit": 662364762536.0,
      "selling_expense": 640230300877.0,
      "admin_expense": 399374259320.0,
-     "total_assets": 16842602199479.0,
-     "current_assets": 16165157847255.0,
-     "current_liabilities": 6882482807782.0,
-     "total_liabilities": 8010189686938.0,
-     "total_equity": 8832412512541.0,
-     "inventory": 5113028727140.0,
      "receivables": 9757511175398.0,
      "trade_receivables": 1283947622091.0,
-     "trade_payables": 487472260633.0,
-     "short_term_debt": 1967264418363.0,
-     "long_term_debt": 1026254758458.0,
-     "dividends_paid": 99570200000.0
+     "trade_payables": 487472260633.0
     }
    },
    {
@@ -15047,27 +15040,27 @@
      "interest_expense": 97857939660.0,
      "depreciation": 48639907440.0,
      "eps": 236.0,
-     "cash": 206528873542.0,
+     "total_assets": 15068518802220.0,
+     "total_equity": 8316412827479.0,
+     "total_liabilities": 6752105974741.0,
+     "current_assets": 14276268088427.0,
+     "current_liabilities": 6313080101657.0,
+     "inventory": 4390771827163.0,
+     "cash": 416086372405.0,
+     "short_term_debt": 1834434542987.0,
+     "long_term_debt": 377960774216.0,
      "cfo": 218163289098.0,
      "cfi": -68758095924.0,
      "cff": 60152305689.0,
      "capex": 39515940188.0,
+     "dividends_paid": 3700500219.0,
      "ebitda": 471203261406.0,
      "pretax_profit": 341332292978.0,
      "selling_expense": 443420829768.0,
      "admin_expense": 289973077947.0,
-     "total_assets": 15068518802220.0,
-     "current_assets": 14276268088427.0,
-     "current_liabilities": 6313080101657.0,
-     "total_liabilities": 6752105974741.0,
-     "total_equity": 8316412827479.0,
-     "inventory": 4390771827163.0,
      "receivables": 9221207827910.0,
      "trade_receivables": 894824565273.0,
-     "trade_payables": 290428139442.0,
-     "short_term_debt": 1834434542987.0,
-     "long_term_debt": 377960774216.0,
-     "dividends_paid": 3700500219.0
+     "trade_payables": 290428139442.0
     }
    },
    {
@@ -15084,27 +15077,27 @@
      "interest_expense": 126397721563.0,
      "depreciation": 51854690383.0,
      "eps": -293.0,
-     "cash": 492524780081.0,
+     "total_assets": 15457119931404.0,
+     "total_equity": 8102944265617.0,
+     "total_liabilities": 7354175665787.0,
+     "current_assets": 14568551618148.0,
+     "current_liabilities": 6754419467135.0,
+     "inventory": 4119376841741.0,
+     "cash": 206528873542.0,
+     "short_term_debt": 1606355163135.0,
+     "long_term_debt": 547674848160.0,
      "cfo": -185580142162.0,
      "cfi": 81510827339.0,
      "cff": -181926591716.0,
      "capex": 24267308879.0,
+     "dividends_paid": 70460788247.0,
      "ebitda": 158318800637.0,
      "pretax_profit": -79537131339.0,
      "selling_expense": 325472011043.0,
      "admin_expense": 278366045981.0,
-     "total_assets": 15457119931404.0,
-     "current_assets": 14568551618148.0,
-     "current_liabilities": 6754419467135.0,
-     "total_liabilities": 7354175665787.0,
-     "total_equity": 8102944265617.0,
-     "inventory": 4119376841741.0,
      "receivables": 9976983706252.0,
      "trade_receivables": 1219165601078.0,
-     "trade_payables": 282833464557.0,
-     "short_term_debt": 1606355163135.0,
-     "long_term_debt": 547674848160.0,
-     "dividends_paid": 70460788247.0
+     "trade_payables": 282833464557.0
     }
    },
    {
@@ -15121,27 +15114,27 @@
      "interest_expense": 125203855484.0,
      "depreciation": 52588477185.0,
      "eps": 760.0,
-     "cash": 1632448195489.0,
+     "total_assets": 16602259161541.0,
+     "total_equity": 8284883864486.0,
+     "total_liabilities": 8317375297055.0,
+     "current_assets": 15672588529439.0,
+     "current_liabilities": 7349628744151.0,
+     "inventory": 4189882654449.0,
+     "cash": 492524780081.0,
+     "short_term_debt": 1375404881092.0,
+     "long_term_debt": 942178933673.0,
      "cfo": -2566093101316.0,
      "cfi": -145985426655.0,
      "cff": 1572155112563.0,
      "capex": 84591299750.0,
+     "dividends_paid": 348765713038.0,
      "ebitda": 781473406692.0,
      "pretax_profit": 660951032276.0,
      "selling_expense": 955267186030.0,
      "admin_expense": 644594737749.0,
-     "total_assets": 16602259161541.0,
-     "current_assets": 15672588529439.0,
-     "current_liabilities": 7349628744151.0,
-     "total_liabilities": 8317375297055.0,
-     "total_equity": 8284883864486.0,
-     "inventory": 4189882654449.0,
      "receivables": 10656648287922.0,
      "trade_receivables": 1422181900422.0,
-     "trade_payables": 499958951517.0,
-     "short_term_debt": 1375404881092.0,
-     "long_term_debt": 942178933673.0,
-     "dividends_paid": 348765713038.0
+     "trade_payables": 499958951517.0
     }
    },
    {
@@ -15158,27 +15151,27 @@
      "interest_expense": 77053586524.0,
      "depreciation": 46696072785.0,
      "eps": 1103.0,
-     "cash": 1146330868926.0,
+     "total_assets": 15147811227799.0,
+     "total_equity": 7763525043505.0,
+     "total_liabilities": 7384286184294.0,
+     "current_assets": 14505135519882.0,
+     "current_liabilities": 7213629916081.0,
+     "inventory": 1985890286482.0,
+     "cash": 1632448195489.0,
+     "short_term_debt": 1033814555701.0,
+     "long_term_debt": 97178457436.0,
      "cfo": -875355635321.0,
      "cfi": -130061714145.0,
      "cff": 1491534676029.0,
      "capex": 104578899038.0,
+     "dividends_paid": 298303209793.0,
      "ebitda": 1312447759627.0,
      "pretax_profit": 1200057007319.0,
      "selling_expense": 689419343886.0,
      "admin_expense": 706172615429.0,
-     "total_assets": 15147811227799.0,
-     "current_assets": 14505135519882.0,
-     "current_liabilities": 7213629916081.0,
-     "total_liabilities": 7384286184294.0,
-     "total_equity": 7763525043505.0,
-     "inventory": 1985890286482.0,
      "receivables": 10560211663530.0,
      "trade_receivables": 1731408201846.0,
-     "trade_payables": 379745762100.0,
-     "short_term_debt": 1033814555701.0,
-     "long_term_debt": 97178457436.0,
-     "dividends_paid": 298303209793.0
+     "trade_payables": 379745762100.0
     }
    },
    {
@@ -15195,27 +15188,27 @@
      "interest_expense": 45138141049.0,
      "depreciation": 28415670698.0,
      "eps": 2817.0,
-     "cash": 350802374807.0,
+     "total_assets": 11095041285511.0,
+     "total_equity": 5839337258718.0,
+     "total_liabilities": 5255704026793.0,
+     "current_assets": 10525322342199.0,
+     "current_liabilities": 5104231179295.0,
+     "inventory": 1699033682183.0,
+     "cash": 1146330868926.0,
+     "short_term_debt": 630247810028.0,
+     "long_term_debt": 145346096069.0,
      "cfo": 1012626445729.0,
      "cfi": -409903155574.0,
      "cff": 192805203964.0,
      "capex": 66817636612.0,
+     "dividends_paid": 911010114646.0,
      "ebitda": 1442798831716.0,
      "pretax_profit": 1444164094944.0,
      "selling_expense": 485329088001.0,
      "admin_expense": 436563121900.0,
-     "total_assets": 11095041285511.0,
-     "current_assets": 10525322342199.0,
-     "current_liabilities": 5104231179295.0,
-     "total_liabilities": 5255704026793.0,
-     "total_equity": 5839337258718.0,
-     "inventory": 1699033682183.0,
      "receivables": 7428475712639.0,
      "trade_receivables": 1496825773902.0,
-     "trade_payables": 205253173898.0,
-     "short_term_debt": 630247810028.0,
-     "long_term_debt": 145346096069.0,
-     "dividends_paid": 911010114646.0
+     "trade_payables": 205253173898.0
     }
    },
    {
@@ -15318,7 +15311,8 @@
      "cfo": 43388837510.0,
      "cfi": 79447725186.0,
      "cff": -102262552039.0,
-     "capex": 39353196456.0
+     "capex": 39353196456.0,
+     "dividends_paid": 4002000000.0
     }
    },
    {
@@ -15347,7 +15341,8 @@
      "cfo": -367835336186.0,
      "cfi": -17978445909.0,
      "cff": 36502590353.0,
-     "capex": 13157503532.0
+     "capex": 13157503532.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15376,7 +15371,8 @@
      "cfo": -87026631924.0,
      "cfi": -103996686218.0,
      "cff": 333371535981.0,
-     "capex": 31610277893.0
+     "capex": 31610277893.0,
+     "dividends_paid": 3395700000.0
     }
    },
    {
@@ -15405,7 +15401,8 @@
      "cfo": -16111937983.0,
      "cfi": -75190631385.0,
      "cff": 347841520953.0,
-     "capex": 16763342785.0
+     "capex": 16763342785.0,
+     "dividends_paid": 95237500000.0
     }
    },
    {
@@ -15434,7 +15431,8 @@
      "cfo": -250560404103.0,
      "cfi": -10083692127.0,
      "cff": 361114991229.0,
-     "capex": 16591854122.0
+     "capex": 16591854122.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15463,7 +15461,8 @@
      "cfo": 112794685422.0,
      "cfi": 9054992851.0,
      "cff": -241743373545.0,
-     "capex": 2040458307.0
+     "capex": 2040458307.0,
+     "dividends_paid": 937000000.0
     }
    },
    {
@@ -15492,7 +15491,8 @@
      "cfo": -92161760263.0,
      "cfi": -79343895255.0,
      "cff": 192029204438.0,
-     "capex": 28584242553.0
+     "capex": 28584242553.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15521,7 +15521,8 @@
      "cfo": 52701037863.0,
      "cfi": -27045548902.0,
      "cff": -52075197202.0,
-     "capex": 3405485551.0
+     "capex": 3405485551.0,
+     "dividends_paid": 0.0
     }
    }
   ],
@@ -15535,11 +15536,20 @@
     "interest_expense": "Interest expenses",
     "depreciation": "Depreciation and amortization",
     "eps": "EPS basic (VND)",
-    "cash": "Cash and cash equivalents at the beginning of period",
+    "total_assets": "Total Assets",
+    "total_equity": "Owner's Equity",
+    "total_liabilities": "Liabilities",
+    "current_assets": "CURRENT ASSETS",
+    "current_liabilities": "Current liabilities",
+    "inventory": "Inventories, Net",
+    "cash": "Cash and cash equivalents",
+    "short_term_debt": "Short-term borrowings",
+    "long_term_debt": "Long-term borrowings",
     "cfo": "Net cash inflows/(outflows) from operating activities",
     "cfi": "Net cash inflows/(outflows) from investing activities",
     "cff": "Net cash inflows/(outflows) from financing activities",
-    "capex": "Purchases of fixed assets and other long term assets"
+    "capex": "Purchases of fixed assets and other long term assets",
+    "dividends_paid": "Dividends paid"
    },
    "quarterly": {
     "revenue": "Net sales",
@@ -15562,58 +15572,27 @@
     "cfo": "Net cash inflows/(outflows) from operating activities",
     "cfi": "Net cash inflows/(outflows) from investing activities",
     "cff": "Net cash inflows/(outflows) from financing activities",
-    "capex": "Purchases of fixed assets and other long term assets"
+    "capex": "Purchases of fixed assets and other long term assets",
+    "dividends_paid": "Dividends paid"
    }
   },
   "published_at_note": "ngày công bố được ước lượng (quý +45 ngày, năm +90 ngày) vì nguồn không cung cấp"
  },
  "peers": [
   {
-   "ticker": "CRE",
-   "pe": 40.3568,
-   "pb": 0.4974,
-   "roe": 0.0123,
-   "market_cap": 2958269046920.0,
+   "ticker": "TDP",
+   "pe": 28.4294,
+   "pb": 2.4594,
+   "roe": 0.0865,
+   "market_cap": 2745397518200.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "QCG",
-   "pe": 15.5771,
-   "pb": 0.5625,
-   "roe": 0.0361,
-   "market_cap": 2668754307000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "SZC",
-   "pe": 8.9523,
-   "pb": 0.9637,
-   "roe": 0.1077,
-   "market_cap": 3086757550450.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "NTC",
-   "pe": 9.8511,
-   "pb": 2.467,
-   "roe": 0.2504,
-   "market_cap": 3170397358000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "KOS",
-   "pe": 126.8286,
-   "pb": 1.0279,
-   "roe": 0.0081,
-   "market_cap": 2402942818500.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "HDC",
-   "pe": 3.5872,
-   "pb": 0.7806,
-   "roe": 0.2176,
-   "market_cap": 2292530181140.0,
+   "ticker": "SHI",
+   "pe": 47.3124,
+   "pb": 1.0956,
+   "roe": 0.0232,
+   "market_cap": 2383757726000.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15625,86 +15604,102 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "KHG",
-   "pe": 29.5007,
-   "pb": 0.3832,
-   "roe": 0.013,
-   "market_cap": 2026952774550.0,
+   "ticker": "NCT",
+   "pe": 5.6339,
+   "pb": 3.0716,
+   "roe": 0.5452,
+   "market_cap": 2179706102000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "IJC",
-   "pe": 6.8928,
-   "pb": 0.5106,
-   "roe": 0.0741,
-   "market_cap": 4117457385600.0,
+   "ticker": "DRC",
+   "pe": 12.7855,
+   "pb": 0.7776,
+   "roe": 0.0608,
+   "market_cap": 1514951266230.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "SCR",
-   "pe": 22.0008,
-   "pb": 0.3135,
-   "roe": 0.0142,
-   "market_cap": 1679320640400.0,
+   "ticker": "TDM",
+   "pe": 30.9667,
+   "pb": 2.5144,
+   "roe": 0.0812,
+   "market_cap": 6499350000000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "AGG",
-   "pe": 4.2291,
-   "pb": 0.4562,
-   "roe": 0.1079,
-   "market_cap": 1603656438540.0,
+   "ticker": "DXP",
+   "pe": 7.6211,
+   "pb": 0.9748,
+   "roe": 0.1279,
+   "market_cap": 934598074800.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "NTL",
-   "pe": 80.1378,
-   "pb": 0.8675,
-   "roe": 0.0108,
-   "market_cap": 1396669855000.0,
+   "ticker": "HAX",
+   "pe": 162.5156,
+   "pb": 0.6675,
+   "roe": 0.0041,
+   "market_cap": 913237288500.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "CEO",
-   "pe": 33.2701,
-   "pb": 0.9156,
-   "roe": 0.0275,
-   "market_cap": 5898179974500.0,
+   "ticker": "DHA",
+   "pe": 7.5088,
+   "pb": 1.6863,
+   "roe": 0.2246,
+   "market_cap": 824037057000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "LHG",
-   "pe": 4.506,
-   "pb": 0.7175,
-   "roe": 0.1592,
-   "market_cap": 1317816463500.0,
+   "ticker": "HAH",
+   "pe": 8.2364,
+   "pb": 1.842,
+   "roe": 0.2236,
+   "market_cap": 9937332771800.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "HPX",
-   "pe": 9.8018,
-   "pb": 0.3347,
-   "roe": 0.0341,
-   "market_cap": 1189299151710.0,
+   "ticker": "TRC",
+   "pe": 2.9332,
+   "pb": 0.3461,
+   "roe": 0.118,
+   "market_cap": 735000000000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "L14",
+   "pe": 24.9594,
+   "pb": 1.2352,
+   "roe": 0.0495,
+   "market_cap": 552385318500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "PCH",
+   "pe": 26.415,
+   "pb": 1.7875,
+   "roe": 0.0677,
+   "market_cap": 502986824500.0,
    "source_id": "src_universe_calc"
   }
  ],
  "news": [
   {
-   "id": "nf897ea65f8",
-   "title": "DXS: Thống kê giao dịch - Lịch sử giá cổ phiếu",
-   "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE1WRjI5Y2NvSTBrVzJWeFpnZ3VUNmk4S0FLQUpPWU94ai1nQ0V0NzJWLU01cnh3cGE0bWh5ZmJyNkJJc2RYdlI4NHRUXzRIaDRWVUpGbg?oc=5",
-   "source": "24HMoney (qua Google News)",
-   "published_at": "2026-09-18T17:53:20",
-   "summary": "DXS: Thống kê giao dịch - Lịch sử giá cổ phiếu &nbsp;&nbsp; 24HMoney"
+   "id": "n589a81b963",
+   "title": "Cổ phiếu đáng chú ý ngày 15/9: BSR, GAS, DXS",
+   "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxObVJyZ1Y4cVZfV2xMWk9vYTl3WmstWGtjUXBCTXJhaF9wRGRhSXlSdWFlZVZ6MXY4clhHTl9IYWpjMUxYZ1pPWkRfc05hTXRmbzFHZlhPaWdqQ1ZVd1FUMWFOeXd0U0t4SGp2U185cWZ6Q2hMcEc3amJnQS1DRTV2WTJnVQ?oc=5",
+   "source": "nguoiquansat.vn (qua Google News)",
+   "published_at": "2026-09-14T14:00:00",
+   "summary": "Cổ phiếu đáng chú ý ngày 15/9: BSR, GAS, DXS &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
    "id": "n226d9e212c",
    "title": "Vì sao cổ phiếu bất động sản nổi sóng, DXS, QCG tăng trần phiên 24-8?",
    "url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQclFTaEV5WjdKdE16eGhMTk0ya0l0SGxhWjBzRndDb25kSWRyeWFsSU55YUw3V0xWanJaUlhuSy1KdHV5SFBROXdMRV91T0FTSWw1aFB6dXhkdHlXVGZxaHVkanBHZk14Z3FRZk1wZ3ZZSGM0LWZyQ1pJQVBoLTBoQWRFM0gyQnFYVlJTbUFVdElTSnliMjhqRWU0RkZUcGp0UzI2aVBBMmQ2S0lr?oc=5",
-   "source": "Báo Tuổi Trẻ (qua Google News)",
+   "source": "Tuổi Trẻ (qua Google News)",
    "published_at": "2026-08-24T14:00:00",
-   "summary": "Vì sao cổ phiếu bất động sản nổi sóng, DXS, QCG tăng trần phiên 24-8? &nbsp;&nbsp; Báo Tuổi Trẻ"
+   "summary": "Vì sao cổ phiếu bất động sản nổi sóng, DXS, QCG tăng trần phiên 24-8? &nbsp;&nbsp; Tuổi Trẻ"
   },
   {
    "id": "nc10788c159",
@@ -15915,6 +15910,14 @@
    "summary": null
   },
   {
+   "id": "n007185e954",
+   "title": "DXS lên phương án thoái sạch vốn tại công ty liên kết Đất Xanh Miền Nam",
+   "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxNUHRkYWhKdmVRZGhyR0pyWmZrcWtINEJnWjZLYTVkRFNkWXh4V2ZudUQyMk9FUFRrVXdRdHk1RGNLUnFUMGRlQzBENmFJQmZxTkY0QVpMOFpoUl9HNEJEb0gwUXhIWTNxRm5ESzBVd1F2Y1NmSHowR25sbnBOc1JpbVdTU0wzRFQzOGlXNFlVTHc1dV9KV0xvYl9uRHVOckJlOElQQTQ3TGRsdVo0YXlGWXVMY3d2RVk?oc=5",
+   "source": "Vietstock (qua Google News)",
+   "published_at": "2026-01-14T15:00:00",
+   "summary": "DXS lên phương án thoái sạch vốn tại công ty liên kết Đất Xanh Miền Nam &nbsp;&nbsp; Vietstock"
+  },
+  {
    "id": "n11844290",
    "title": "DXS: Nghị quyết HĐQT thông qua chủ trương chuyển nhượng toàn bộ cổ phần tại Công ty Cổ phần Đầu tư và Dịch vụ Đất Xanh Miền Nam",
    "url": "n/a",
@@ -15976,57 +15979,57 @@
    "id": "src_price",
    "name": "vnstock (VCI) - quote.history (giá điều chỉnh)",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:19:19",
+   "fetched_at": "2026-10-15T17:58:42",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_index",
    "name": "vnstock (VCI) - quote.history VNINDEX",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:19:19",
+   "fetched_at": "2026-10-15T17:58:42",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_company",
    "name": "vnstock (VCI) - company.overview + tự tính PE/PB/ROE peers",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:19:22",
+   "fetched_at": "2026-10-15T17:58:48",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_fin_year",
    "name": "vnstock (VCI) - finance year (income/balance/cashflow)",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:21:18",
+   "fetched_at": "2026-10-15T17:58:58",
+   "note": "thư viện vnstock; xem docs/CONTRACTS.md"
+  },
+  {
+   "id": "src_fin_quarter",
+   "name": "vnstock (VCI) - finance quarter (income/balance/cashflow)",
+   "url": "https://trading.vietcap.com.vn",
+   "fetched_at": "2026-10-15T17:59:09",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_vnf",
    "name": "vnfinancialdata (Hugging Face thanhnp-uel/vietnam-listed-companies-financial-statements)",
    "url": "https://huggingface.co/datasets/thanhnp-uel/vietnam-listed-companies-financial-statements",
-   "fetched_at": "2026-10-11T14:21:20",
+   "fetched_at": "2026-10-15T17:59:11",
    "note": "BCTC năm hợp nhất, VND; không có ngày công bố (ước lượng năm+90 ngày); nguồn gốc: cổng sàn/website công ty"
   },
   {
    "id": "src_news",
    "name": "vnstock (VCI) - company.news / RSS",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:21:23",
+   "fetched_at": "2026-10-15T17:59:32",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_universe_calc",
    "name": "PE/PB/ROE tự tính từ snapshot các mã cùng ngành trong universe",
    "url": "internal://universe",
-   "fetched_at": "2026-10-11T15:11:30",
+   "fetched_at": "2026-10-15T18:13:38",
    "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"
-  },
-  {
-   "id": "src_fin_quarter",
-   "name": "vnstock (VCI) - finance quarter (income/balance/cashflow)",
-   "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T17:13:53",
-   "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   }
  ]
 }

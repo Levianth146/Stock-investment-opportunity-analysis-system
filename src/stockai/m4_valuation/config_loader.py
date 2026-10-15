@@ -29,6 +29,7 @@ _DEFAULT_M4: dict[str, Any] = {
     "scoring": "percentile_inverted",
     "target_bands": {"bull_mult": 1.15, "bear_mult": 0.85},
     "enable_dcf": False,
+    "dcf": {},
 }
 
 

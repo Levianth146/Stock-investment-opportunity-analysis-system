@@ -657,6 +657,24 @@ def backfill_quarterly(
     return summary
 
 
+def merge_news(old: list[dict], new: list[dict], start: str, as_of: str, cap: int = 300) -> list[dict]:
+    """Gộp tin mới với tin đã có (khử trùng theo tiêu đề), giữ trong cửa sổ [start, as_of], mới nhất trước.
+
+    Làm mới nhanh (không Google News) chỉ trả vài chục tin VCI; không được làm mất tin có URL đã thu thập trước đó.
+    """
+    seen: set[str] = set()
+    out: list[dict] = []
+    for item in [*new, *old]:
+        key = nz.norm(str(item.get("title") or ""))
+        day = str(item.get("published_at") or "")[:10]
+        if not key or key in seen or not day or day > as_of or day < start:
+            continue
+        seen.add(key)
+        out.append(item)
+    out.sort(key=lambda x: str(x.get("published_at") or ""), reverse=True)
+    return out[:cap]
+
+
 def refresh_news_prices(
     tickers: list[str],
     as_of: str,
@@ -696,6 +714,9 @@ def refresh_news_prices(
                 cfg_run["_flags"].append("news_skipped_by_config")
             snap["prices"] = prices
             snap["index"] = index
+            news_items = merge_news(snap.get("news") or [], news_items, start, as_of)
+            if any(str(i.get("url") or "").startswith("http") for i in news_items):
+                cfg_run["_flags"] = [f for f in cfg_run["_flags"] if f not in ("news_url_missing", "news_has_no_article_url")]
             snap["news"] = news_items
             snap["meta"]["as_of"] = as_of
             snap["meta"]["window_start"] = start

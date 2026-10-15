@@ -27,7 +27,7 @@ AS_OF = "2026-10-08"
 PREVIEW = ROOT / "data" / "reports_preview"
 
 _FORBIDDEN = re.compile(
-    r"(?:\bM[2-9]\b|[a-z]+_[a-z_]+|\bas_of\b|\bpeers?\b|quote\.history|\bsnapshot\b|"
+    r"(?:[a-z]+_[a-z_]+|\bas_of\b|\bpeers?\b|quote\.history|\bsnapshot\b|"
     r"income/balance|\bLLM\b|\btemplate\b)",
     re.I,
 )

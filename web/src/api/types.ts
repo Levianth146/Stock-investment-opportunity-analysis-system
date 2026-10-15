@@ -21,6 +21,20 @@ export interface MetaResponse extends ApiEnvelope {
   risk_reference?: number;
   /** Ngưỡng khuyến nghị nếu API trả (014c đọc nếu có). */
   ratings?: Array<{ min: number; label: string }>;
+  scoring?: {
+    profiles?: Record<
+      string,
+      { weights: Record<string, number>; lambda_R: number }
+    >;
+    risk_reference?: number;
+    ratings?: Array<{ min: number; label: string }>;
+    risk_gate?: { R_threshold: number; max_rating: string };
+    data_gate?: {
+      limited_max_rating?: string;
+      implausible_upside_pct?: number;
+      implausible_max_rating?: string;
+    };
+  };
   llm?: LlmStatus;
 }
 
