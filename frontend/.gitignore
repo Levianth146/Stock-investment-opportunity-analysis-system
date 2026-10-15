@@ -1,10 +1,9 @@
 node_modules/
 build/
-dist/
+# The FastAPI distribution is checked in alongside its matching index.html.
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
 frontend/node_modules/
-frontend/dist/

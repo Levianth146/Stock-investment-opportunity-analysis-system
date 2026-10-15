@@ -66,3 +66,19 @@ def test_dividends_for(tmp_path):
     assert a["available"] and a["dps_ttm_vnd"] == 1000.0
     assert dividends_for(tmp_path, "BBB")["reason"] == "no_events"
     assert dividends_for(tmp_path, "ZZZ")["reason"] == "not_fetched"
+
+
+def test_dividend_snapshot_boundary_and_ttm_anchor(tmp_path):
+    from stockai.api.dividends import dividends_for
+    path = tmp_path / "data/dividends/dividends.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"AAA": {"events": [
+        {"ex_date": "2026-10-09", "kind": "cash", "dps_vnd": 999},
+        {"ex_date": "2026-10-08", "kind": "cash", "dps_vnd": 100},
+        {"ex_date": "2025-10-09", "kind": "cash", "dps_vnd": 50},
+        {"ex_date": "2024-10-01", "kind": "cash", "dps_vnd": 300},
+    ]}}), encoding="utf-8")
+    result = dividends_for(tmp_path, "AAA", asof="2026-10-08")
+    assert len(result["events"]) == 3
+    assert result["dps_ttm_vnd"] == 150
+    assert result["asof"] == "2026-10-08"

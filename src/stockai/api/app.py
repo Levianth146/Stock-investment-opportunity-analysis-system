@@ -425,7 +425,7 @@ def create_app(
         if bad:
             return bad
         try:
-            return _envelope(dividends_for(store.root, sym), store)
+            return _envelope(dividends_for(store.root, sym, asof=store.asof), store)
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
 

@@ -40,6 +40,13 @@ def test_frontend_analysis_contract(client):
     assert data["recommendation"] == detail["result"]["rating"]
 
 
+def test_news_endpoint_retains_legacy_items_and_adds_archive(client):
+    result = client.get("/api/tickers/DEMO/news").json()
+    assert isinstance(result["items"], list)
+    assert isinstance(result["articles"], list)
+    assert result["classification_method"] == "headline_lexicon"
+
+
 @pytest.mark.parametrize("payload,status", [
     ({"ticker": "DEMO", "as_of": "2026-10-09"}, 409),
     ({"ticker": "DEMO", "as_of": "invalid"}, 422),
@@ -235,3 +242,59 @@ def test_full_ticker_catalog_includes_nested_and_unranked_without_scoring(tmp_pa
     newer = ResultStore(cfg)
     assert newer.asof == "2026-10-09"
     assert newer.list_tickers() == ["NEW"]
+
+
+@pytest.mark.parametrize("ticker", ["ABR", "AMC"])
+def test_unranked_snapshot_keeps_prices_and_explains_skipped_collection(tmp_path, ticker):
+    root = Path(__file__).resolve().parents[1]
+    snapshot = json.loads((root / "fixtures/snapshot_DEMO.json").read_text(encoding="utf-8"))
+    snapshot["meta"].update(ticker=ticker, as_of="2026-10-08",
+                            flags=["quality_tier_insufficient", "quality_illiquid", "fetch_skipped_early"],
+                            data_status={"prices": "ok", "financials": "missing", "news": "missing"})
+    snapshot["financials"]["annual"] = []
+    snapshot["financials"]["quarterly"] = []
+    snapshot["news"] = []
+    snapshots = tmp_path / "snapshots"
+    snapshots.mkdir()
+    (snapshots / f"{ticker}_2026-10-08.json").write_text(json.dumps(snapshot), encoding="utf-8")
+    cfg = {"snapshots_dir": str(snapshots), "cache_dir": str(tmp_path / "cache"), "asof": "2026-10-08"}
+    store = ResultStore(cfg)
+    client = TestClient(create_app(api_cfg=cfg, store=store))
+    response = client.post("/api/analyze", json={"ticker": ticker})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ticker"] == ticker
+    assert body["current_price"] is not None and body["price_history"]
+    assert body["score"] is None and body["target_price"] is None
+    assert all(value is None for value in body["scores"].values())
+    assert body["quality_gate"]["scored"] is False
+    assert body["data_availability"]["collection_incomplete"] is True
+    assert body["data_availability"]["price_sessions"] > 0
+    assert body["data_availability"]["annual_reports"] == 0
+    assert body["data_availability"]["quarterly_reports"] == 0
+    assert body["data_availability"]["news_articles"] == 0
+    catalog = client.get("/api/tickers").json()["items"][0]
+    assert catalog["quality_tier"] == "insufficient"
+    assert catalog["quality_reasons"] == ["illiquid"]
+    assert catalog["collection_incomplete"] is True
+
+
+def test_analyze_ignores_invalid_latest_closes_and_preserves_snapshot_company():
+    from types import SimpleNamespace
+
+    snapshot = {"company": {"name": "Company ABR", "exchange": "HSX"}, "prices": {"rows": [
+        {"date": "2026-10-05", "close": 10000},
+        {"date": "2026-10-06", "close": 10350},
+        {"date": "2026-10-07", "close": None},
+        {"date": "2026-10-08", "close": float("nan")},
+        {"date": "2026-10-08", "close": True},
+        {"date": "2026-10-09", "close": 999999},
+    ]}}
+    store = SimpleNamespace(asof="2026-10-08", get_bundle=lambda *a, **kw: {"company": {"name": None}},
+                            load_snapshot=lambda ticker: snapshot)
+    body = analyze_snapshot(store, "ABR", "long_term")
+    assert body["company"]["name"] == "Company ABR"
+    assert body["current_price"] == 10350
+    assert body["price_date"] == "2026-10-06"
+    assert body["price_change"] == 350
+    assert body["data_availability"]["price_sessions"] == 2

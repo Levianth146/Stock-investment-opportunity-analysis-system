@@ -33,7 +33,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
             {/* Blue curve */}
             <path d="M30 65 C45 82, 65 82, 80 65 C68 72, 45 74, 30 65 Z" fill="#0066B3" />
             {/* FPT Text */}
-            <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fill="#0066B3" fontWeight="900" fontSize="26" fontFamily="sans-serif">
+            <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fill="#0066B3" fontWeight="900" fontSize="28" fontFamily="sans-serif">
               FPT
             </text>
           </svg>
@@ -47,7 +47,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
             <rect width="100" height="100" rx="18" fill="#003399" />
             <path d="M20 70 L38 28 L50 28 L35 70 Z" fill="#FFFFFF" />
             <path d="M48 70 L65 35 L70 35 L58 70 Z" fill="#FBBF24" />
-            <text x="50" y="86" textAnchor="middle" fill="#FFFFFF" fontWeight="800" fontSize="16" letterSpacing="1">
+            <text x="50" y="86" textAnchor="middle" fill="#FFFFFF" fontWeight="900" fontSize="18" letterSpacing="1">
               VNM
             </text>
           </svg>
@@ -62,7 +62,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
             {/* Hòa Phát 3 Blue Steel geometric chevrons */}
             <polygon points="50,20 78,70 65,70 50,42 35,70 22,70" fill="#FFFFFF" />
             <polygon points="50,42 62,64 38,64" fill="#38BDF8" />
-            <text x="50" y="88" textAnchor="middle" fill="#FFFFFF" fontWeight="800" fontSize="14">
+            <text x="50" y="88" textAnchor="middle" fill="#FFFFFF" fontWeight="900" fontSize="16">
               HÒA PHÁT
             </text>
           </svg>
@@ -102,7 +102,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
             <rect width="100" height="100" rx="18" fill="#FFFFFF" />
             <path d="M25 35 C25 25, 45 25, 50 35 C55 45, 75 45, 75 35" fill="none" stroke="#DC2626" strokeWidth="9" strokeLinecap="round" />
             <path d="M25 65 C25 55, 45 55, 50 65 C55 75, 75 75, 75 65" fill="none" stroke="#1E40AF" strokeWidth="9" strokeLinecap="round" />
-            <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fill="#1E3A8A" fontWeight="900" fontSize="18">
+            <text x="50" y="55" textAnchor="middle" dominantBaseline="middle" fill="#1E3A8A" fontWeight="900" fontSize="20">
               SSI
             </text>
           </svg>
@@ -140,7 +140,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
             <rect width="100" height="100" rx="18" fill="#FFFFFF" />
             <circle cx="50" cy="50" r="32" fill="none" stroke="#0284C7" strokeWidth="6" strokeDasharray="6,4" />
             <circle cx="50" cy="50" r="14" fill="#0EA5E9" />
-            <text x="50" y="88" textAnchor="middle" fill="#0369A1" fontWeight="800" fontSize="16">
+            <text x="50" y="88" textAnchor="middle" fill="#0369A1" fontWeight="900" fontSize="18">
               DGC
             </text>
           </svg>
@@ -154,7 +154,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
             <rect width="100" height="100" rx="18" fill="#002D72" />
             {/* MB Red & White Star elements */}
             <polygon points="50,22 57,40 76,40 60,52 66,70 50,58 34,70 40,52 24,40 43,40" fill="#EF4444" />
-            <text x="50" y="88" textAnchor="middle" fill="#FFFFFF" fontWeight="900" fontSize="18">
+            <text x="50" y="88" textAnchor="middle" fill="#FFFFFF" fontWeight="900" fontSize="20">
               MB
             </text>
           </svg>

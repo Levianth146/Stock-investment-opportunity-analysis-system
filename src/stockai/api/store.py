@@ -19,6 +19,8 @@ from stockai.m5_sentiment.run import run as run_m5
 from stockai.m6_risk.run import run as run_m6
 from stockai.m7_scoring.run import run as run_m7
 from stockai.m8_validate.run import run as run_m8
+from stockai.api.news_data import news_archive
+from stockai.api.opportunity_data import recent_closes
 
 _SYMBOL_RE = re.compile(r"^[A-Z0-9]{1,6}$")
 DISCLAIMER = (
@@ -155,10 +157,9 @@ def _file_digest(path: Path) -> str:
 
 def config_fingerprint(root: Path | None = None) -> str:
     root = root or repo_root()
-    parts = [
-        _file_digest(root / "config" / "scoring.yaml"),
-        _file_digest(root / "config" / "valuation.yaml"),
-    ]
+    parts = [_file_digest(root / "config" / f"{name}.yaml")
+             for name in ("scoring", "data_sources", "llm", "valuation", "technical", "sentiment")]
+    parts.append(_file_digest(root / "data" / "valuation_sector_stats.json"))
     return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
 
 
@@ -247,6 +248,8 @@ class ResultStore:
         if self._ticker_catalog is not None:
             return self._ticker_catalog
         from math import isfinite
+        from stockai.contracts.helpers import quality_reasons, quality_tier
+        from stockai.api.profiles import company_profile as profile_record
 
         def finite(value):
             return value if isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value) else None
@@ -259,6 +262,7 @@ class ResultStore:
                 items.append({"symbol": ticker, "name": ticker, "snapshot_status": "error"})
                 continue
             company = snapshot.get("company") or {}
+            cached_company = profile_record(self.root, ticker).get("profile") or {}
             prices = sorted((row for row in (snapshot.get("prices") or {}).get("rows", [])
                              if row.get("date", "") <= self.asof and finite(row.get("close")) is not None),
                             key=lambda row: row.get("date", ""))
@@ -267,9 +271,12 @@ class ResultStore:
             previous = finite(prices[-2].get("close")) if len(prices) > 1 else None
             change = close - previous if close is not None and previous is not None else None
             items.append({
-                "symbol": ticker, "name": company.get("name") or ticker,
+                "symbol": ticker, "name": cached_company.get("name") or company.get("name") or ticker,
                 "exchange": company.get("exchange"), "sector": company.get("sector"),
                 "snapshot_status": "ok", "data_status": (snapshot.get("meta") or {}).get("data_status") or {},
+                "quality_tier": quality_tier(snapshot),
+                "quality_reasons": quality_reasons(snapshot),
+                "collection_incomplete": "fetch_skipped_early" in ((snapshot.get("meta") or {}).get("flags") or []),
                 "price_date": latest.get("date"), "current_price": close,
                 "price_change": change,
                 "price_change_percent": round(change / previous * 100, 2) if change is not None and previous and previous > 0 else None,
@@ -405,9 +412,7 @@ class ResultStore:
             price = pc.get("value")
         elif isinstance(pc, (int, float)):
             price = float(pc)
-        target = m7.get("target") if isinstance(m7.get("target"), dict) else None
-        if target is None and isinstance(m4.get("target"), dict):
-            target = m4.get("target")
+        target = m7.get("target") if scored and isinstance(m7.get("target"), dict) else None
         ref = target.get("base") if isinstance(target, dict) else None
         upside = None
         if isinstance(price, (int, float)) and isinstance(ref, (int, float)) and price != 0:
@@ -573,6 +578,7 @@ class ResultStore:
                     from stockai.api.checks import evaluate_all_checks
 
                     snap = self.load_snapshot(ticker)
+                    row["price_trend"] = recent_closes(snap, self.asof)
                     ch = evaluate_all_checks(
                         snapshot=snap,
                         bundle=bundle,
@@ -1058,34 +1064,12 @@ class ResultStore:
                     "link": src_n.get("url"),
                 }
             )
+        archive = news_archive(snap, self.asof, symbol)
         classified = {it["id"] for it in items}
-        raw: list[dict[str, Any]] = []
-        for n in snap.get("news") or []:
-            if not isinstance(n, dict) or not n.get("id") or str(n["id"]) in classified:
-                continue
-            url = n.get("url")
-            label = "chưa phân loại"
-            try:
-                from stockai.m5_sentiment.run import classify_title
-
-                pol, _m, _meta = classify_title(
-                    str(n.get("title") or ""), symbol, source=str(n.get("source") or "")
-                )
-                label = "tích cực" if pol >= 0.1 else ("tiêu cực" if pol <= -0.1 else "trung tính")
-            except Exception:  # noqa: BLE001
-                pass
-            raw.append(
-                {
-                    "id": str(n["id"]),
-                    "title": n.get("title"),
-                    "label": label,
-                    "source": n.get("source"),
-                    "url": url if isinstance(url, str) and url.startswith("http") else None,
-                    "published_at": n.get("published_at"),
-                }
-            )
-        raw.sort(key=lambda x: str(x.get("published_at") or ""), reverse=True)
-        dates = [str(n.get("published_at") or "")[:10] for n in (snap.get("news") or []) if isinstance(n, dict)]
+        raw = [dict(article, label="tích cực" if article["polarity"] >= 0.1
+                    else "tiêu cực" if article["polarity"] <= -0.1 else "trung tính")
+               for article in archive if article["id"] not in classified]
+        dates = [article["date"] for article in archive]
         return {
             "asof": self.asof,
             "disclaimer": DISCLAIMER,
@@ -1093,7 +1077,10 @@ class ResultStore:
             "items": items,
             "other_items": raw[:30],
             "latest_news_date": max(dates) if dates and max(dates) else None,
-            "total_news": len(snap.get("news") or []),
+            "total_news": len(archive),
+            "articles": archive,
+            "classification_method": "headline_lexicon",
+            "scope": "ticker_snapshot_archive",
         }
 
 
