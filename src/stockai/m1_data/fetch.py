@@ -493,6 +493,8 @@ def build_snapshot(ticker: str, as_of: str, cfg: dict) -> dict:
         snap["financials"], ss = r; snap["sources"].extend(ss)
         a = len(snap["financials"]["annual"])
         status["financials"] = "ok" if a >= 5 else ("partial" if a else "missing")
+        if a < 5:
+            _flag(cfg, f"financials_annual_history_short:{a}/5")
     if snap["financials"]["annual"]:
         step("vnf", lambda: vnf_source.apply(snap, cfg))               # đối chiếu/bổ sung/kéo dài lịch sử từ vnfinancialdata (tùy chọn)
         # VNF (và mọi bước trước tin) phải giữ cùng list với cfg["_flags"]; gắn lại phòng gán nhầm list mới

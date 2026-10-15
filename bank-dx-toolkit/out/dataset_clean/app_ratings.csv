@@ -1,0 +1,11 @@
+﻿date,bank,store,app_id,title,rating,rating_count,version,note
+2026-10-08,agribank,apple,1547213840,Agribank Retail eBanking,4.44102,195,4.2.2,averageUserRating = trung bình mọi phiên bản
+2026-10-08,agribank,play,vn.com.agribank.ebanking.ru,Agribank Retail eBanking,3.52,447,4.2.4,installs=100.000+
+2026-10-08,mb,apple,1205807363,MB Bank,4.73236,2098997,28.5.99,averageUserRating = trung bình mọi phiên bản
+2026-10-08,mb,play,com.mbmobile,MB Bank,4.771805,1069566,6.5.23,installs=10.000.000+
+2026-10-08,tcb,apple,1548623362,Techcombank Mobile,4.77395,946125,4.0.29,averageUserRating = trung bình mọi phiên bản
+2026-10-08,tcb,play,vn.com.techcombank.bb.app,Techcombank Mobile,4.7334743,623437,4.0.29 (20),installs=10.000.000+
+2026-10-08,bidv,apple,1061867449,BIDV SmartBanking,3.84385,60660,5.3.14,averageUserRating = trung bình mọi phiên bản
+2026-10-08,bidv,play,com.vnpay.bidv,BIDV SmartBanking,4.0223885,140062,5.3.12,installs=10.000.000+
+2026-10-08,vcb,apple,561433133,VCB Digibank,3.43747,64550,6.5.8,averageUserRating = trung bình mọi phiên bản
+2026-10-08,vcb,play,com.VCB,VCB Digibank,3.9479814,187422,6.5.8,installs=10.000.000+

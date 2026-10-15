@@ -1,5 +1,7 @@
 # Stock Investment Opportunity Analysis System
 
+Backend FastAPI + frontend: xem [hướng dẫn chạy và kết nối](docs/FASTAPI_FRONTEND.md). Chạy `python scripts/run_api.py`, sau đó mở http://127.0.0.1:8000/ (giao diện) hoặc http://127.0.0.1:8000/docs (Swagger).
+
 Hệ thống phân tích cơ hội đầu tư cổ phiếu: nhập **mã + hồ sơ nhà đầu tư** (`long_term` / `swing`), tự thu thập dữ liệu, chấm điểm, ra khuyến nghị 5 mức và xuất **báo cáo PDF**.
 
 ```

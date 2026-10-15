@@ -186,6 +186,7 @@ class ResultStore:
         self.default_profile = str(self.api_cfg.get("default_profile") or "long_term")
         self._cfg_fp = config_fingerprint(self.root)
         self._ticker_index: dict[str, Path] | None = None
+        self._ticker_catalog: list[dict[str, Any]] | None = None
         self._ranking_mem: dict[str, list[dict[str, Any]]] = {}
         self._scored_tickers: list[str] | None = None
         self._asof = asof if asof and asof != "auto" else None
@@ -208,14 +209,15 @@ class ResultStore:
         dates: list[str] = []
         if not self.snapshots_dir.is_dir():
             return datetime.utcnow().strftime("%Y-%m-%d")
-        for p in self.snapshots_dir.glob("*_????-??-??.json"):
+        for p in self.snapshots_dir.rglob("*_????-??-??.json"):
             if p.name.startswith("_"):
                 continue
             stem = p.stem
             if "_" not in stem:
                 continue
             d = stem.rsplit("_", 1)[-1]
-            if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d):
+            ticker = stem.rsplit("_", 1)[0]
+            if is_valid_symbol(ticker) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", d):
                 dates.append(d)
         return max(dates) if dates else datetime.utcnow().strftime("%Y-%m-%d")
 
@@ -225,17 +227,56 @@ class ResultStore:
         idx: dict[str, Path] = {}
         asof = self.asof
         if self.snapshots_dir.is_dir():
-            for p in self.snapshots_dir.glob(f"*_{asof}.json"):
+            # Prefer files nearest the configured root when a ticker is duplicated.
+            paths = sorted(self.snapshots_dir.rglob(f"*_{asof}.json"),
+                           key=lambda p: (len(p.relative_to(self.snapshots_dir).parts), p.as_posix()))
+            for p in paths:
                 if p.name.startswith("_"):
                     continue
                 ticker = p.name[: -(len(asof) + 6)]  # strip _YYYY-MM-DD.json
                 if is_valid_symbol(ticker):
-                    idx[ticker] = p
+                    idx.setdefault(ticker, p)
         self._ticker_index = idx
         return idx
 
     def list_tickers(self) -> list[str]:
         return sorted(self._build_index().keys())
+
+    def ticker_catalog(self) -> list[dict[str, Any]]:
+        """All snapshot tickers, without running scoring or filtering out unranked stocks."""
+        if self._ticker_catalog is not None:
+            return self._ticker_catalog
+        from math import isfinite
+
+        def finite(value):
+            return value if isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value) else None
+
+        items = []
+        for ticker in self.list_tickers():
+            try:
+                snapshot = self.load_snapshot(ticker)
+            except (OSError, ValueError):
+                items.append({"symbol": ticker, "name": ticker, "snapshot_status": "error"})
+                continue
+            company = snapshot.get("company") or {}
+            prices = sorted((row for row in (snapshot.get("prices") or {}).get("rows", [])
+                             if row.get("date", "") <= self.asof and finite(row.get("close")) is not None),
+                            key=lambda row: row.get("date", ""))
+            latest = prices[-1] if prices else {}
+            close = finite(latest.get("close"))
+            previous = finite(prices[-2].get("close")) if len(prices) > 1 else None
+            change = close - previous if close is not None and previous is not None else None
+            items.append({
+                "symbol": ticker, "name": company.get("name") or ticker,
+                "exchange": company.get("exchange"), "sector": company.get("sector"),
+                "snapshot_status": "ok", "data_status": (snapshot.get("meta") or {}).get("data_status") or {},
+                "price_date": latest.get("date"), "current_price": close,
+                "price_change": change,
+                "price_change_percent": round(change / previous * 100, 2) if change is not None and previous and previous > 0 else None,
+                "volume": finite(latest.get("volume")),
+            })
+        self._ticker_catalog = items
+        return items
 
     def list_scored_tickers(self) -> list[str]:
         """Mã không insufficient (quality_gate scored). Cache sau lần quét đầu."""
