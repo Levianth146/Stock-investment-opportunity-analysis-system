@@ -235,14 +235,15 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
                 use_cache=(attempt == 0),  # chỉ cache hit ở lần đầu
             )
             meta = raw.pop("_meta", {}) if isinstance(raw, dict) else {}
+            attempt_cost = 0.0
             if isinstance(meta, dict):
                 flags.extend(meta.get("flags") or [])
                 if meta.get("cache_hit"):
                     flags.append("debate_cache_hit")
                 try:
-                    cost_usd += float(meta.get("cost_usd") or 0.0)
+                    attempt_cost = float(meta.get("cost_usd") or 0.0)
                 except (TypeError, ValueError):
-                    pass
+                    attempt_cost = 0.0
                 # Model/provider thật từ provider (không lấy model đầu config)
                 if meta.get("provider"):
                     cfg["_debate_provider"] = str(meta.get("provider"))
@@ -252,6 +253,9 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
                     cfg["_debate_usage"] = meta.get("usage")
                 if meta.get("cost_usd") is not None:
                     cfg["_debate_cost_usd_last"] = meta.get("cost_usd")
+                tried = meta.get("models_tried")
+                if isinstance(tried, list):
+                    cfg["_debate_models_tried"] = tried
             bull = raw.get("bull") if isinstance(raw, dict) else None
             bear = raw.get("bear") if isinstance(raw, dict) else None
             errs = validate_debate_sides(
@@ -282,6 +286,8 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
                 if not errs:
                     flags.append("debate_repaired_drop_bad_items")
             if not errs:
+                # Chỉ cộng budget/cost khi kết quả LLM được dùng
+                cost_usd += attempt_cost
                 flags.append("m7_debate_llm_used")
                 if cost_usd > 0:
                     flags.append(f"debate_cost_usd:{cost_usd:.6f}")
@@ -298,12 +304,15 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
             extra = getattr(e, "flags", None)
             if isinstance(extra, list):
                 flags.extend(extra)
+            tried_exc = getattr(e, "models_tried", None)
+            if isinstance(tried_exc, list):
+                cfg["_debate_models_tried"] = tried_exc
             # Hết mọi provider/model → không đốt thêm attempts validation
             # KHÔNG break sớm chỉ vì http_5xx (generate_json đã retry nội bộ)
             if "all_providers_failed" in feedback or "missing" in feedback.lower():
                 break
 
-    # Template fallback — ghi rõ lý do cuối
+    # Template fallback — ghi rõ lý do cuối; không tính cost LLM (kết quả không dùng)
     if feedback:
         flags.append(f"debate_fallback_reason:{feedback[:120]}")
     bull_t, bear_t, tflags = build_template_debate(payload, cfg=cfg_for_payload)
@@ -313,5 +322,5 @@ def run_debate(snapshot: dict, upstream: dict, cfg: dict) -> tuple[list[dict], l
         if f not in uniq:
             uniq.append(f)
     _merge_flags(cfg, uniq)
-    cfg["_debate_cost_usd"] = cost_usd
+    cfg["_debate_cost_usd"] = 0.0
     return bull_t, bear_t
