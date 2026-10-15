@@ -5,15 +5,16 @@
   "as_of": "2026-10-08",
   "window_start": "2021-10-09",
   "synthetic": false,
-  "fetched_at": "2026-10-11T01:04:13",
+  "fetched_at": "2026-10-15T17:59:33",
   "flags": [
    "prices_scaled_x1000_to_VND",
    "fin_annual_unmatched:gross_profit,depreciation,current_assets,current_liabilities,inventory,short_term_debt,long_term_debt,cff",
    "fin_quarterly_unmatched:gross_profit,depreciation,current_assets,current_liabilities,inventory,short_term_debt,long_term_debt,cff",
    "vnf_crosscheck_ok:2025",
-   "vnf_filled:dividends_paid,net_interest_income",
+   "vnf_filled:net_interest_income",
    "news_urls_partly_google_redirect",
-   "universe_membership_current_not_point_in_time",
+   "deep_fetch",
+   "peers_finance_nonfinance_blocked",
    "quality_tier_full"
   ],
   "data_status": {
@@ -21,7 +22,7 @@
    "index": "ok",
    "financials": "ok",
    "company": "ok",
-   "peers": "ok",
+   "peers": "missing",
    "news": "ok"
   }
  },
@@ -14944,8 +14945,8 @@
      "cfo": 1546431000000.0,
      "cfi": -107290000000.0,
      "capex": 192016000000.0,
-     "net_interest_income": 1891741000000.0,
-     "dividends_paid": 828000000.0
+     "dividends_paid": 828000000.0,
+     "net_interest_income": 1891741000000.0
     }
    },
    {
@@ -14967,8 +14968,8 @@
      "cfo": -5002589000000.0,
      "cfi": -865251000000.0,
      "capex": 4942000000.0,
-     "net_interest_income": 1444335000000.0,
-     "dividends_paid": 1740000000.0
+     "dividends_paid": 1740000000.0,
+     "net_interest_income": 1444335000000.0
     }
    },
    {
@@ -14990,8 +14991,8 @@
      "cfo": -3222465000000.0,
      "cfi": -459571000000.0,
      "capex": 9855000000.0,
-     "net_interest_income": 709025000000.0,
-     "dividends_paid": 2302000000.0
+     "dividends_paid": 2302000000.0,
+     "net_interest_income": 709025000000.0
     }
    },
    {
@@ -15013,8 +15014,8 @@
      "cfo": 4940338000000.0,
      "cfi": 632195000000.0,
      "capex": 6677000000.0,
-     "net_interest_income": 919202000000.0,
-     "dividends_paid": 1653000000.0
+     "dividends_paid": 1653000000.0,
+     "net_interest_income": 919202000000.0
     }
    },
    {
@@ -15036,8 +15037,8 @@
      "cfo": -2097476000000.0,
      "cfi": -556691000000.0,
      "capex": 23653000000.0,
-     "net_interest_income": 786127000000.0,
-     "dividends_paid": 1952000000.0
+     "dividends_paid": 1952000000.0,
+     "net_interest_income": 786127000000.0
     }
    },
    {
@@ -15059,8 +15060,8 @@
      "cfo": 6027177000000.0,
      "cfi": 32172000000.0,
      "capex": 5557000000.0,
-     "net_interest_income": 713211000000.0,
-     "dividends_paid": 1335000000.0
+     "dividends_paid": 1335000000.0,
+     "net_interest_income": 713211000000.0
     }
    },
    {
@@ -15150,7 +15151,8 @@
      "cash": 9846249000000.0,
      "cfo": -1542042000000.0,
      "cfi": -25178000000.0,
-     "capex": 746000000.0
+     "capex": 746000000.0,
+     "dividends_paid": 267000000.0
     }
    },
    {
@@ -15171,7 +15173,8 @@
      "cash": 6831611000000.0,
      "cfo": 3016237000000.0,
      "cfi": -1478000000.0,
-     "capex": 1928000000.0
+     "capex": 1928000000.0,
+     "dividends_paid": 121000000.0
     }
    },
    {
@@ -15192,7 +15195,8 @@
      "cash": 10181501000000.0,
      "cfo": -3350906000000.0,
      "cfi": -11765000000.0,
-     "capex": 4839000000.0
+     "capex": 4839000000.0,
+     "dividends_paid": 198000000.0
     }
    },
    {
@@ -15213,7 +15217,8 @@
      "cash": 10588290000000.0,
      "cfo": -234027000000.0,
      "cfi": -159624000000.0,
-     "capex": 182386000000.0
+     "capex": 182386000000.0,
+     "dividends_paid": 159000000.0
     }
    },
    {
@@ -15234,7 +15239,8 @@
      "cash": 2195364000000.0,
      "cfo": 2934998000000.0,
      "cfi": 65101000000.0,
-     "capex": 2463000000.0
+     "capex": 2463000000.0,
+     "dividends_paid": 471000000.0
     }
    },
    {
@@ -15255,7 +15261,8 @@
      "cash": 0.0,
      "cfo": 2196366000000.0,
      "cfi": -1002000000.0,
-     "capex": 2328000000.0
+     "capex": 2328000000.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15276,7 +15283,8 @@
      "cash": 6625201000000.0,
      "cfo": -1240238000000.0,
      "cfi": 8478000000.0,
-     "capex": 2398000000.0
+     "capex": 2398000000.0,
+     "dividends_paid": 342000000.0
     }
    },
    {
@@ -15297,7 +15305,8 @@
      "cash": 6681968000000.0,
      "cfo": -63836000000.0,
      "cfi": 383000000.0,
-     "capex": 542000000.0
+     "capex": 542000000.0,
+     "dividends_paid": 597000000.0
     }
    }
   ],
@@ -15315,7 +15324,8 @@
     "cash": "Cash and cash equivalents at the beginning of period",
     "cfo": "Net cash from operating activities",
     "cfi": "Net cash from investing activities",
-    "capex": "Purchases of fixed assets and other long term assets"
+    "capex": "Purchases of fixed assets and other long term assets",
+    "dividends_paid": "Dividends paid"
    },
    "quarterly": {
     "revenue": "Total Operating Income",
@@ -15330,133 +15340,13 @@
     "cash": "Cash and cash equivalents at the beginning of period",
     "cfo": "Net cash from operating activities",
     "cfi": "Net cash from investing activities",
-    "capex": "Purchases of fixed assets and other long term assets"
+    "capex": "Purchases of fixed assets and other long term assets",
+    "dividends_paid": "Dividends paid"
    }
   },
   "published_at_note": "ngày công bố được ước lượng (quý +45 ngày, năm +90 ngày) vì nguồn không cung cấp"
  },
- "peers": [
-  {
-   "ticker": "ORS",
-   "pe": 70.0285,
-   "pb": 1.0864,
-   "roe": 0.0155,
-   "market_cap": 8298281023200.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "DSE",
-   "pe": 33.942,
-   "pb": 2.15,
-   "roe": 0.0633,
-   "market_cap": 9250195809600.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "SHS",
-   "pe": 7.768,
-   "pb": 0.8279,
-   "roe": 0.1066,
-   "market_cap": 10433761752000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "FTS",
-   "pe": 16.9076,
-   "pb": 1.5177,
-   "roe": 0.0898,
-   "market_cap": 6708165200000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "BSI",
-   "pe": 13.2855,
-   "pb": 1.1865,
-   "roe": 0.0893,
-   "market_cap": 6558607640700.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "CTS",
-   "pe": 9.2655,
-   "pb": 1.8735,
-   "roe": 0.2022,
-   "market_cap": 5349613051350.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "MBS",
-   "pe": 13.0113,
-   "pb": 1.8405,
-   "roe": 0.1415,
-   "market_cap": 14714162729700.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VND",
-   "pe": 9.8622,
-   "pb": 0.954,
-   "roe": 0.0967,
-   "market_cap": 19942128794800.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VCI",
-   "pe": 15.9274,
-   "pb": 1.1868,
-   "roe": 0.0745,
-   "market_cap": 21373902208750.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "TVS",
-   "pe": 11.4031,
-   "pb": 1.1111,
-   "roe": 0.0974,
-   "market_cap": 3265990417950.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "HCM",
-   "pe": 21.6413,
-   "pb": 1.7539,
-   "roe": 0.081,
-   "market_cap": 25506811300400.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VIX",
-   "pe": 5.3738,
-   "pb": 1.3551,
-   "roe": 0.2522,
-   "market_cap": 29072510422900.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VDS",
-   "pe": 8.9153,
-   "pb": 0.8145,
-   "roe": 0.0914,
-   "market_cap": 2524160000000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "AGR",
-   "pe": 17.0727,
-   "pb": 0.9433,
-   "roe": 0.0553,
-   "market_cap": 2422388442030.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "BVS",
-   "pe": 8.1719,
-   "pb": 0.6906,
-   "roe": 0.0845,
-   "market_cap": 1834741999800.0,
-   "source_id": "src_universe_calc"
-  }
- ],
+ "peers": [],
  "news": [
   {
    "id": "n008057a402",
@@ -15467,20 +15357,20 @@
    "summary": "EVF: 18 năm tuổi và hành trình kiến tạo bước đệm nhảy vọt, định hình tương lai &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
-   "id": "n57bade16fa",
+   "id": "nabdc3d4995",
    "title": "Tài chính Điện lực (EVF) lên kế hoạch huy động 300 triệu USD trái phiếu quốc tế tại Singapore",
-   "url": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNUi1SUlRfdzlwTGtqYkNBNUZRZW8tcTlEZi1mRHZmYUxMclFvcnRKWmVwSHBHbFNUR0gxaDRIVDItWWhqYmdkZTZkbTlTS3pfaEJlWTRWNUI5RU9qWDlxQ2w0ZzRVaUhkbWNlRGV5NzNnSnJLb2pJRkFTRTZ0Rm5wbm9fRVByUVF3OXJyeVY4UGNXWVZOU0R0UlpHNmZqOF9hUnNtTlFPcTNBYTg2SnM2OWJmNlY0bnU1V1ViOW5ubEdtYmpOODZqdg?oc=5",
-   "source": "Báo Pháp Luật Việt Nam (qua Google News)",
-   "published_at": "2026-10-08T10:48:00",
-   "summary": "Tài chính Điện lực (EVF) lên kế hoạch huy động 300 triệu USD trái phiếu quốc tế tại Singapore &nbsp;&nbsp; Báo Pháp Luật Việt Nam"
+   "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNZUpMd2d2TmppSlZ4RlU5dlRscHJ2T1NSbWlxM2hQcERjdE5qWTgxTU9oZFE4el9JWk8yMENSWFJkUzg5OFQ2ckVvem9SbW16OHVsWlBUWGdFTW1OX29ybVdlbk5xVkxNbjhYcEs4eDJsSlpuTEMzTmJFMXlLa2FleUFOY3BQUUFQbm82TWZ4b2o3WWt5UFFFWWRVTVdveG1TLURMLUpuYTJ0MnV0UG5XMXNzWjc?oc=5",
+   "source": "Vietnam.vn (qua Google News)",
+   "published_at": "2026-10-08T11:48:48",
+   "summary": "Tài chính Điện lực (EVF) lên kế hoạch huy động 300 triệu USD trái phiếu quốc tế tại Singapore &nbsp;&nbsp; Vietnam.vn"
   },
   {
-   "id": "nd7fae10aed",
-   "title": "Dư nợ trái phiếu EVF đạt 11.000 tỷ đồng sau phát hành",
-   "url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxQN25oLTZ5c3ItelNBUEhKNFdobUF2dHBlUmNmRURDemdWUllxcnUzNXg2QzFkWkMxZmdFTFZ6S1VQdy1YV3VlU1hnd1ZjaE5JSDVzV1Zic2dJTjhadnFnSzNmTmZhOTB0VE9Da3JnNUxRUktwbmFhR0ZNTUZPakZRU2U2ZlY1VFgwQjlVRVlxbGtjcVJoVG9RSDNkX2FXbVppV1F3?oc=5",
-   "source": "VnBusiness (qua Google News)",
-   "published_at": "2026-10-08T10:44:54",
-   "summary": "Dư nợ trái phiếu EVF đạt 11.000 tỷ đồng sau phát hành &nbsp;&nbsp; VnBusiness"
+   "id": "nb24c0f7668",
+   "title": "EVF sắp huy động 300 triệu USD từ trái phiếu quốc tế",
+   "url": "https://news.google.com/rss/articles/CBMigAFBVV95cUxPNEItbW1Xd1FpbUZRZTlnR1IyZ1YzTDd6VzZ4elpWZzkxbUVzTmQtQWdKeEtpN0FSbE1ESndIdjlmcE9FYV9MRlRZZWRYRFZJRnFreDE5YVA0bHNCT0FDRm5YRXUtOFV6U2ZBYzdqbEJ1dFphOTlMWS1DYmt4T2c5Ng?oc=5",
+   "source": "Vietnam.vn (qua Google News)",
+   "published_at": "2026-10-07T19:19:18",
+   "summary": "EVF sắp huy động 300 triệu USD từ trái phiếu quốc tế &nbsp;&nbsp; Vietnam.vn"
   },
   {
    "id": "n5ea9b6af4e",
@@ -15491,14 +15381,6 @@
    "summary": "EVF lên phương án phát hành trái phiếu quốc tế trị giá 300 triệu USD &nbsp;&nbsp; Thuonghieucongluan.com.vn"
   },
   {
-   "id": "n222e514039",
-   "title": "EVF sắp huy động 300 triệu USD từ trái phiếu quốc tế",
-   "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxPeXpLdFpHRUlVUlF4bjBZMm5FSXhuNHBtZ3c1SjU1cnhXWXhKdVNCblpaMm5oa2tQd2laTE93cVg0VUk5eEpORkZNQy1wWkZ4NmJQSGE5NnRUenB3dmc1UE8tUWZvbTI3ek5sc0lKLXpLQklYZmlzQ1BIYUd1TXZibjRyVlFZQUR5cXgtdXhvNk9TWjRsamRFNXNuU2FEVXdWbGxnOQ?oc=5",
-   "source": "Người Đưa Tin (qua Google News)",
-   "published_at": "2026-10-07T16:28:00",
-   "summary": "EVF sắp huy động 300 triệu USD từ trái phiếu quốc tế &nbsp;&nbsp; Người Đưa Tin"
-  },
-  {
    "id": "n12183341",
    "title": "EVF dự kiến huy động 300 triệu USD trái phiếu quốc tế",
    "url": "n/a",
@@ -15507,12 +15389,12 @@
    "summary": null
   },
   {
-   "id": "n28056f3175",
+   "id": "nb43102ba56",
    "title": "EVF công bố phương án phát hành tối đa 300 triệu USD trái phiếu quốc tế",
-   "url": "https://news.google.com/rss/articles/CBMisAFBVV95cUxPRnd4R19zdVhSby1uZFlWVXhpTnRYdERlSEwzeWxYZnlDWXJPcHBrbFpjeG5aNmNCQzgwWnRUSlc4UUhqcVhvYkZFUEdadUN3aGRWOWNGejkyUEdrR21GWm14YVR3Skx1Z0ZUT01HWktoUDlpb24xSzcxbVAwZ2dfeW1jMy1BcWJ2Y1F2a0hKdGNFbndQSnVJcnJRM2N1NTRtdjBrNlV3cFRBMkpoMWoyQQ?oc=5",
-   "source": "CafeF (qua Google News)",
-   "published_at": "2026-10-06T19:30:00",
-   "summary": "EVF công bố phương án phát hành tối đa 300 triệu USD trái phiếu quốc tế &nbsp;&nbsp; CafeF"
+   "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPN3dKTTdwV1dYTUpBb25wLXlWb3JLWmlKNGtqdW5UczNpcFpHTWU4dVhkX0JaZW1CLXUwQzQ0dmtVeDlLaUV4aXgyU3I5b0l1VngzandObjNEM2ZIRl8tSkNfV2N3YmVGYUo2U0dFUzhoZjZKYzZLUXIzRkY0eGxacnREa1U4WC1mVk14c1EwUUZMTWZiel9qd0psLWs3ZEJjUXFUcXpPcw?oc=5",
+   "source": "Nhadautu.vn (qua Google News)",
+   "published_at": "2026-10-05T17:38:52",
+   "summary": "EVF công bố phương án phát hành tối đa 300 triệu USD trái phiếu quốc tế &nbsp;&nbsp; Nhadautu.vn"
   },
   {
    "id": "n6420b20e2c",
@@ -15523,19 +15405,11 @@
    "summary": "EVF lên kế hoạch phát hành 300 triệu USD trái phiếu quốc tế &nbsp;&nbsp; 24HMoney"
   },
   {
-   "id": "n98cc88b90e",
-   "title": "EVF lên kế hoạch phát hành 300 triệu USD trái phiếu quốc tế, mở đường tăng trưởng bứt phá tới năm 2028",
-   "url": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxPTUh1a09tUkdXLTNNajBvVDBYcE4zbkdESGRkdFVvY25pZ3I2U0VmSUJJREJtMDNhUVRtWm5zbEZUZGw1RzQzcTEyamtEOTBGeWhWUm95UlBVZnlrZUJaS3hveVV5dDFkUlU5LTZrdzEtZ0Zqcnk2bFI1U3p1V0YyNGU2c1dwWjd5d3ZpX1h0aXJnZXMta2FvbDBZeVV0dlhUVjRtMWp1X2Z6akFvVTZ1MGNIbURpWkhzeUJrVzhRdEVxNkJxQzlxZENDaXI1aGJjZFM4?oc=5",
-   "source": "nguoiquansat.vn (qua Google News)",
-   "published_at": "2026-10-05T08:06:01",
-   "summary": "EVF lên kế hoạch phát hành 300 triệu USD trái phiếu quốc tế, mở đường tăng trưởng bứt phá tới năm 2028 &nbsp;&nbsp; nguoiquansat.vn"
-  },
-  {
    "id": "n735cd5d671",
    "title": "EVF lên kế hoạch huy động tối đa 300 triệu USD trái phiếu quốc tế",
    "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQLWpZQnlxSVVKamkxYTZXcVRZT09QcVZTZmFaeFJzVFo3RENVNXc1MXFOOXhRdVJ1MWphM2UtSzdXbm9MbGhIdnloYi1kLUVocTJjRXgxWkdKWVJFWG1yVDFUV0V1aDFCN0tTMnVhYWNPbHpGZE1TdGlLZ1NEWUtUVDdpblFlbW5YanN0LXhmRDJnYTRLR1RVMDlfU1pDeElY?oc=5",
    "source": "Mekong ASEAN (qua Google News)",
-   "published_at": "2026-10-03T12:03:05",
+   "published_at": "2026-10-03T14:00:00",
    "summary": "EVF lên kế hoạch huy động tối đa 300 triệu USD trái phiếu quốc tế &nbsp;&nbsp; Mekong ASEAN"
   },
   {
@@ -15547,20 +15421,12 @@
    "summary": null
   },
   {
-   "id": "n809f4c3706",
-   "title": "Những lát cắt tài chính của EVF trước thềm tăng vốn",
-   "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxONTducmJDWEdqaU9KUzdpaEM0eFdua2VUMUt5WHVIWXVGVmQ3Zk9LQU41cERuMUxKSnpIWllreVl6NU5lRWNlUTVKWTA2VFhfQ2JiNUNnSHE2OUh1M3d3eHFzSWM1dVdDS294VkhYb3VQY1pySTdfVVBEMkJOQ3JFWTVTcw?oc=5",
-   "source": "MoneyF (qua Google News)",
-   "published_at": "2026-10-01T11:58:44",
-   "summary": "Những lát cắt tài chính của EVF trước thềm tăng vốn &nbsp;&nbsp; MoneyF"
-  },
-  {
    "id": "ncfb8cf9cb8",
    "title": "EVF nhận khoản vay 15 triệu USD từ Finnfund",
    "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxNQmVpMm41YWZxTjgtTVc4NS1abkoxSzFJbFA4V0VOOTBIcFBfYTcwYnIxVk1US1FpWk1TVmZWdV9abmZoeWlnUENWeVRuT09CZ09EZWh0Y1BhWWlzbTNfYUloSUhwcDdRQTc4WnR5QmtKbnNBZldmUzRCQjNjMVRtMnJ3?oc=5",
-   "source": "Nhadautu. (qua Google News)",
-   "published_at": "2026-09-30T15:40:41",
-   "summary": "EVF nhận khoản vay 15 triệu USD từ Finnfund &nbsp;&nbsp; Nhadautu."
+   "source": "Nhadautu.vn (qua Google News)",
+   "published_at": "2026-09-30T14:00:00",
+   "summary": "EVF nhận khoản vay 15 triệu USD từ Finnfund &nbsp;&nbsp; Nhadautu.vn"
   },
   {
    "id": "n69b76d0380",
@@ -15579,20 +15445,20 @@
    "summary": "EVF ký khoản vay cao cấp 15 triệu USD với Finnfund, nâng quy mô các thỏa thuận vốn quốc tế lên 60 triệu USD &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
-   "id": "n278e6b1993",
-   "title": "EVF chuẩn bị nâng vốn điều lệ lên gần 8,500 tỷ",
-   "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNckdaM3ZDNDMzNG91YUFBX0k1RmowS25jaFQzSjlPa0NRcjNsZ3k0M21iWlcwOFgwN2pmTzFobnFnbC1Pb29xRG9Cb0JMb0x1aVE2d1JyMGxEVmlya3VTeEN0VXVqNVluVUpUUnlYbkhGWGh2VG1NNVZNeFU5TlhqS2VPTHM4N2xvSU1tR2ctLVRjVWh5?oc=5",
-   "source": "Vietstock (qua Google News)",
-   "published_at": "2026-09-28T14:00:00",
-   "summary": "EVF chuẩn bị nâng vốn điều lệ lên gần 8,500 tỷ &nbsp;&nbsp; Vietstock"
-  },
-  {
    "id": "n12170329",
    "title": "EVF: Thông báo nhận được công văn của NHNN về việc chấp thuận tăng vốn điều lệ",
    "url": "n/a",
    "source": "vnstock/VCI",
    "published_at": "2026-09-25T17:42:14",
    "summary": null
+  },
+  {
+   "id": "n8909444d7c",
+   "title": "EVF chính thức mở room ngoại, thêm mảnh ghép cho bài toán vốn",
+   "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOd01CRWQ3VXRrRkhQTVA2S2VWSFRmQzhXMU10SFNFak1lZVM2OG1LZ284Q0VwN0Q3MVMyZy0tRWNGdHhtLUl3NDR0VkoxanlUcjk0S0l6YnNhUFN4RHQ3SFVfeU5TNHJic2RROE5KRUtTS0U3ZEYzSXFWdFdjSW1lUGwxUlhQaUpsLUh5T1hMSHFKTVp6dDV1eXpyN1c?oc=5",
+   "source": "nguoiquansat.vn (qua Google News)",
+   "published_at": "2026-09-23T14:00:00",
+   "summary": "EVF chính thức mở room ngoại, thêm mảnh ghép cho bài toán vốn &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
    "id": "n12165389",
@@ -15619,6 +15485,30 @@
    "summary": null
   },
   {
+   "id": "n04e9b4f80f",
+   "title": "EVF huy động 20 triệu USD từ Pháp, Tổng Giám đốc muốn gom thêm 4 triệu cổ phiếu",
+   "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPa3VvU2FEaDhRTzJSc0d3QnJ0VDBPaHptcDlGU3p5RWV5OVRzNFNXYjlHOXZjRjNwU2JOWU5WLW5jenVVcEdmVS1uNmNwZUJHb0ptQ05lNmw5UTNjLWNSMkg4ZDFPNGJmZ0FBYmhPelBSaGxsUl9pUzFqWEpOaVZpdDIxdXg1UGZUNnQtWDVQLV9WZ2VBYUo2NmZ6dWNMTVBMbG9ORXN0WQ?oc=5",
+   "source": "F247.COM (qua Google News)",
+   "published_at": "2026-09-18T14:00:00",
+   "summary": "EVF huy động 20 triệu USD từ Pháp, Tổng Giám đốc muốn gom thêm 4 triệu cổ phiếu &nbsp;&nbsp; F247.COM"
+  },
+  {
+   "id": "n9e30cdd99b",
+   "title": "Tổng giám đốc EVF đăng ký mua 4 triệu cổ phiếu, nâng sở hữu lên 0,961%",
+   "url": "https://news.google.com/rss/articles/CBMie0FVX3lxTE9Dd192M1d1ZWpmNXpqTjlaVnl4alBhU3g1S2p1eVh4NHRTYmNkN2c3ZnJlWkk1RVJsRmR1dkEwRzJ3elgwUVNEeTVLWGNFQVdNWC0taGk1V3BNVmp5TUk3Y25nN0p3ZFlqQkV4SE04aHlpcjlHNVRMdkhvTQ?oc=5",
+   "source": "VnEconomy (qua Google News)",
+   "published_at": "2026-09-17T14:00:00",
+   "summary": "Tổng giám đốc EVF đăng ký mua 4 triệu cổ phiếu, nâng sở hữu lên 0,961% &nbsp;&nbsp; VnEconomy"
+  },
+  {
+   "id": "n14f26f12c5",
+   "title": "Tổng Giám đốc EVF muốn mua 4 triệu cp giữa đà suy giảm thị giá",
+   "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxPQU4tb2RXeFlSb2Q3OVdtcGVlX2lDUnVsbHpKU1EzSTVCTkgtNjZVUVlvZDBfTkF1cVdYYTgtenBOeHhockJVNENjMFhzcGRnQlVWaVRlbm9halQzUEU0UEt6TzlOc1pkenVjRHpXYldCWXhjTERlZjBWR3BNU0J5dGxtbEVoakpoaEVESHc5T2xkZVJzMEFna09mT1FUYXVjUGhPMlNYSGVyTVE?oc=5",
+   "source": "Vietstock (qua Google News)",
+   "published_at": "2026-09-17T14:00:00",
+   "summary": "Tổng Giám đốc EVF muốn mua 4 triệu cp giữa đà suy giảm thị giá &nbsp;&nbsp; Vietstock"
+  },
+  {
    "id": "n226e4be006",
    "title": "EVF giảm 8 phiên liên tiếp, Tổng Giám đốc đăng ký mua 4 triệu cổ phiếu",
    "url": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQQ2JVVGVxWXQwYVBSczlwTy11anJOUl9LQk9teHg4MDlsNUVpQWY4am1zcW4tZXZLQXI0a1NSV3E4NlZ0SEs3c281a3lueWNQbTQ2Uy1BLU5wWGNDRUZaZ1VLR1YwQWZYUDlrekhkMV9pbUtsV192RFVZeDlGWHRVN0hSQnVsS1UzSXJCaDZxanVYZENfRjhObXNwUFVqNGlnM01LSW5lcEVQdDJYMnhzU3pNRnpFOFRNc0Rv?oc=5",
@@ -15643,6 +15533,14 @@
    "summary": null
   },
   {
+   "id": "nb7ece1c8e5",
+   "title": "Tổng Giám đốc Lê Mạnh Linh đăng ký mua 4 triệu cổ phiếu EVF",
+   "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQbFNpcWEtcjhocVVmOGNCWmlUeXdBTy1fbWZtZHYtRmpUd3RGLWZHRmxzcHBTMDJsWWNxZzNEaTZCS2IzSWtBVHU4ZWt2NHBLR0lNdzMxbXZwTlFZMjBiVko5VGRkaUlDa25kaFpLZU9wUXdXUTFDYlk1UXF4YzhmOTlfX1NzdW4xRWdCZXkwc3pZYlRZN2NNOHZiaw?oc=5",
+   "source": "nguoiquansat.vn (qua Google News)",
+   "published_at": "2026-09-16T14:00:00",
+   "summary": "Tổng Giám đốc Lê Mạnh Linh đăng ký mua 4 triệu cổ phiếu EVF &nbsp;&nbsp; nguoiquansat.vn"
+  },
+  {
    "id": "n0435f3d54a",
    "title": "EVF: Tổng giám đốc EVF dự chi hơn 40 tỷ đồng mua cổ phiếu",
    "url": "https://news.google.com/rss/articles/CBMifkFVX3lxTE9VYXl4eHZ5QU9OYjdJejZTZTZPbkFYSWFZZW5EU2szMkxlUDZWZ29WRGhMOEdVUHM5THpORUVTbFk4SjRtMGpsYTJMbXVvSVFCdUpQNFNrSXJiWHNTb09MLTVHNnl0UGJRTHBIMjBfS05JSkVXR19vVEpTMU5yZw?oc=5",
@@ -15651,12 +15549,28 @@
    "summary": "EVF: Tổng giám đốc EVF dự chi hơn 40 tỷ đồng mua cổ phiếu &nbsp;&nbsp; CÔNG TY CỔ PHẦN CHỨNG KHOÁN CV"
   },
   {
+   "id": "n41a225e96e",
+   "title": "EVF về vùng giá thấp nhất 7 tháng, Tổng Giám đốc muốn mua 4 triệu cổ phiếu",
+   "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOZ3g2WHh0TjNLTUFRbmNOQ0JDOG1BSkdDWV8tSGpZTU9WSkRJZnJRY3NnQVBZNEdjWVdlSE1DMlc2aTZPSDJJWjM1MXc4a1lMVjVpdjAyRTlhNXEta2RYRnZjbjI1aWk3VkRxOUtkWXBHby1ESDRIY0tTalNJZmVDRGZLWTZKbUJfX1V2NzJNLU9fZkt3RWVsQUozRnk5RGtpRTN4VFhONmdQTTR5RnJLbDA2RU5jQQ?oc=5",
+   "source": "VietnamBiz (qua Google News)",
+   "published_at": "2026-09-16T14:00:00",
+   "summary": "EVF về vùng giá thấp nhất 7 tháng, Tổng Giám đốc muốn mua 4 triệu cổ phiếu &nbsp;&nbsp; VietnamBiz"
+  },
+  {
    "id": "n12153115",
    "title": "EVF:  Tổng giám đốc đăng ký mua 4 triệu cổ phiếu",
    "url": "n/a",
    "source": "vnstock/VCI",
    "published_at": "2026-09-16T13:45:00",
    "summary": null
+  },
+  {
+   "id": "n7de5e2f219",
+   "title": "EVF huy động 20 triệu USD từ Proparco, thúc đẩy tài chính khí hậu và hỗ trợ doanh nghiệp do phụ nữ làm chủ",
+   "url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxQQmVMejB0MjdTeGp4MFBVNUlNb19SZEtnN1plYVVYY2pHMlpEelRLTEdMeml0QzZjRTF2aW1DWDNPM09LM2VfWHAtSnVfalU3TXEwdno2ZDliaF8wOEJmakNYVTIyaTczZDVlb3hlaEpRVmhkMUNwNl9fRVI5dUFUTEhNWUc3TjhDZVNrWWNkbTdFMnZsMzd3QllDbGNBNGI3ZHc4aTBoQWdFeG9wMHlFWTNoSDVkTWoyczdUUzkxVjVUWm9vUTJZVnl5bl9FOVhXaC0zYzBZLXZLODBYQWJDVy1R?oc=5",
+   "source": "VietnamBiz (qua Google News)",
+   "published_at": "2026-09-11T14:00:00",
+   "summary": "EVF huy động 20 triệu USD từ Proparco, thúc đẩy tài chính khí hậu và hỗ trợ doanh nghiệp do phụ nữ làm chủ &nbsp;&nbsp; VietnamBiz"
   },
   {
    "id": "n8faeb12e69",
@@ -15742,9 +15656,9 @@
    "id": "nc177d817a7",
    "title": "EVF muốn hút gần 1.100 tỷ đồng, đang đàm phán với hơn 5 nhà đầu tư ngoại",
    "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxPbmxTM2haWENTZkxmQjA5a255Qlo0YkU5T3hMU1FfazlmZ2QxY1NtTUU0djZLQUItNTh5WGpyLUh1RWxCOGg0MlUyMTZkTnhhYTU3Y3NKUzhFUDNrZDFsU1VFUFFfR2R2cm5DNHphWU5lN09uUFVtQUtZWVJFVVU1TVZBNTRkdVkwZi1jSlNRbVhGX0dIRDI4bFlhZDBSOHJpMjh4eXhn?oc=5",
-   "source": "Nhadautu. (qua Google News)",
+   "source": "Nhadautu.vn (qua Google News)",
    "published_at": "2026-08-21T14:00:00",
-   "summary": "EVF muốn hút gần 1.100 tỷ đồng, đang đàm phán với hơn 5 nhà đầu tư ngoại &nbsp;&nbsp; Nhadautu."
+   "summary": "EVF muốn hút gần 1.100 tỷ đồng, đang đàm phán với hơn 5 nhà đầu tư ngoại &nbsp;&nbsp; Nhadautu.vn"
   },
   {
    "id": "n70f44a1ca8",
@@ -15763,6 +15677,14 @@
    "summary": "ĐHĐCĐ bất thường EVF thông qua 3 quyết sách lớn, mở dư địa cho giai đoạn tăng trưởng mới &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
+   "id": "n5d6abe9210",
+   "title": "EVF dự kiến tăng vốn lên 8.456 tỷ đồng, đề cử cựu Chủ tịch Eximbank vào HĐQT",
+   "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOaDZMcGdYUjB6cG9TRmxScXJEODNBT0wxcU0yMTlmc2JzM3ZxT0xzbllZNFdMSlJoUXozOVRfaFVyY3VNZlhJYTROMXlaRUpmM0VBdFpOeXNiQzlDbElkZzhQWW5LZGl1dnczSkZ1Tl9iVThxVUZDNWVXb2hnR0lGUUdNeHdFMHJKQUMzWFFJaTNrenR3WG5OTzRqSk5GN1Rvb2hrS3FYTXgwbnJ0LUptVXQ3MFVwbVZNRTYxVC1QeDNlUQ?oc=5",
+   "source": "Người Đưa Tin (qua Google News)",
+   "published_at": "2026-08-21T14:00:00",
+   "summary": "EVF dự kiến tăng vốn lên 8.456 tỷ đồng, đề cử cựu Chủ tịch Eximbank vào HĐQT &nbsp;&nbsp; Người Đưa Tin"
+  },
+  {
    "id": "n534d25d243",
    "title": "EVF muốn huy động gần 1.100 tỷ đồng, vì sao chọn nhà đầu tư ngoại thay vì cổ đông hiện hữu?",
    "url": "https://news.google.com/rss/articles/CBMizAFBVV95cUxPVWdTdTBMWDh1ZmRUckliN1FmVWpMUGxBUlFLSzBvOGVXNkdjU2k4WXliUDVBQmVGQ0VkUnFqbl82dWc4ZU40MmZLWnFoMzE3U082cHlSVEhqSV9ORWRtd2dMcDFyUW1PODdpSG82ZWhFTnpOZ0JzRW84b3k2RXNpc2dsYkhydTFRYmpYYnpyYm1DYjM0d2JVaDRSMExMSU85dmg3bVJ3R2FFQ1pjdU5XRHoyNm8wQ1UtYkU3eUJLVURZbjBrSVRITW1LV3Q?oc=5",
@@ -15777,14 +15699,6 @@
    "source": "VietnamBiz (qua Google News)",
    "published_at": "2026-08-21T14:00:00",
    "summary": "Đại hội bất thường EVF: Ông Nguyễn Cảnh Anh vào HĐQT, nới room ngoại lên 50% &nbsp;&nbsp; VietnamBiz"
-  },
-  {
-   "id": "nc260d8c92f",
-   "title": "EVF dự kiến tăng vốn lên 8.456 tỷ đồng, đề cử cựu Chủ tịch Eximbank vào HĐQT",
-   "url": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxOUFN1RS1hN2hTX1VYUG1jSmpPdzROWUMyRDhSaEkxR2VJUXgtM1RiZHlKUDlsNUdHX0pwNDlfYlhvMThaOURaWkVZa3EzRURnVHRldTdFUnlUSUhpS1RJbnQyT3ZhcWg3R3VzY1pzcmp4ZG1TYTUyRUdhaUwxd2ZZVGJBaTJBbVZ6TTI0RlhwN0ItZzVDRzlhRl9hU2dVT1lxWjRWcVotSE1VN0hXNXpiYm5UdTBnTlBBZXlZ?oc=5",
-   "source": "Chứng khoán DNSE (qua Google News)",
-   "published_at": "2026-08-21T14:00:00",
-   "summary": "EVF dự kiến tăng vốn lên 8.456 tỷ đồng, đề cử cựu Chủ tịch Eximbank vào HĐQT &nbsp;&nbsp; Chứng khoán DNSE"
   },
   {
    "id": "n12127843",
@@ -15825,14 +15739,6 @@
    "source": "24HMoney (qua Google News)",
    "published_at": "2026-08-11T14:00:00",
    "summary": "EVF chuẩn bị “bơm” thêm 850 tỷ đồng vốn &nbsp;&nbsp; 24HMoney"
-  },
-  {
-   "id": "n95c08c1e24",
-   "title": "EVF hé lộ nhân sự dự kiến bầu vào HĐQT: Người có 18 năm kinh nghiệm ngành ngân hàng, từng là lãnh đạo tại nhiều doanh nghiệp lớn",
-   "url": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxOTk91N0h3ZDI2MTdGSC1Zd0RVQWstWjNrV2pFYXR0WFBzS3ljR1k4UGZzMFVfV3JfOG43YzlNRl9Mc0xUOUgxSjFKNnFnS1dLTTdPYjRmd2djNDBQajVIcWRmZGV3aG9LLUhMVTQ3cUpwbHdORFNsVGIyb0t2dHdObThodWpoeVFHWFk2SlNCMlFQbERzRUdZQzB0MGdodWpDT05JaDRHMFZ5NGJ0X1BJT2g4MVZWX1R1Z1JTM1ZkQmZtVDEwWFZxakZBOWpLODVjZXFtV1hVdC1XMnJzUEZqTHZMNFljcTZCMWpWWVV1U2lIXzZh?oc=5",
-   "source": "nguoiquansat.vn (qua Google News)",
-   "published_at": "2026-08-11T14:00:00",
-   "summary": "EVF hé lộ nhân sự dự kiến bầu vào HĐQT: Người có 18 năm kinh nghiệm ngành ngân hàng, từng là lãnh đạo tại nhiều doanh nghiệp lớn &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
    "id": "nf329bb7e12",
@@ -15878,9 +15784,9 @@
    "id": "n0813077a22",
    "title": "EVF công bố BCTC soát xét bán niên 2026",
    "url": "https://news.google.com/rss/articles/CBMifEFVX3lxTFB3Y3RFSHdSRjM4dGdMZldiejBMMXA4NXVldmpxLUxSNGlsd1ZhSWxSN3NnY3JJRW1yOGRlbW1GYXNXdDZwTlFobWtIb0NuSGFFem9mUDIwSlJZOUJ0aVJBdHFWNzJNZU1zcmhVMFBPNlZ2SmRINHRpZU9nMXE?oc=5",
-   "source": "Nhadautu. (qua Google News)",
+   "source": "Nhadautu.vn (qua Google News)",
    "published_at": "2026-07-29T14:00:00",
-   "summary": "EVF công bố BCTC soát xét bán niên 2026 &nbsp;&nbsp; Nhadautu."
+   "summary": "EVF công bố BCTC soát xét bán niên 2026 &nbsp;&nbsp; Nhadautu.vn"
   },
   {
    "id": "n12096868",
@@ -15891,28 +15797,20 @@
    "summary": null
   },
   {
-   "id": "nde81be634b",
-   "title": "EVF lãi trước thuế gần 700 tỷ đồng sau 6 tháng, hoàn thành 52,8% kế hoạch năm",
-   "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxORkI3SHVGMUJSRGZpNmgzR01fTGpBajR2N2dUdC1sTTRxd1ZkdnNNcHNidUVHRzdZYVltRVlEODZSUXMxWlJVV3FqRy0zc212eEVSZkNwNFJxaG1ydERpQ25oSlRiMVpzYTF6OEtGYWdaSnFuaXN6ZEpHQXdNMDhtZGYzOA?oc=5",
-   "source": "MoneyF (qua Google News)",
-   "published_at": "2026-07-27T14:00:00",
-   "summary": "EVF lãi trước thuế gần 700 tỷ đồng sau 6 tháng, hoàn thành 52,8% kế hoạch năm &nbsp;&nbsp; MoneyF"
-  },
-  {
-   "id": "n925310376a",
-   "title": "EVF lãi 700 tỷ đồng sau soát xét, vượt 50% kế hoạch sau nửa đầu năm 2026",
-   "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPSmI3aVpYMlkxZjB3UGY1YUhOZUJCRVpPVHZJelZmbC1ZLUtBdzlkVzg2Rm4yQkdhSGZNWnFua0h5MEh5OGhfNFVHajFsT09EY1cwRUE3Z1RSNzd0SktCZGtvYnRzcmgtY2ota3JkQWd2ejVuUThZblFfNzgxTzhyZDRUNkZfS0ZwT0hfd3pRaWJ4WUh6cWcwMXdMdVNVX3FrZHZkRU9zZE9uUQ?oc=5",
-   "source": "nguoiquansat.vn (qua Google News)",
-   "published_at": "2026-07-27T14:00:00",
-   "summary": "EVF lãi 700 tỷ đồng sau soát xét, vượt 50% kế hoạch sau nửa đầu năm 2026 &nbsp;&nbsp; nguoiquansat.vn"
-  },
-  {
    "id": "n12094757",
    "title": "EVF: Giải trình biến động LNST trên BCTC 6 tháng đầu năm 2026 so với cùng kỳ năm trước",
    "url": "n/a",
    "source": "vnstock/VCI",
    "published_at": "2026-07-27T13:48:00",
    "summary": null
+  },
+  {
+   "id": "ne942550f27",
+   "title": "EVF mở chu kỳ tăng trưởng mới, dư địa tái định giá dần hiện rõ giai đoạn 2026–2030",
+   "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxNTlg1X0JGNGpMNTRWUUZBSFlZUzRkLXJhX0o3dTR0U1hqQjNFMHdtRTNPWTZGZ3p0enpoRHMxNkh1TUk2QkVpbnNDUFdoOFZNRjZIUlFlWkxyTk9WSGFKQUUwLWNVdHBFWVZVbUtxQ2JEb3BJOWozTUFMWTJBNVV5aVFScERRR1hsQUlkNzhTZU1IXzVHYVpYaHlpaElnQ2FkX0l5dGxIUVBXZWM?oc=5",
+   "source": "F247.COM (qua Google News)",
+   "published_at": "2026-07-24T14:00:00",
+   "summary": "EVF mở chu kỳ tăng trưởng mới, dư địa tái định giá dần hiện rõ giai đoạn 2026–2030 &nbsp;&nbsp; F247.COM"
   },
   {
    "id": "n12087319",
@@ -15931,12 +15829,12 @@
    "summary": null
   },
   {
-   "id": "n5aae756f70",
-   "title": "EVF tiến sát mốc 92.000 tỷ đồng tài sản, lợi nhuận 6 tháng đầu năm tăng 15% lên 556 tỷ đồng",
-   "url": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxNalJmelN5S2NRU3RGLUhYbEpGa1JvWWtCNGMxbGs4X3BpY3VMZl9jZHo3SmxSZ19rNWZ6TkxHY0p1bXd6N1NCcGNoTUdyVl9kMGJ6ZlBSNVlqczNSUHlNT2Z0QkZpc0pxSXV5ekRtSHoxYzlFMkpEMmR3aUhBSVBkbG52MUJYbGkyS3RUS0lxWl9JQVYyM2lINDMzQmlkMnVlQVBzejZoRDA5Yi1DbE1GcjhQRm01XzBQSThRT0NaQWpFUGc?oc=5",
-   "source": "nguoiquansat.vn (qua Google News)",
+   "id": "neae4248189",
+   "title": "EVF lãi sau thuế gần 290 tỷ đồng quý II, thu nhập lãi thuần tăng 70%",
+   "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxNbTNVNWp6S3JWbUVfVG9qVU9lLVB0NFZKSS1zcmZwMVpaSkNYY01EX2RkZkx1VWticjFwWE1BZnBGQkZqY25Id1ozeFM0ZWs0UTI4LV9QMEFnaEE5eU1PUFBuMnpQS0RwTVpOWk1hbmxPVHBvelZZYVl5ODdOVHhfQkdWUG9tR0wydTIzN2RwRmtXcXNMQXZr?oc=5",
+   "source": "F247.COM (qua Google News)",
    "published_at": "2026-07-20T14:00:00",
-   "summary": "EVF tiến sát mốc 92.000 tỷ đồng tài sản, lợi nhuận 6 tháng đầu năm tăng 15% lên 556 tỷ đồng &nbsp;&nbsp; nguoiquansat.vn"
+   "summary": "EVF lãi sau thuế gần 290 tỷ đồng quý II, thu nhập lãi thuần tăng 70% &nbsp;&nbsp; F247.COM"
   },
   {
    "id": "n12073944",
@@ -16001,6 +15899,14 @@
    "source": "vnstock/VCI",
    "published_at": "2026-06-23T17:47:33",
    "summary": null
+  },
+  {
+   "id": "n55e1fcfc10",
+   "title": "EVF muốn bổ sung thêm một thành viên HĐQT",
+   "url": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQbF9kUkppaW0wS2YxeGUxSVFySy14U2lZcXhKNDFqWmhYZXRDaFFwcklQRUZxMUxZNjhnMG5OTDY2V0l0b1p3R0R6bjZ4SHlfZXhsWE9xU0N2WjFSQWFXNFpJRXp4b0VJR1ZtcXhkYk82cXp4NFZtb2xGNzZncnNLTFZB?oc=5",
+   "source": "Mekong ASEAN (qua Google News)",
+   "published_at": "2026-06-21T14:00:00",
+   "summary": "EVF muốn bổ sung thêm một thành viên HĐQT &nbsp;&nbsp; Mekong ASEAN"
   },
   {
    "id": "n12054276",
@@ -16107,6 +16013,14 @@
    "summary": null
   },
   {
+   "id": "n531b6e40b2",
+   "title": "ĐHĐCĐ EVF: Mục tiêu lãi kỷ lục 1.300 tỷ đồng",
+   "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOXzlXRUVyejdIMHBZdFo5LVRlSExzNDBfMXhFOF9SNU82RllBeEY3RjdfN3E1VEdSS1BCYVA1TjlEMlZLUkRXMloxZy1lYy00bDJYWTZ2WWVjUlpYWWx1LXVWM3Bja0tsb2pJaEt6aDBINkdsQlBaZ1hWZHFBVUdteEZLQQ?oc=5",
+   "source": "Mekong ASEAN (qua Google News)",
+   "published_at": "2026-04-03T14:00:00",
+   "summary": "ĐHĐCĐ EVF: Mục tiêu lãi kỷ lục 1.300 tỷ đồng &nbsp;&nbsp; Mekong ASEAN"
+  },
+  {
    "id": "n0f212069d0",
    "title": "EVF tổ chức thành công đại hội đồng cổ đông thường niên năm 2026",
    "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxNY0hyUWl2QmlLU082aGxaSG1SSkZDamN0Y3J2Q09QMHBOY084ZVFvS2FHZENjVGQ4YnNoX2I5TUo5MzFWMFViWEQxenJPTVR2bkxTYnN0Vzk5bmtzQmloWjNucDVFT3I2bWxqdmV5bzgyenJJOGduTUZRU25Bd1BCblFUa2ZSM3NQTU1WQ0hfQVphNGgxazBKTHNKSmc1WHVORlFUcnFQNmxxM3FRRHBZ?oc=5",
@@ -16115,12 +16029,12 @@
    "summary": "EVF tổ chức thành công đại hội đồng cổ đông thường niên năm 2026 &nbsp;&nbsp; thitruongtaichinhtiente.vn"
   },
   {
-   "id": "n531b6e40b2",
-   "title": "ĐHĐCĐ EVF: Mục tiêu lãi kỷ lục 1.300 tỷ đồng",
-   "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOXzlXRUVyejdIMHBZdFo5LVRlSExzNDBfMXhFOF9SNU82RllBeEY3RjdfN3E1VEdSS1BCYVA1TjlEMlZLUkRXMloxZy1lYy00bDJYWTZ2WWVjUlpYWWx1LXVWM3Bja0tsb2pJaEt6aDBINkdsQlBaZ1hWZHFBVUdteEZLQQ?oc=5",
+   "id": "nf1dbfe6483",
+   "title": "Lãnh đạo EVF: ‘Công ty luôn mở cửa cho những cổ đông nước ngoài’",
+   "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxNbk1sOFFIT0t2WmNubmlGRGE0N2E2c016T05iZ0VwOU5rZnduMWRWRmdHZTl4M3ZHLXNPblpUUFpvUVljUWxDWmNRUGRLNXRkUUVLTGljeVdibklGRzdCQXRCOV9kQUw3RjdKWFZVbnl0aXc0eFFKS284WXY5ZVJKeGE2UnpjMnpsYUZIVmhraDZ3VktxUWxvcDhWTk5FQQ?oc=5",
    "source": "Mekong ASEAN (qua Google News)",
    "published_at": "2026-04-03T14:00:00",
-   "summary": "ĐHĐCĐ EVF: Mục tiêu lãi kỷ lục 1.300 tỷ đồng &nbsp;&nbsp; Mekong ASEAN"
+   "summary": "Lãnh đạo EVF: ‘Công ty luôn mở cửa cho những cổ đông nước ngoài’ &nbsp;&nbsp; Mekong ASEAN"
   },
   {
    "id": "n0f9384f5ea",
@@ -16131,12 +16045,12 @@
    "summary": "Trước thềm ĐHĐCĐ 2026: Sau mốc lợi nhuận nghìn tỷ, EVF bước vào giai đoạn tăng tốc mới &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
-   "id": "n550b1200df",
+   "id": "n53247da3af",
    "title": "Đại hội đồng cổ đông EVF 2026: Lần đầu trình lập Quỹ trách nhiệm xã hội",
-   "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPbnFXNWRfQ2prSEJkTGxpOUg4cndUQVdLQlgzcmdBYWhnVC02UktNUmxXTkJVbTVIMGJMMWNyUnlhM3RYN3RjU0NJYjJSdmh5b2NXMkN4cGVwM0t4MUJ3QjZqcHlKM09GOVZLdDJyUk1saVVoc2xHaXA4QmwzWEtNcklTZjdVdWt6cTEwczBfTkhja3ltYTBkRU1WaWRTOGs?oc=5",
-   "source": "Báo Pháp Luật Việt Nam (qua Google News)",
+   "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxOd3k0RG9WWFE5Xy16akRfcmdxc1pLc3RDNWdSVjJ5bm91YzQzeTFVa2RtYmpQY2pOa09qNXBOQ3RuVy1pSW5KQl9XX2Z3dHZYOXJHdEVxMnA1Qy0wOGJQNjFiRHhiTndlRHZVQ21UYnN0c1NtNDg3OTkzN0lKVWxLbWdjallHbXBJR3NSWHZBVUdoNHBCMHlhd3BWQ0RxSEtqdzBvNkNwbmZ5eTBjVi1QQVIyS2g?oc=5",
+   "source": "Chứng khoán DNSE (qua Google News)",
    "published_at": "2026-03-31T14:00:00",
-   "summary": "Đại hội đồng cổ đông EVF 2026: Lần đầu trình lập Quỹ trách nhiệm xã hội &nbsp;&nbsp; Báo Pháp Luật Việt Nam"
+   "summary": "Đại hội đồng cổ đông EVF 2026: Lần đầu trình lập Quỹ trách nhiệm xã hội &nbsp;&nbsp; Chứng khoán DNSE"
   },
   {
    "id": "n11951226",
@@ -16147,36 +16061,12 @@
    "summary": null
   },
   {
-   "id": "nb49b5cd406",
-   "title": "EVF huy động 450 tỷ đồng trái phiếu để tăng vốn cho vay",
-   "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxNRkZOZXpJeTNGV3kxbFhTNGthLV9YSGFPNEh6MW1kRUtuZlJ1bndMd1A5T29hTzRxSnVxUk56WkZ2V3hWVG9Ba3l4cXoybkQ4aDVtS2J2WGJ6Vl9SSVBodEc4RVZqN05nakJmYTljTjlxeUZqU2ZVM3FaZXNaMktTdTlXelR3b0JpZFoxb2JQSFFMS09jLXBHVjNzQzg1YzJlb2FFRQ?oc=5",
-   "source": "Thuonghieucongluan.com.vn (qua Google News)",
-   "published_at": "2026-03-27T14:00:00",
-   "summary": "EVF huy động 450 tỷ đồng trái phiếu để tăng vốn cho vay &nbsp;&nbsp; Thuonghieucongluan.com.vn"
-  },
-  {
-   "id": "nd6f6a5a897",
-   "title": "EVF lên kế hoạch phát hành tối đa 1.000 tỷ đồng trái phiếu riêng lẻ",
-   "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNdEtUVmhONHJiNDFzb0N4c1k0UGxPQlczaUtJd0hOX0pDaW9MNzFlMUhUNHE3UzFwYVhCZi1samR4QllmckpJVWpoVi1zSzZvOVVDMnZ3TDRsSjRjN1A2WmZJMlQwbEJpWHVkVll0cXJMNGVxT2VoNlZiN05nNWdrdmg5WGR2WmlsS2UyY1dWeUhNdkhacTlTcmZFbWczUThSeEE?oc=5",
-   "source": "Mekong ASEAN (qua Google News)",
-   "published_at": "2026-03-12T14:00:00",
-   "summary": "EVF lên kế hoạch phát hành tối đa 1.000 tỷ đồng trái phiếu riêng lẻ &nbsp;&nbsp; Mekong ASEAN"
-  },
-  {
    "id": "n11913345",
    "title": "EVF: Nghị quyết HĐQT về việc phê duyệt phương án phát hành Trái phiếu tăng vốn cấp 2 theo hình thức riêng lẻ năm 2026",
    "url": "n/a",
    "source": "vnstock/VCI",
    "published_at": "2026-03-11T17:03:55",
    "summary": null
-  },
-  {
-   "id": "n6fca949b73",
-   "title": "Cổ phiếu EVF liên tục tăng trần trước thềm đại hội đồng cổ đông",
-   "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxNMXctNWE2ODJZVkNQUWVOR3JHTlMzNi1veHk2R1BmTDU5cm52LVhYSklxak8wcjlpNC1GSWlZM2JGYWphUTdRRElRRW9vWHNzS3EwSjNVMXFSbTI4SnlNTlR2X09OSEMzazd5emhSYkRoeTMzZEpfVk85Mk1nMGF6dnBtWnpiTHgzVTlrbEZ3dUZabWR3cUtLcFFDVlZYY3JNa2p0Wg?oc=5",
-   "source": "VietnamFinance (qua Google News)",
-   "published_at": "2026-03-11T14:00:00",
-   "summary": "Cổ phiếu EVF liên tục tăng trần trước thềm đại hội đồng cổ đông &nbsp;&nbsp; VietnamFinance"
   },
   {
    "id": "na3e7e9f60a",
@@ -16193,6 +16083,14 @@
    "source": "Người Đưa Tin (qua Google News)",
    "published_at": "2026-03-11T14:00:00",
    "summary": "EVF không chia cổ tức năm thứ 2 liên tiếp dù lợi nhuận vượt kế hoạch &nbsp;&nbsp; Người Đưa Tin"
+  },
+  {
+   "id": "n0ddfc6bab5",
+   "title": "Dòng vốn phía sau 16.000 xe điện và những chuyển động đáng chú ý tại EVF",
+   "url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxNaGp1NDJVby1JYXhnclljN3NvSF96Y1ZmWjY3anhidVpfVVptckt3WkNyRURBQVdQbjJ5LTl5Z1JBV0FaTnloMGxMQXRkSzFSNWFXOEhQWWQ5cHdBbG9TTUtNbWVkWHdBTHZERXB0N3VXNTRidDZXWWVwZHc5VFl3bkpJSVRxU2Y2TFY0dndEdjY1UVZaSWRENEZqVklhT0dPUV9lN29xbG82S1RI?oc=5",
+   "source": "nguoiquansat.vn (qua Google News)",
+   "published_at": "2026-03-10T14:00:00",
+   "summary": "Dòng vốn phía sau 16.000 xe điện và những chuyển động đáng chú ý tại EVF &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
    "id": "n11908167",
@@ -16259,14 +16157,6 @@
    "summary": "EVF- Thời điểm vàng để mua vào và tích lũy &nbsp;&nbsp; 24HMoney"
   },
   {
-   "id": "nc850d8793f",
-   "title": "EVF lập đỉnh lợi nhuận, 'viên ngọc' tài chính tiêu dùng lộ diện trước kỳ ĐHĐCĐ 2026",
-   "url": "https://news.google.com/rss/articles/CBMitwFBVV95cUxNNmliTmN3T1BBUmdNejlCb09HSHc5bElDSnFUNGxNZklFcXlHTHlqMUcxd2NzMU1PeTNZdmFOaVdqTjBaX2RFd1ZXTGszME9LNjVrUV92LWRTNDB5a2JONGZhQ18zYVBRc2pSbGhUUG9kVkJhMUhQVWpUX243dTFYalJ2WnBoaEU2SzFMemhJWTI3ZE1fV2FXcG1nWTk3MGtaOExSOXBRTkttU1g4cFBqWEpib1JpcVE?oc=5",
-   "source": "nguoiquansat.vn (qua Google News)",
-   "published_at": "2026-02-03T15:00:00",
-   "summary": "EVF lập đỉnh lợi nhuận, 'viên ngọc' tài chính tiêu dùng lộ diện trước kỳ ĐHĐCĐ 2026 &nbsp;&nbsp; nguoiquansat.vn"
-  },
-  {
    "id": "n5aedb99d7f",
    "title": "EVF lãi trước thuế hơn 1.100 tỷ đồng trong 2025",
    "url": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNOXBiV09sVE81Tkl3T0xaRUVBSk4zWE1aUmRTUm50NVhYSUlpenBEZXZWMFR0ajlLVlViSE5BQ2g3UFE0aUN3dzFBcVBORUJPOFdSQS1MUnR0eWVvUXRCM1FKdVpJdV83SWtvS1UxbEcwNHJ6d0x3WUF0dVB0YkxRcC1JZ3NITG5FWHc?oc=5",
@@ -16297,14 +16187,6 @@
    "source": "Tin nhanh chứng khoán (qua Google News)",
    "published_at": "2026-01-20T15:00:00",
    "summary": "EVF: Lợi nhuận quý IV/2025 tăng 21% so với cùng kỳ năm trước &nbsp;&nbsp; Tin nhanh chứng khoán"
-  },
-  {
-   "id": "n19e5134e44",
-   "title": "EVF được vinh danh 'Công ty Tài chính của năm' tại FChoice 2025",
-   "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxNNzNab2xocE5QTEhVM1VpOE0yLTFDVkZwLV85S1plUjdPaDI5QmpQbW1aeldUR1VlcmMwb0cyT3ZhcDRFRmlMNGtKbmwzd0Vtcmw5T0E5V0JKU0FtVEJMUFgyT0w3SHlTQnZKUk0zeXhJX2JJeU1CY1lQTE5PX21JRkltWW81V3ZHdUd1blRXX3I1eDhWVXEtTHJn?oc=5",
-   "source": "Nhadautu. (qua Google News)",
-   "published_at": "2026-01-15T15:00:00",
-   "summary": "EVF được vinh danh 'Công ty Tài chính của năm' tại FChoice 2025 &nbsp;&nbsp; Nhadautu."
   },
   {
    "id": "n02fab3841e",
@@ -16344,57 +16226,50 @@
    "id": "src_price",
    "name": "vnstock (VCI) - quote.history (giá điều chỉnh)",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T01:04:16",
+   "fetched_at": "2026-10-15T17:59:35",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_index",
    "name": "vnstock (VCI) - quote.history VNINDEX",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T01:04:16",
+   "fetched_at": "2026-10-15T17:59:35",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_company",
    "name": "vnstock (VCI) - company.overview + tự tính PE/PB/ROE peers",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T01:04:19",
+   "fetched_at": "2026-10-15T17:59:39",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_fin_year",
    "name": "vnstock (VCI) - finance year (income/balance/cashflow)",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T01:04:40",
+   "fetched_at": "2026-10-15T17:59:51",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_fin_quarter",
    "name": "vnstock (VCI) - finance quarter (income/balance/cashflow)",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T01:04:51",
+   "fetched_at": "2026-10-15T18:00:02",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_vnf",
    "name": "vnfinancialdata (Hugging Face thanhnp-uel/vietnam-listed-companies-financial-statements)",
    "url": "https://huggingface.co/datasets/thanhnp-uel/vietnam-listed-companies-financial-statements",
-   "fetched_at": "2026-10-11T01:04:53",
+   "fetched_at": "2026-10-15T18:00:04",
    "note": "BCTC năm hợp nhất, VND; không có ngày công bố (ước lượng năm+90 ngày); nguồn gốc: cổng sàn/website công ty"
   },
   {
    "id": "src_news",
    "name": "vnstock (VCI) - company.news / RSS",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T01:05:15",
+   "fetched_at": "2026-10-15T18:00:29",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
-  },
-  {
-   "id": "src_universe_calc",
-   "name": "PE/PB/ROE tự tính từ snapshot các mã cùng ngành trong universe",
-   "url": "internal://universe",
-   "fetched_at": "2026-10-11T01:52:25",
-   "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"
   }
  ]
 }
