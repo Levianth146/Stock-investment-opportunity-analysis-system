@@ -13,7 +13,6 @@ from typing import Any, AsyncIterator
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
-from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from stockai.api.analysis import AnalyzeRequest, analyze_snapshot
@@ -195,13 +194,12 @@ def create_app(
             store,
         )
 
-<<<<<<< HEAD
     @app.get("/api/llm/status", response_model=None)
     def llm_status(request: Request) -> dict:
         """Trạng thái LLM công khai (ok | quota_blocked | no_key). Không lộ key."""
         store = get_store(request)
         return _envelope(llm_public_status(), store)
-=======
+
     @app.post("/api/analyze", response_model=None)
     def analyze(request: Request, payload: AnalyzeRequest) -> Any:
         store = get_store(request)
@@ -212,7 +210,6 @@ def create_app(
         if payload.as_of is not None and payload.as_of.isoformat() != store.asof:
             return _err(409, f"Snapshot hiện có ngày {store.asof}; bỏ as_of để dùng ngày này", store)
         return _envelope(analyze_snapshot(store, payload.ticker, payload.profile), store)
->>>>>>> origin/develop
 
     @app.get("/api/rankings", response_model=None)
     def rankings(
@@ -935,31 +932,31 @@ def create_app(
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
 
-<<<<<<< HEAD
-    # SPA: chỉ khi cấu hình có web_dist_dir và thư mục tồn tại (không tự gắn trong test)
+    # SPA React (web/dist) ưu tiên; không có thì lùi về frontend tĩnh của develop (frontend/dist).
+    spa_mounted = False
     if cfg.get("web_dist_dir"):
         dist = resolve_web_dist(cfg, repo_root())
         if dist is not None:
             mount_spa(app, dist)
-=======
-    # Register the build after API routes so unknown /api paths remain JSON 404s.
-    frontend_dir = Path(str(cfg.get("frontend_dir") or "frontend/dist"))
-    if not frontend_dir.is_absolute():
-        frontend_dir = repo_root() / frontend_dir
-    if (frontend_dir / "index.html").is_file():
-        assets_dir = frontend_dir / "assets"
-        if assets_dir.is_dir():
-            app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend-assets")
+            spa_mounted = True
+    if not spa_mounted:
+        # Register the build after API routes so unknown /api paths remain JSON 404s.
+        frontend_dir = Path(str(cfg.get("frontend_dir") or "frontend/dist"))
+        if not frontend_dir.is_absolute():
+            frontend_dir = repo_root() / frontend_dir
+        if (frontend_dir / "index.html").is_file():
+            assets_dir = frontend_dir / "assets"
+            if assets_dir.is_dir():
+                app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend-assets")
 
-        @app.get("/", include_in_schema=False)
-        def frontend_index():
-            return FileResponse(frontend_dir / "index.html")
+            @app.get("/", include_in_schema=False)
+            def frontend_index():
+                return FileResponse(frontend_dir / "index.html")
 
-        if (frontend_dir / "api-client.js").is_file():
-            @app.get("/api-client.js", include_in_schema=False)
-            def frontend_client():
-                return FileResponse(frontend_dir / "api-client.js", media_type="text/javascript")
->>>>>>> origin/develop
+            if (frontend_dir / "api-client.js").is_file():
+                @app.get("/api-client.js", include_in_schema=False)
+                def frontend_client():
+                    return FileResponse(frontend_dir / "api-client.js", media_type="text/javascript")
 
     return app
 
