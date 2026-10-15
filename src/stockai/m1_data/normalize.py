@@ -117,6 +117,13 @@ ALIASES: dict[str, tuple[list[str], str | None]] = {
     "cfi": ([r"^net cash.*investing activities", r"investing activities"], _LEVEL_EXCL),
     "cff": ([r"^net cash.*financing activities", r"financing activities"], _LEVEL_EXCL),
     "capex": ([r"purchases? of fixed assets", r"capital expenditure", r"acquisition of fixed"], _LEVEL_EXCL),
+    # cổ tức tiền mặt (VCI item_id=dividends_paid / item_en="Dividends paid");
+    # loại received/interest. Ngân hàng: cùng nhãn «Cổ tức trả cho cổ đông» —
+    # vẫn map (014j probe); năm tỷ lệ bất thường gắn cờ ở API financials, không xóa số.
+    "dividends_paid": (
+        [r"^dividends_paid$", r"dividends?\s+paid"],
+        _LEVEL_EXCL + r"|received|interest",
+    ),
     # ngân hàng
     "net_interest_income": ([r"^net interest income"], _LEVEL_EXCL),
     "total_operating_income": ([r"^total operating income"], _LEVEL_EXCL),
@@ -131,8 +138,9 @@ ALIASES: dict[str, tuple[list[str], str | None]] = {
 }
 MONETARY = {"revenue", "gross_profit", "ebit", "net_income", "net_income_parent", "interest_expense", "depreciation",
             "total_assets", "total_equity", "total_liabilities", "current_assets", "current_liabilities", "inventory",
-            "cash", "short_term_debt", "long_term_debt", "cfo", "cfi", "cff", "capex", "net_interest_income",
-            "total_operating_income", "provision_expense", "customer_loans", "customer_deposits", "opex"}
+            "cash", "short_term_debt", "long_term_debt", "cfo", "cfi", "cff", "capex", "dividends_paid",
+            "net_interest_income", "total_operating_income", "provision_expense", "customer_loans",
+            "customer_deposits", "opex"}
 BANK_ONLY = {"opex", "net_interest_income", "total_operating_income", "provision_expense", "customer_loans",
              "customer_deposits", "npl_ratio", "car", "nim", "cir"}
 # Ngân hàng không có các chỉ tiêu này trong BCTC (NPL, CAR chỉ có trong báo cáo thường niên; NIM, CIR được tính xấp xỉ)
@@ -185,6 +193,56 @@ def estimated_publish_date(year: int, q: int) -> str:
     return (end + timedelta(days=90 if q == 0 else 45)).isoformat()
 
 
+def _dividends_paid_by_period(frames: list[pd.DataFrame], annual: bool) -> dict[str, float]:
+    """Đọc item_id==dividends_paid (hoặc item_en chứa dividends+paid, loại received/interest).
+
+    Trả {\"YYYY-Q\": abs(value)} — Q=0 cho năm. Không bịa số nếu không có dòng.
+    """
+    out: dict[str, float] = {}
+    for f in frames:
+        if f is None or len(f) == 0:
+            continue
+        cols = list(f.columns)
+        if "item_id" not in cols and "item_en" not in cols:
+            continue
+        row = None
+        if "item_id" in cols:
+            hit = f[f["item_id"].astype(str).str.strip().str.lower() == "dividends_paid"]
+            if len(hit):
+                row = hit.iloc[0]
+        if row is None and "item_en" in cols:
+            for _, r in f.iterrows():
+                n = norm(r.get("item_en"))
+                if re.search(r"dividends?\s+paid", n) and not re.search(r"received|interest", n):
+                    row = r
+                    break
+        if row is None:
+            continue
+        meta = {"item", "item_en", "item_id"}
+        per_cols = [c for c in cols if c not in meta]
+        # Ghép với khóa kỳ từ to_wide để đồng bộ year/q
+        w = _period_keys(to_wide(f), annual)
+        for c in per_cols:
+            v = num(row[c])
+            if v is None:
+                continue
+            # Khóa kỳ: tên cột kỳ ("2025" / "2026-Q2") khớp index của w
+            key = str(c)
+            if key in w.index:
+                y, q = int(w.loc[key, "_year"]), int(w.loc[key, "_q"])
+            else:
+                m = re.search(r"(20\d{2})", key)
+                qq = re.search(r"[Qq]\s*([1-4])", key)
+                if not m:
+                    continue
+                y = int(m.group(1))
+                q = 0 if annual else (int(qq.group(1)) if qq else 0)
+            out[f"{y}-{q}"] = abs(v)
+        if out:
+            break
+    return out
+
+
 def normalize_financials(frames: list[pd.DataFrame], annual: bool, as_of: str, source_id: str, is_bank: bool,
                          setting="auto", keep: int = 6) -> tuple[list[dict], dict, list[str]]:
     """frames = [income, balance, cashflow, ratio] (cái nào lỗi thì bỏ). Trả (periods, column_map, flags)."""
@@ -207,6 +265,8 @@ def normalize_financials(frames: list[pd.DataFrame], annual: bool, as_of: str, s
     if wide is None or wide.empty:
         return [], {}, ["financials_empty"]
 
+    div_by_period = _dividends_paid_by_period(frames, annual)
+
     cmap: dict[str, str] = {}
     for canon, (pats, excl) in ALIASES.items():
         if (canon in BANK_ONLY and not is_bank) or (canon in NONBANK_ONLY and is_bank):
@@ -214,6 +274,8 @@ def normalize_financials(frames: list[pd.DataFrame], annual: bool, as_of: str, s
         col = find_col(wide, pats, excl)
         if col is not None:
             cmap[canon] = str(col)
+    if "dividends_paid" not in cmap and div_by_period:
+        cmap["dividends_paid"] = "<item_id:dividends_paid>"
     missing = [k for k in ALIASES if k not in cmap and not ((k in BANK_ONLY and not is_bank) or (k in NONBANK_ONLY and is_bank)
                                                            or (k in BANK_NA and is_bank))]
     if is_bank:
@@ -236,12 +298,21 @@ def normalize_financials(frames: list[pd.DataFrame], annual: bool, as_of: str, s
             continue
         items = {}
         for canon, col in cmap.items():
+            if col.startswith("<"):
+                continue
             v = num(row[col])
             if v is not None and canon in MONETARY:
                 v *= mult
-            if canon in ("capex", "interest_expense") and v is not None:
+            if canon in ("capex", "interest_expense", "dividends_paid") and v is not None:
                 v = abs(v)
             items[canon] = v
+        # item_id dividends_paid thắng alias item_en (tránh nhầm dòng received)
+        pk = f"{y}-{q}"
+        if pk in div_by_period:
+            v = div_by_period[pk]
+            if v is not None:
+                v = abs(v) * mult
+            items["dividends_paid"] = v
         if is_bank:                                          # CIR = chi phí hoạt động / tổng thu nhập hoạt động; NIM ≈ NII (quy năm) / tổng tài sản
             opx, toi, nii, tas = (items.get(k) for k in ("opex", "total_operating_income", "net_interest_income", "total_assets"))
             if opx is not None and toi:

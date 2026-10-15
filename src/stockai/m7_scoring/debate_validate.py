@@ -20,6 +20,113 @@ _NUM_TOKEN_RE = re.compile(
     r"(?<![A-Za-z0-9_])(-?\d+(?:[.,]\d+)?)(x|%)?(?![A-Za-z0-9_])",
     re.IGNORECASE,
 )
+# Claim định giá so ngành: chỉ cho phép khi |diff|/median ≥ ngưỡng
+_VALUATION_CLAIM_RE = re.compile(
+    r"(rẻ|đắt|hấp\s*dẫn|cao\s+hơn\s+đáng\s+kể|thấp\s+hơn\s+đáng\s+kể|"
+    r"rẻ\s+hơn|đắt\s+hơn|hấp\s*dẫn\s+hơn)",
+    re.IGNORECASE,
+)
+_PE_PB_IN_TEXT_RE = re.compile(r"\bP\s*/\s*[EB]\b|\bP/[EB]\b", re.IGNORECASE)
+
+
+def valuation_gap_ok(
+    pe: float | None,
+    pb: float | None,
+    med_pe: float | None,
+    med_pb: float | None,
+    *,
+    min_gap_pct: float = 0.10,
+) -> tuple[bool, float | None]:
+    """True nếu có ít nhất một multiple lệch ≥ min_gap_pct so median."""
+    best: float | None = None
+    for val, med in ((pe, med_pe), (pb, med_pb)):
+        if val is None or med is None or med == 0:
+            continue
+        gap = abs(float(val) - float(med)) / abs(float(med))
+        if best is None or gap > best:
+            best = gap
+    if best is None:
+        return False, None
+    return best >= float(min_gap_pct), best
+
+
+def _metric_value(payload_metrics: dict | None, key: str) -> float | None:
+    if not isinstance(payload_metrics, dict):
+        return None
+    entry = payload_metrics.get(key)
+    if isinstance(entry, dict) and isinstance(entry.get("value"), (int, float)):
+        return float(entry["value"])
+    if isinstance(entry, (int, float)):
+        return float(entry)
+    return None
+
+
+def _valuation_claim_errors(
+    text: str,
+    payload_metrics: dict | None,
+    *,
+    min_gap_pct: float = 0.10,
+) -> list[str]:
+    """Chặn claim rẻ/đắt/hấp dẫn khi lệch ngành < ngưỡng."""
+    if not text or not _VALUATION_CLAIM_RE.search(text):
+        return []
+    # Chỉ áp khi câu nói về P/E, P/B hoặc có cả hai số gần nhau kiểu định giá
+    pe = _metric_value(payload_metrics, "m4.pe")
+    pb = _metric_value(payload_metrics, "m4.pb")
+    med_pe = _metric_value(payload_metrics, "m4.sector_median_pe")
+    med_pb = _metric_value(payload_metrics, "m4.sector_median_pb")
+    mentions_mult = bool(_PE_PB_IN_TEXT_RE.search(text)) or (
+        "trung vị" in text.lower() or "ngành" in text.lower()
+    )
+    if not mentions_mult and pe is None and pb is None:
+        return []
+    ok, gap = valuation_gap_ok(pe, pb, med_pe, med_pb, min_gap_pct=min_gap_pct)
+    if ok:
+        return []
+    gap_s = f"{gap:.1%}" if gap is not None else "N/A"
+    return [
+        f"valuation_claim_gap_too_small gap={gap_s} min={min_gap_pct:.0%} "
+        f"(dùng «tương đương mức ngành» hoặc bỏ claim)"
+    ]
+
+
+def neutralize_weak_valuation_claims(
+    text: str,
+    payload_metrics: dict | None,
+    *,
+    min_gap_pct: float = 0.10,
+) -> str:
+    """Đổi claim mạnh → trung tính khi gap < ngưỡng; không đổi nếu đã đủ lệch."""
+    if not text or not _VALUATION_CLAIM_RE.search(text):
+        return text
+    errs = _valuation_claim_errors(text, payload_metrics, min_gap_pct=min_gap_pct)
+    if not errs:
+        return text
+    # Thay cụm claim bằng trung tính
+    out = _VALUATION_CLAIM_RE.sub("tương đương mức ngành", text)
+    out = re.sub(r"\s{2,}", " ", out).strip()
+    return out
+
+
+def drop_ungrounded_number_sentences(
+    text: str,
+    allowed_forms: set[str],
+    scores: dict | None = None,
+) -> str:
+    """Bỏ câu chứa số không có trong payload; giữ câu còn lại."""
+    if not text or not text.strip():
+        return text
+    # Tách theo dấu chấm / chấm hỏi / chấm than (giữ delimiter)
+    parts = re.split(r"(?<=[.!?])\s+", text.strip())
+    kept: list[str] = []
+    for sent in parts:
+        if not sent.strip():
+            continue
+        bad = _numbers_in_text_ok(sent, allowed_forms, scores=scores)
+        if bad:
+            continue
+        kept.append(sent.strip())
+    return " ".join(kept).strip()
 
 
 def classify_ref(ref: str) -> RefKind:
@@ -203,6 +310,7 @@ def _numbers_in_text_ok(text: str, allowed_forms: set[str], scores: dict | None 
                 errs.append(f"số lạ '{token}'")
                 continue
             ok = False
+            has_pct = suffix == "%"
             for f in forms:
                 fm = _NUM_TOKEN_RE.search(f)
                 if not fm:
@@ -211,7 +319,16 @@ def _numbers_in_text_ok(text: str, allowed_forms: set[str], scores: dict | None 
                     fv = float(fm.group(1).replace(",", "."))
                 except ValueError:
                     continue
-                if abs(fv - num) < 0.051 or abs(fv - num * 100) < 0.51 or abs(fv * 100 - num) < 0.51:
+                # Khớp trực tiếp (cùng thang)
+                if abs(fv - num) < 0.051:
+                    ok = True
+                    break
+                # Ratio ↔ %: chỉ khi |fv|<1 (ratio thập phân thật), ngưỡng chặt
+                # (tránh beta≈1,2 làm tròn thành «1» rồi khớp nhầm 99,9)
+                if abs(fv) < 1.0 - 1e-9 and abs(fv * 100.0 - num) < 0.051:
+                    ok = True
+                    break
+                if has_pct and abs(fv) > 1.0 and abs(fv - num * 100.0) < 0.051:
                     ok = True
                     break
             if not ok:
@@ -232,6 +349,7 @@ def _item_errors(
     payload_metrics: dict | None,
     scores: dict | None,
     news_items: list | None,
+    min_gap_pct: float = 0.10,
 ) -> list[str]:
     errs: list[str] = []
     where = f"{side}[{idx}]"
@@ -243,6 +361,8 @@ def _item_errors(
     else:
         if _TARGET_BAN_RE.search(text):
             errs.append(f"{where}: text chứa pattern giá mục tiêu bị cấm")
+        for ve in _valuation_claim_errors(text, payload_metrics, min_gap_pct=min_gap_pct):
+            errs.append(f"{where}: {ve}")
         if payload_numbers is not None or payload_metrics is not None:
             forms = payload_numbers or _collect_payload_number_forms(payload_metrics, news_items)
             for ne in _numbers_in_text_ok(text, forms, scores=scores):
@@ -299,6 +419,7 @@ def validate_debate_sides(
     news_items: list | None = None,
     min_items: int = 2,
     max_items: int = 4,
+    min_gap_pct: float = 0.10,
 ) -> list[str]:
     """Kiểm tra scored path: mỗi phía 2–4 item; text + refs grounded + polarity.
 
@@ -326,6 +447,7 @@ def validate_debate_sides(
                     payload_metrics=payload_metrics,
                     scores=scores,
                     news_items=news_items,
+                    min_gap_pct=min_gap_pct,
                 )
             )
     return errs
@@ -344,13 +466,33 @@ def repair_debate_sides(
     news_items: list | None = None,
     min_items: int = 2,
     max_items: int = 4,
+    min_gap_pct: float = 0.10,
 ) -> tuple[list[dict], list[dict], list[str]]:
-    """Bỏ item lỗi polarity/số nếu vẫn còn đủ min_items mỗi phía; trả (bull, bear, errs).
+    """Sửa text (bỏ câu số lạ / trung tính hóa claim) rồi bỏ item lỗi nếu còn dư.
 
-    Không bịa nội dung mới — chỉ cắt item không đạt validator.
+    Không bịa nội dung mới.
     """
-    out_bull = list(bull) if isinstance(bull, list) else []
-    out_bear = list(bear) if isinstance(bear, list) else []
+    forms = _collect_payload_number_forms(payload_metrics, news_items)
+
+    def _fix_item(item: dict) -> dict:
+        text = item.get("text")
+        if not isinstance(text, str):
+            return item
+        fixed = drop_ungrounded_number_sentences(text, forms, scores=scores)
+        fixed = neutralize_weak_valuation_claims(
+            fixed, payload_metrics, min_gap_pct=min_gap_pct
+        )
+        if fixed != text:
+            out = dict(item)
+            out["text"] = fixed
+            return out
+        return item
+
+    out_bull = [_fix_item(x) if isinstance(x, dict) else x for x in (bull or [])]
+    out_bear = [_fix_item(x) if isinstance(x, dict) else x for x in (bear or [])]
+    # Lọc item text rỗng sau khi cắt câu
+    out_bull = [x for x in out_bull if isinstance(x, dict) and str(x.get("text") or "").strip()]
+    out_bear = [x for x in out_bear if isinstance(x, dict) and str(x.get("text") or "").strip()]
 
     # Bỏ dần item lỗi khi còn dư (≥ min_items)
     for _ in range(4):
@@ -372,6 +514,7 @@ def repair_debate_sides(
                     payload_metrics=payload_metrics,
                     scores=scores,
                     news_items=news_items,
+                    min_gap_pct=min_gap_pct,
                 )
                 if ie and len(src) > min_items and (len(dst) + len(src) - i - 1) >= min_items:
                     continue
@@ -390,6 +533,7 @@ def repair_debate_sides(
             news_items=news_items,
             min_items=min_items,
             max_items=max_items,
+            min_gap_pct=min_gap_pct,
         )
         if not errs:
             break

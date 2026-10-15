@@ -770,6 +770,93 @@ def save_snapshot(
     return p
 
 
+def refresh_financials_from_raw(
+    tickers: list[str],
+    as_of: str,
+    cfg: dict,
+    *,
+    in_dir: str,
+    out_dir: str,
+) -> dict[str, dict]:
+    """Làm mới khối financials từ raw .pkl (cfg['from_raw']=True), giữ prices/news/peers.
+
+    Không gọi mạng. Thiếu raw BCTC → status skipped_no_raw (giữ snapshot cũ nếu đã copy).
+    """
+    cfg = {**cfg, "from_raw": True}
+    summary: dict[str, dict] = {}
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    n = len(tickers)
+    for i, t in enumerate(tickers, 1):
+        src_path = Path(in_dir) / f"{t}_{as_of}.json"
+        if not src_path.exists():
+            summary[t] = {"status": "error", "error": "missing_source_snapshot"}
+            print(f"[{i}/{n}] {t} thiếu snapshot nguồn", flush=True)
+            continue
+        try:
+            snap = json.loads(src_path.read_text(encoding="utf-8"))
+            is_bank = bool((snap.get("company") or {}).get("is_bank"))
+            cfg_run = {**cfg, "_flags": []}
+            # Bỏ cờ unmatched/fin cũ liên quan BCTC trước khi ghi lại
+            old_flags = [
+                f
+                for f in list((snap.get("meta") or {}).get("flags") or [])
+                if not (
+                    isinstance(f, str)
+                    and (
+                        f.startswith("fin_")
+                        or f.startswith("vnf_")
+                        or f in ("fast_mode", "quarterly_skipped_fast_mode")
+                    )
+                )
+            ]
+            fin, fin_sources = fetch_financials(t, as_of, cfg_run, is_bank)
+            if not fin.get("annual") and not fin.get("quarterly"):
+                summary[t] = {"status": "skipped_no_raw"}
+                # vẫn ghi bản cũ sang out nếu khác thư mục
+                out_path = Path(out_dir) / f"{t}_{as_of}.json"
+                if out_path.resolve() != src_path.resolve():
+                    out_path.write_text(json.dumps(snap, ensure_ascii=False, indent=1), encoding="utf-8")
+                print(f"[{i}/{n}] {t} skipped_no_raw", flush=True)
+                continue
+            # Giữ quý cũ nếu raw không có quý (fast / thiếu pkl)
+            old_q = (snap.get("financials") or {}).get("quarterly") or []
+            if not fin.get("quarterly") and old_q:
+                fin["quarterly"] = old_q
+                cmap = fin.setdefault("column_map", {})
+                if not cmap.get("quarterly"):
+                    cmap["quarterly"] = ((snap.get("financials") or {}).get("column_map") or {}).get("quarterly") or {}
+            snap["financials"] = fin
+            # Nguồn: thay src_fin_* cũ, thêm mới
+            sources = [
+                s
+                for s in (snap.get("sources") or [])
+                if not (isinstance(s, dict) and str(s.get("id", "")).startswith("src_fin"))
+            ]
+            sources.extend(fin_sources)
+            snap["sources"] = sources
+            new_flags = old_flags + list(cfg_run.get("_flags") or [])
+            if "financials_refreshed_from_raw" not in new_flags:
+                new_flags.append("financials_refreshed_from_raw")
+            snap.setdefault("meta", {})["flags"] = list(dict.fromkeys(new_flags))
+            # VNF offline tắt ở CLI; không gọi lại
+            assert_valid(snap, "snapshot")
+            bad = check_no_lookahead(snap)
+            if bad:
+                raise ValueError("look-ahead: " + "; ".join(bad[:3]))
+            out_path = Path(out_dir) / f"{t}_{as_of}.json"
+            out_path.write_text(json.dumps(snap, ensure_ascii=False, indent=1), encoding="utf-8")
+            has_div = any(
+                (p.get("items") or {}).get("dividends_paid") is not None
+                for p in (fin.get("annual") or [])
+            )
+            summary[t] = {"status": "ok", "dividends_paid": has_div}
+            print(f"[{i}/{n}] {t} ok div={has_div}", flush=True)
+        except Exception as e:  # noqa: BLE001
+            summary[t] = {"status": "error", "error": str(e)[:200]}
+            print(f"[{i}/{n}] {t} error: {str(e)[:120]}", flush=True)
+    return summary
+
+
 def load_snapshot(path: str) -> dict:
     snap = json.loads(Path(path).read_text(encoding="utf-8"))
     assert_valid(snap, "snapshot")

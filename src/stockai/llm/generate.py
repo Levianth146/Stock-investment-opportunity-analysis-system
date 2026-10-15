@@ -138,6 +138,42 @@ def _circuit_is_open(provider: str, model: str, debate: dict) -> bool:
         return True
 
 
+def circuit_open_until(provider: str, model: str) -> float | None:
+    """Unix monotonic deadline khi circuit đang mở; None nếu đóng."""
+    key = _cb_key(provider, model)
+    with _circuit_lock:
+        st = _circuit.get(key)
+        if not st:
+            return None
+        until = float(st.get("open_until") or 0.0)
+        if until <= 0 or time.monotonic() >= until:
+            return None
+        return until
+
+
+def circuit_retry_after_sec(provider: str, model: str) -> float | None:
+    until = circuit_open_until(provider, model)
+    if until is None:
+        return None
+    return max(0.0, until - time.monotonic())
+
+
+def circuit_snapshot() -> dict[str, dict[str, Any]]:
+    """Bản sao state circuit (test / probe) — không chứa key."""
+    with _circuit_lock:
+        out: dict[str, dict[str, Any]] = {}
+        now = time.monotonic()
+        for k, st in _circuit.items():
+            until = float(st.get("open_until") or 0.0)
+            out[k] = {
+                "fails": int(st.get("fails") or 0),
+                "open": until > 0 and now < until,
+                "retry_after_sec": max(0.0, until - now) if until > now else 0.0,
+                "last_reason": str(st.get("last_reason") or ""),
+            }
+        return out
+
+
 def _circuit_record_success(provider: str, model: str) -> None:
     key = _cb_key(provider, model)
     with _circuit_lock:
@@ -230,7 +266,7 @@ def _models_for(provider: str, debate: dict) -> list[str]:
 
 def _timeout_for(provider: str, debate: dict) -> float:
     """Timeout per-provider; fallback debate.timeout_sec."""
-    base = float(debate.get("timeout_sec") or 90)
+    base = float(debate.get("timeout_sec") or 30)
     sec = debate.get(provider) if isinstance(debate.get(provider), dict) else {}
     if isinstance(sec, dict) and sec.get("timeout_sec") is not None:
         try:
@@ -238,6 +274,39 @@ def _timeout_for(provider: str, debate: dict) -> float:
         except (TypeError, ValueError):
             pass
     return base
+
+
+def _ordered_model_targets(
+    providers: list[str],
+    debate: dict,
+    qpath: Path,
+) -> list[tuple[str, str]]:
+    """Thứ tự thử: model khỏe (non-GLM) → GLM → phần còn lại cùng danh sách.
+
+    «Khỏe» = có key, không bị quota block, circuit đóng.
+    Bỏ qua model đang circuit/quota (không xếp vào rest).
+    """
+    healthy_non_glm: list[tuple[str, str]] = []
+    healthy_glm: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+
+    for provider in providers:
+        if not _has_key(provider):
+            continue
+        for model in _models_for(provider, debate):
+            key = (provider, model)
+            if key in seen:
+                continue
+            seen.add(key)
+            blocked, _until = is_blocked(provider, model, path=qpath)
+            if blocked or _circuit_is_open(provider, model, debate):
+                continue
+            if provider == "glm":
+                healthy_glm.append(key)
+            else:
+                healthy_non_glm.append(key)
+    # healthy → GLM → (rest đã gộp trong healthy_non_glm theo thứ tự config)
+    return healthy_non_glm + healthy_glm
 
 
 def _gemini_gen_opts(debate: dict) -> dict[str, Any]:
@@ -367,6 +436,14 @@ def _reason_tag(exc: Exception) -> str:
     return (msg.split(":", 1)[0] or "error")[:40]
 
 
+def _safe_print(msg: str) -> None:
+    """In log ops — tránh UnicodeEncodeError cp1252 trên Windows console."""
+    try:
+        print(msg, flush=True)
+    except UnicodeEncodeError:
+        print(msg.encode("ascii", "replace").decode("ascii"), flush=True)
+
+
 def _persist_quota_block(provider: str, model: str, exc: Exception, debate: dict) -> None:
     body = getattr(exc, "body", "") or ""
     code_1113 = bool(getattr(exc, "code_1113", False))
@@ -382,7 +459,7 @@ def _persist_quota_block(provider: str, model: str, exc: Exception, debate: dict
         default_hours=6.0,
         path=_quota_path(debate),
     )
-    print(f"quota_block: {provider}/{model} đến {format_blocked_until(until)}")
+    _safe_print(f"quota_block: {provider}/{model} until {format_blocked_until(until)}")
 
 
 def generate_json(
@@ -455,121 +532,172 @@ def generate_json(
     for provider in providers:
         if not _has_key(provider):
             flags.append(f"llm_missing_key_{provider}")
+
+    # Log + flag model bị bỏ (quota/circuit) dù không nằm trong hàng đợi thử
+    for provider in providers:
+        if not _has_key(provider):
             continue
-        timeout_sec = _timeout_for(provider, debate)
         for model in _models_for(provider, debate):
             blocked, until = is_blocked(provider, model, path=qpath)
             if blocked and until is not None:
                 msg_until = format_blocked_until(until)
-                print(f"bỏ qua {model} đến {msg_until}")
+                _safe_print(f"skip {provider}/{model} until {msg_until}")
                 flags.append(f"llm_quota_skip_{provider}_{model}")
                 continue
             if _circuit_is_open(provider, model, debate):
                 flags.append(f"llm_circuit_open_{provider}_{model}")
-                continue
-            for attempt in range(max_retries):
-                try:
-                    _wait_rpm(rpm)
-                    parsed, usage, extra_flags = _call_provider_model(
-                        provider,
-                        prompt,
+
+    targets = _ordered_model_targets(providers, debate, qpath)
+    providers_tried: set[str] = set()
+    providers_ok: set[str] = set()
+    for provider, model in targets:
+        blocked, until = is_blocked(provider, model, path=qpath)
+        if blocked and until is not None:
+            msg_until = format_blocked_until(until)
+            _safe_print(f"skip {provider}/{model} until {msg_until}")
+            flags.append(f"llm_quota_skip_{provider}_{model}")
+            continue
+        if _circuit_is_open(provider, model, debate):
+            flags.append(f"llm_circuit_open_{provider}_{model}")
+            continue
+        timeout_sec = _timeout_for(provider, debate)
+        providers_tried.add(provider)
+        for attempt in range(max_retries):
+            t_attempt = time.monotonic()
+            try:
+                _wait_rpm(rpm)
+                parsed, usage, extra_flags = _call_provider_model(
+                    provider,
+                    prompt,
+                    model=model,
+                    debate=debate,
+                    temperature=temperature,
+                    timeout_sec=timeout_sec,
+                    schema_hint=schema_hint,
+                )
+                latency_ms = int((time.monotonic() - t_attempt) * 1000)
+                _safe_print(
+                    f"llm_attempt provider={provider} model={model} "
+                    f"latency_ms={latency_ms} class=ok attempt={attempt + 1}"
+                )
+                in_tok = int(usage.get("input_tokens") or 0)
+                out_tok = int(usage.get("output_tokens") or 0)
+                cost = estimate_cost_usd(model, in_tok, out_tok, debate)
+                _circuit_record_success(provider, model)
+                providers_ok.add(provider)
+                if can_cache:
+                    write_cache(
+                        cache_dir,
+                        key,
+                        bull=list(parsed.get("bull") or []) if isinstance(parsed.get("bull"), list) else [],
+                        bear=list(parsed.get("bear") or []) if isinstance(parsed.get("bear"), list) else [],
+                        provider=provider,
                         model=model,
-                        debate=debate,
-                        temperature=temperature,
-                        timeout_sec=timeout_sec,
-                        schema_hint=schema_hint,
+                        flags=flags,
                     )
-                    in_tok = int(usage.get("input_tokens") or 0)
-                    out_tok = int(usage.get("output_tokens") or 0)
-                    cost = estimate_cost_usd(model, in_tok, out_tok, debate)
-                    _circuit_record_success(provider, model)
-                    if can_cache:
-                        write_cache(
-                            cache_dir,
-                            key,
-                            bull=list(parsed.get("bull") or []) if isinstance(parsed.get("bull"), list) else [],
-                            bear=list(parsed.get("bear") or []) if isinstance(parsed.get("bear"), list) else [],
-                            provider=provider,
-                            model=model,
-                            flags=flags,
-                        )
-                        try:
-                            path = cache_path(cache_dir, key)
-                            existing = json.loads(path.read_text(encoding="utf-8"))
-                            if isinstance(existing, dict):
-                                existing["raw"] = {k: v for k, v in parsed.items()}
-                                existing["usage"] = usage
-                                existing["cost_usd"] = cost
-                                path.write_text(
-                                    json.dumps(existing, ensure_ascii=False, indent=2),
-                                    encoding="utf-8",
-                                )
-                        except (OSError, ValueError):
-                            pass
-                    meta_flags = list(flags) + list(extra_flags)
-                    if attempt > 0:
-                        meta_flags.append(f"llm_retry_ok_{provider}_{model}")
-                    parsed["_meta"] = {
-                        "provider": provider,
-                        "model": model,
-                        "flags": meta_flags,
-                        "cache_hit": False,
-                        "usage": usage,
-                        "cost_usd": cost,
-                        "attempts_on_model": attempt + 1,
-                        "network_calls": get_network_call_count(),
-                    }
-                    return parsed
-                except (gemini_rest.GeminiRestError, glm_rest.GlmRestError) as e:
-                    # Bắt TRƯỚC RuntimeError vì GeminiRestError/GlmRestError kế thừa RuntimeError
-                    last_err = e
-                    last_reason = str(e)
-                    reason = _reason_tag(e)
-                    opened = _circuit_record_failure(provider, model, reason, debate)
-                    if opened:
-                        flags.append(f"llm_circuit_open_{provider}_{model}")
+                    try:
+                        path = cache_path(cache_dir, key)
+                        existing = json.loads(path.read_text(encoding="utf-8"))
+                        if isinstance(existing, dict):
+                            existing["raw"] = {k: v for k, v in parsed.items()}
+                            existing["usage"] = usage
+                            existing["cost_usd"] = cost
+                            path.write_text(
+                                json.dumps(existing, ensure_ascii=False, indent=2),
+                                encoding="utf-8",
+                            )
+                    except (OSError, ValueError):
+                        pass
+                meta_flags = list(flags) + list(extra_flags)
+                if attempt > 0:
+                    meta_flags.append(f"llm_retry_ok_{provider}_{model}")
+                # Đánh dấu provider trước đó đã cạn model
+                for prev in providers_tried:
+                    if prev != provider and prev not in providers_ok:
+                        pe = f"llm_provider_exhausted_{prev}"
+                        if pe not in meta_flags:
+                            meta_flags.append(pe)
+                parsed["_meta"] = {
+                    "provider": provider,
+                    "model": model,
+                    "flags": meta_flags,
+                    "cache_hit": False,
+                    "usage": usage,
+                    "cost_usd": cost,
+                    "attempts_on_model": attempt + 1,
+                    "network_calls": get_network_call_count(),
+                    "latency_ms": latency_ms,
+                }
+                return parsed
+            except (gemini_rest.GeminiRestError, glm_rest.GlmRestError) as e:
+                # Bắt TRƯỚC RuntimeError vì GeminiRestError/GlmRestError kế thừa RuntimeError
+                last_err = e
+                last_reason = str(e)
+                reason = _reason_tag(e)
+                latency_ms = int((time.monotonic() - t_attempt) * 1000)
+                _safe_print(
+                    f"llm_attempt provider={provider} model={model} "
+                    f"latency_ms={latency_ms} class={reason} attempt={attempt + 1}"
+                )
+                opened = _circuit_record_failure(provider, model, reason, debate)
+                if opened:
+                    flags.append(f"llm_circuit_open_{provider}_{model}")
 
-                    if _is_empty_output(e):
-                        flags.append("llm_empty_output")
-                        flags.append(f"llm_model_exhausted_{provider}_{model}")
-                        break
-
-                    if _is_quota_exhausted(e):
-                        try:
-                            _persist_quota_block(provider, model, e, debate)
-                        except OSError:
-                            pass
-                        flag = f"llm_quota_exhausted:{provider}"
-                        if flag not in flags:
-                            flags.append(flag)
-                        flags.append(f"llm_model_exhausted_{provider}_{model}")
-                        # Chỉ bỏ model này — thử model khác cùng provider (quota per-model)
-                        break
-
-                    if _is_retryable(e) and attempt + 1 < max_retries:
-                        sleep_for = _BACKOFF_SEC[min(attempt, len(_BACKOFF_SEC) - 1)]
-                        time.sleep(sleep_for)
-                        continue
+                if _is_empty_output(e):
+                    flags.append("llm_empty_output")
                     flags.append(f"llm_model_exhausted_{provider}_{model}")
                     break
-                except RuntimeError as e:
-                    if "max_live_calls_reached" in str(e):
-                        last_err = e
-                        last_reason = str(e)
-                        flags.append("llm_max_live_calls")
-                        err = RuntimeError(f"all_providers_failed:{last_err}")
-                        setattr(err, "flags", flags + [f"debate_llm_final_reason:{last_reason}"])
-                        raise err from e
-                    last_err = e
-                    last_reason = str(e)
-                    reason = _reason_tag(e)
-                    opened = _circuit_record_failure(provider, model, reason, debate)
-                    if opened:
-                        flags.append(f"llm_circuit_open_{provider}_{model}")
+
+                if _is_quota_exhausted(e):
+                    # Chỉ quota_exhausted thật mới ghi _quota_state.json
+                    # 503/429 tạm → circuit 15 phút, KHÔNG ghi quota
+                    try:
+                        _persist_quota_block(provider, model, e, debate)
+                    except OSError:
+                        pass
+                    flag = f"llm_quota_exhausted:{provider}"
+                    if flag not in flags:
+                        flags.append(flag)
                     flags.append(f"llm_model_exhausted_{provider}_{model}")
                     break
-            # next model
-        flags.append(f"llm_provider_exhausted_{provider}")
+
+                if _is_retryable(e) and attempt + 1 < max_retries:
+                    # 5xx/429: tối đa 1 retry rồi failover model
+                    sc = getattr(e, "status_code", None)
+                    if isinstance(sc, int) and (sc >= 500 or sc == 429) and attempt >= 1:
+                        flags.append(f"llm_model_exhausted_{provider}_{model}")
+                        break
+                    sleep_for = _BACKOFF_SEC[min(attempt, len(_BACKOFF_SEC) - 1)]
+                    time.sleep(sleep_for)
+                    continue
+                flags.append(f"llm_model_exhausted_{provider}_{model}")
+                break
+            except RuntimeError as e:
+                if "max_live_calls_reached" in str(e):
+                    last_err = e
+                    last_reason = str(e)
+                    flags.append("llm_max_live_calls")
+                    err = RuntimeError(f"all_providers_failed:{last_err}")
+                    setattr(err, "flags", flags + [f"debate_llm_final_reason:{last_reason}"])
+                    raise err from e
+                last_err = e
+                last_reason = str(e)
+                reason = _reason_tag(e)
+                latency_ms = int((time.monotonic() - t_attempt) * 1000)
+                _safe_print(
+                    f"llm_attempt provider={provider} model={model} "
+                    f"latency_ms={latency_ms} class={reason} attempt={attempt + 1}"
+                )
+                opened = _circuit_record_failure(provider, model, reason, debate)
+                if opened:
+                    flags.append(f"llm_circuit_open_{provider}_{model}")
+                flags.append(f"llm_model_exhausted_{provider}_{model}")
+                break
+    for provider in providers_tried:
+        if provider not in providers_ok:
+            flag_pe = f"llm_provider_exhausted_{provider}"
+            if flag_pe not in flags:
+                flags.append(flag_pe)
     err = RuntimeError(f"all_providers_failed:{last_err}")
     setattr(err, "flags", flags + [f"debate_llm_final_reason:{last_reason}"])
     raise err

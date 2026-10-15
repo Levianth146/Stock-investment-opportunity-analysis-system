@@ -7,9 +7,11 @@ from typing import Any
 
 from fastapi import Request
 
+from stockai.api.debate_jobs import DebateJobManager
 from stockai.api.debate_service import DebateService
-from stockai.api.quotes import QuoteProvider, SnapshotQuoteProvider
-from stockai.api.ratelimit import DebateRateLimiter
+from stockai.api.quotes import HubQuoteProvider, QuoteProvider, SnapshotQuoteProvider
+from stockai.api.ratelimit import ConnectionLimiter, DebateRateLimiter
+from stockai.api.realtime import FakeStream, RealtimeHub
 from stockai.api.store import ResultStore, load_api_cfg
 
 
@@ -23,11 +25,34 @@ def init_app_state(app: Any, *, api_cfg: dict | None = None, store: ResultStore 
         max_per_day=int(cfg.get("debate_live_max_per_day") or 15),
         budget_path=cache_dir / "_debate_budget.json",
     )
+    debate_svc = DebateService(st, limiter)
+    max_workers = int(cfg.get("debate_job_max_workers") or 2)
+
+    rt_cfg = cfg.get("realtime") if isinstance(cfg.get("realtime"), dict) else {}
+    fake: FakeStream | None = None
+    if cfg.get("_realtime_fake") is True:
+        fake = FakeStream()
+    hub = RealtimeHub(st, cfg, fake_stream=fake)
+    snap_qp = SnapshotQuoteProvider(st)
+    quote_provider: QuoteProvider = HubQuoteProvider(hub, snap_qp)
+    sse_lim = ConnectionLimiter(
+        max_per_key=int((rt_cfg or {}).get("sse_max_per_ip") or 5),
+    )
+
     app.state.api_cfg = cfg
     app.state.store = st
     app.state.limiter = limiter
-    app.state.debate_service = DebateService(st, limiter)
-    app.state.quote_provider = SnapshotQuoteProvider(st)
+    app.state.debate_service = debate_svc
+    app.state.debate_jobs = DebateJobManager(debate_svc, max_workers=max_workers)
+    app.state.realtime_hub = hub
+    app.state.sse_limiter = sse_lim
+    app.state.quote_provider = quote_provider
+    # Không start hub trong test trừ khi cfg yêu cầu
+    if not cfg.get("skip_realtime_start"):
+        try:
+            hub.start()
+        except Exception:  # noqa: BLE001
+            pass
 
 
 def get_store(request: Request) -> ResultStore:
@@ -38,8 +63,20 @@ def get_debate_service(request: Request) -> DebateService:
     return request.app.state.debate_service
 
 
+def get_debate_jobs(request: Request) -> DebateJobManager:
+    return request.app.state.debate_jobs
+
+
 def get_quote_provider(request: Request) -> QuoteProvider:
     return request.app.state.quote_provider
+
+
+def get_realtime_hub(request: Request) -> Any:
+    return request.app.state.realtime_hub
+
+
+def get_sse_limiter(request: Request) -> ConnectionLimiter:
+    return request.app.state.sse_limiter
 
 
 def get_api_cfg(request: Request) -> dict:

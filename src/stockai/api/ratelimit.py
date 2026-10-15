@@ -9,6 +9,43 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+class ConnectionLimiter:
+    """Giới hạn số kết nối đồng thời theo khóa (IP) — dùng cho SSE."""
+
+    def __init__(self, *, max_per_key: int = 5, max_tracked: int = 5000) -> None:
+        self.max_per_key = max(1, int(max_per_key))
+        self.max_tracked = max(1, int(max_tracked))
+        self._counts: OrderedDict[str, int] = OrderedDict()
+        self._lock = threading.Lock()
+
+    def try_acquire(self, key: str) -> bool:
+        k = (key or "unknown").strip() or "unknown"
+        with self._lock:
+            cur = int(self._counts.get(k) or 0)
+            if cur >= self.max_per_key:
+                return False
+            if k in self._counts:
+                self._counts.move_to_end(k)
+            self._counts[k] = cur + 1
+            while len(self._counts) > self.max_tracked:
+                self._counts.popitem(last=False)
+            return True
+
+    def release(self, key: str) -> None:
+        k = (key or "unknown").strip() or "unknown"
+        with self._lock:
+            cur = int(self._counts.get(k) or 0)
+            if cur <= 1:
+                self._counts.pop(k, None)
+            else:
+                self._counts[k] = cur - 1
+
+    def count(self, key: str) -> int:
+        k = (key or "unknown").strip() or "unknown"
+        with self._lock:
+            return int(self._counts.get(k) or 0)
+
+
 class SlidingWindowLimiter:
     """Đếm sự kiện trong cửa sổ ``window_sec`` giây."""
 
@@ -46,6 +83,20 @@ class SlidingWindowLimiter:
             if self.max_events <= 0:
                 return False
             return len(self._events) < self.max_events
+
+    def release_one(self) -> bool:
+        """Gỡ sự kiện mới nhất (hoàn ngân sách khi LLM fail)."""
+        with self._lock:
+            self._prune(time.monotonic())
+            if not self._events:
+                return False
+            self._events.pop()
+            return True
+
+    def event_count(self) -> int:
+        with self._lock:
+            self._prune(time.monotonic())
+            return len(self._events)
 
     def is_empty_after_prune(self) -> bool:
         """True nếu không còn sự kiện trong cửa sổ (sau khi dọn)."""
@@ -202,3 +253,26 @@ class DebateRateLimiter:
             if not self._daily_record_unlocked():
                 return False, "rate_limit_daily"
             return True, None
+
+    def release(self, client_ip: str) -> None:
+        """Hoàn 1 slot (giờ / IP / ngày) khi LLM không dùng thật (fail → template)."""
+        ip = (client_ip or "unknown").strip() or "unknown"
+        self.global_limiter.release_one()
+        with self._lock:
+            day, count = self._load_daily_unlocked()
+            if count > 0:
+                self._save_daily_unlocked(day, count - 1)
+            lim = self._by_ip.get(ip)
+            if lim is not None:
+                lim.release_one()
+
+    def daily_count(self) -> int:
+        with self._lock:
+            _, count = self._load_daily_unlocked()
+            return int(count)
+
+    def set_daily_count(self, count: int) -> None:
+        """Ghi đè số lượt ngày UTC (ops / reset sau fail click)."""
+        with self._lock:
+            day = self._utc_day()
+            self._save_daily_unlocked(day, max(0, int(count)))
