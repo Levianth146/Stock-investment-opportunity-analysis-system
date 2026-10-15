@@ -1,5 +1,7 @@
 # Chạy backend FastAPI cùng frontend
 
+Triển khai bản demo miễn phí: xem [hướng dẫn Render](DEPLOY_RENDER.md).
+
 Đã tích hợp code mới từ `origin/develop` ngày 15/10/2026, giữ dashboard tùy chỉnh. Xem [nguồn dữ liệu, bản sao dự phòng và giới hạn sau cập nhật](GITHUB_DATA_INTEGRATION.md). Giá hiện có đến 08/10/2026; snapshot 14/10 không nằm trong Git.
 
 ## Trang Danh mục theo dõi

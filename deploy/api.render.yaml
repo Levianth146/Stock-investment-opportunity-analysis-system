@@ -1,0 +1,31 @@
+# Used inside the Docker image; local config/api.yaml remains independent.
+snapshots_dir: data/snapshots
+asof: auto
+default_profile: long_term
+frontend_dir: frontend/dist
+web_dist_dir: null
+docs_enabled: false
+# Frontend and API share one HTTPS origin.
+cors_origins: []
+# Do not accept arbitrary forwarded headers from public clients.
+trust_proxy_headers: false
+cache_dir: data/api_cache
+debate_live_max_per_hour: 10
+debate_live_max_per_ip_per_hour: 3
+debate_live_max_per_day: 15
+debate_job_max_workers: 1
+realtime:
+  enabled: true
+  persist_dir: data/intraday
+  persist_interval_sec: 15
+  max_symbols: 250
+  max_per_connection: 200
+  price_scale: 1000
+  stale_after_sec: 90
+  sse_heartbeat_sec: 15
+  sse_max_symbols: 20
+  sse_max_per_ip: 5
+  market_sse_max_per_ip: 2
+  market_stream_interval_sec: 1.5
+  market_stream_lists_sec: 4
+  market_stream_idle_sec: 15
