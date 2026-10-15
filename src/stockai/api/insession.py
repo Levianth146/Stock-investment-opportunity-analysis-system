@@ -80,6 +80,43 @@ def _closes_vols(snap: dict) -> tuple[list[float], list[float], list[float], lis
     return closes, highs, lows, vols
 
 
+_STATIC_CACHE: dict[str, Any] = {"asof": None, "by_sym": {}}
+
+
+def _static_for(store: Any, sym: str) -> dict[str, Any] | None:
+    """Chỉ số tĩnh theo (asof, mã): SMA/RSI/TB20/52w/ngành/CP lưu hành — tính 1 lần, không đọc lại file."""
+    asof = getattr(store, "asof", None)
+    if _STATIC_CACHE["asof"] != asof:
+        _STATIC_CACHE["asof"] = asof
+        _STATIC_CACHE["by_sym"] = {}
+    by_sym: dict[str, Any] = _STATIC_CACHE["by_sym"]
+    if sym in by_sym:
+        return by_sym[sym]
+    try:
+        snap = store.load_snapshot(sym)
+    except Exception:  # noqa: BLE001
+        return None
+    closes, highs, lows, vols = _closes_vols(snap)
+    company = snap.get("company") if isinstance(snap.get("company"), dict) else {}
+    hi = lo = None
+    if highs and lows:
+        hi = max(highs[-252:]) if len(highs) >= 20 else max(highs)
+        lo = min(lows[-252:]) if len(lows) >= 20 else min(lows)
+    st = {
+        "sma50": _sma(closes, 50),
+        "sma200": _sma(closes, 200),
+        "avg20": _avg_vol(vols, 20),
+        "rsi": _rsi14(closes, 14),
+        "hi": hi,
+        "lo": lo,
+        "last_vol": vols[-1] if vols else None,
+        "sector": company.get("sector") or "Khác",
+        "shares": _num(company.get("shares_outstanding")),
+    }
+    by_sym[sym] = st
+    return st
+
+
 def _live_valuation(
     snap: dict,
     price: float | None,
@@ -140,6 +177,20 @@ def _fmt_ddmm(asof: str | None) -> str:
     return f"{s[8:10]}/{s[5:7]}"
 
 
+_MARKET_CACHE: dict[str, Any] = {"asof": None, "val": None}
+
+
+def _eod_market(store: Any) -> dict:
+    """store.market() đọc nhiều snapshot — cache theo asof (EOD không đổi trong phiên)."""
+    if not hasattr(store, "market"):
+        return {}
+    asof = getattr(store, "asof", None)
+    if _MARKET_CACHE["asof"] != asof or _MARKET_CACHE["val"] is None:
+        _MARKET_CACHE["val"] = store.market()
+        _MARKET_CACHE["asof"] = asof
+    return _MARKET_CACHE["val"]
+
+
 def _eod_prior_close(eod_idx: dict | None) -> float | None:
     """Đóng cửa phiên trước từ series_eod (điểm cuối = phiên đóng gần nhất)."""
     if not isinstance(eod_idx, dict):
@@ -161,7 +212,7 @@ def _build_index_block(hub: RealtimeHub, store: Any, as_of_ts: str) -> dict[str,
     avail = hub.available_indices()
     live_q = hub.get_index_quote("VNINDEX")
     candles = hub.candles("VNINDEX") if live_q else []
-    eod = store.market() if hasattr(store, "market") else {}
+    eod = _eod_market(store)
     eod_idx = eod.get("index") if isinstance(eod, dict) else None
     series_eod = (eod_idx or {}).get("series_30d") if isinstance(eod_idx, dict) else None
     prior_eod = _eod_prior_close(eod_idx if isinstance(eod_idx, dict) else None)
@@ -261,7 +312,9 @@ def _build_index_block(hub: RealtimeHub, store: Any, as_of_ts: str) -> dict[str,
     }
 
 
-def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
+def build_market_analysis(
+    hub: RealtimeHub, store: Any, *, include_valuation: bool = True
+) -> dict[str, Any]:
     """Tạo payload GET /api/realtime/market — breadth, lists, heatmap, valuation mẫu."""
     sess = hub.session_now()
     as_of_ts = sess.as_of_ts
@@ -287,11 +340,9 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
     for q in hub.iter_liquid_quotes():
         liquid_n += 1
         sym = q.symbol
-        try:
-            snap = store.load_snapshot(sym)
-        except Exception:  # noqa: BLE001
+        st = _static_for(store, sym)
+        if st is None:
             continue
-        closes, highs, lows, vols = _closes_vols(snap)
         price = q.price
         basis = q.basis if q.state in ("live", "stale") else "eod"
         chg = q.change_pct
@@ -299,7 +350,8 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
             getattr(q, "prev_close_source", "none") in ("tick", "snapshot")
             and q.prev_close is not None
         )
-        traded = hub.has_traded_session(sym) or q.state in ("live", "stale")
+        # "Đã khớp" = có tick thật trong phiên này (stale không tick ≠ đứng giá).
+        traded = hub.has_traded_session(sym)
 
         # Breadth 4 nhóm: up/down/flat/unmatched — tổng = liquid
         if session_open and not traded:
@@ -317,8 +369,8 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
         else:
             flat += 1
 
-        sma50 = _sma(closes, 50)
-        sma200 = _sma(closes, 200)
+        sma50 = st["sma50"]
+        sma200 = st["sma200"]
         if price is not None and sma50 is not None:
             if price >= sma50:
                 above_sma50 += 1
@@ -330,9 +382,9 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
             else:
                 below_sma200 += 1
 
-        avg20 = _avg_vol(vols, 20)
+        avg20 = st["avg20"]
         # % / Vol tương đối: chỉ khi live (hoặc phiên đóng hợp lệ); không bịa +0% khi thiếu stream
-        metrics_ok = (not session_open) or q.state in ("live", "stale")
+        metrics_ok = (not session_open) or traded
         if not metrics_ok:
             chg = None
 
@@ -353,7 +405,7 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
                     rel_vol_label = "ước tính"
         else:
             # Ngoài giờ: KL/TB20 nguyên phiên, không nhân session_fraction
-            today_vol = float(q.volume) if q.volume is not None else (vols[-1] if vols else None)
+            today_vol = float(q.volume) if q.volume is not None else st["last_vol"]
             if avg20 and avg20 > 0 and today_vol is not None:
                 rel_vol = round(today_vol / avg20, 2)
                 rel_vol_label = f"phiên {_fmt_ddmm(store.asof)}, KL/TB20"
@@ -364,9 +416,9 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
             value_traded = price * today_vol
         liquid_ok = value_traded is not None and value_traded >= MIN_VALUE_TRADED
 
-        if highs and lows and price is not None:
-            hi = max(highs[-252:]) if len(highs) >= 20 else max(highs)
-            lo = min(lows[-252:]) if len(lows) >= 20 else min(lows)
+        if st["hi"] is not None and st["lo"] is not None and price is not None:
+            hi = st["hi"]
+            lo = st["lo"]
             if price >= hi * 0.999:
                 hit_52w_hi += 1
                 if liquid_ok:
@@ -421,7 +473,7 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
                     }
                 )
 
-        rsi = _rsi14(closes, 14)
+        rsi = st["rsi"]
         if rsi is not None and liquid_ok:
             if rsi >= 70:
                 overbought.append(
@@ -432,10 +484,11 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
                     {**_row(sym, price, chg, as_of_ts, "eod", rel_vol=rel_vol), "rsi14": round(rsi, 2)}
                 )
 
-        company = snap.get("company") if isinstance(snap.get("company"), dict) else {}
-        sector = company.get("sector") or "Khác"
-        shares = _num(company.get("shares_outstanding"))
+        sector = st["sector"]
+        shares = st["shares"]
         mcap = (price * shares) if (price is not None and shares is not None) else None
+        ref_px = q.prev_close if q.prev_close is not None else price
+        mcap_ref = (ref_px * shares) if (ref_px is not None and shares is not None) else None
         if not metrics_ok:
             hm_label = "chưa có giá trực tiếp"
             hm_chg: float | None = None
@@ -459,6 +512,7 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
                     "as_of_ts": as_of_ts,
                     "basis": basis,
                 },
+                "market_cap_ref": mcap_ref,
                 "label": hm_label,
             }
         )
@@ -476,7 +530,7 @@ def build_market_analysis(hub: RealtimeHub, store: Any) -> dict[str, Any]:
         return sorted(rows, key=_k, reverse=reverse)[:n]
 
     sample_vals: list[dict] = []
-    sample_syms = list(hub._liquid)[:12]  # noqa: SLF001
+    sample_syms = list(hub._liquid)[:12] if include_valuation else []  # noqa: SLF001
     for sym in sample_syms:
         try:
             snap = store.load_snapshot(sym)

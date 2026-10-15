@@ -473,9 +473,14 @@ class RealtimeHub:
         api_secret = os.environ.get("DNSE_API_SECRET_KEY") or os.environ["DNSE_API_SECRET"]
         # Không log key
         symbols = self._desired_symbols()
-        chunks = [
-            symbols[i : i + self.max_per_conn]
-            for i in range(0, len(symbols), self.max_per_conn)
+        # Hạn mức DNSE: tối đa max_per_conn kênh / kết nối (trades + sec_def + index + session).
+        # Kết nối đầu dành 2 kênh cho index + session → bớt 2 mã trade.
+        first_n = max(1, self.max_per_conn - 2)
+        chunks = [symbols[:first_n]] if symbols else []
+        rest = symbols[first_n:]
+        chunks += [
+            rest[i : i + self.max_per_conn]
+            for i in range(0, len(rest), self.max_per_conn)
         ]
         if not chunks:
             self._mode = "no_realtime"
@@ -510,13 +515,8 @@ class RealtimeHub:
 
             await client.connect()
             # Không truyền on_trade/on_sec_def — ingest từ raw dict ở trên
-            await client.subscribe_trades(chunk, board_id="G1", encoding="json")
-            try:
-                await client.subscribe_sec_def(chunk, board_id="G1", encoding="json")
-                self._sec_def_ok = True
-            except Exception:  # noqa: BLE001
-                self._sec_def_ok = False
             if first:
+                # Ưu tiên chỉ số + phiên trước khi chiếm hạn mức bằng trades
                 try:
                     await client.subscribe_market_index(
                         market_index="VNINDEX", encoding="json"
@@ -531,6 +531,15 @@ class RealtimeHub:
                     self._session_channel_ok = True
                 except Exception:  # noqa: BLE001
                     self._session_channel_ok = False
+            await client.subscribe_trades(chunk, board_id="G1", encoding="json")
+            # sec_def chỉ khi còn hạn mức kênh (2*len + index/session <= max)
+            extras = 2 if first else 0
+            if len(chunk) * 2 + extras <= self.max_per_conn:
+                try:
+                    await client.subscribe_sec_def(chunk, board_id="G1", encoding="json")
+                    self._sec_def_ok = True
+                except Exception:  # noqa: BLE001
+                    self._sec_def_ok = self._sec_def_ok or False
 
             self._ws_connected = True
             self._connected_mono = time.monotonic()
@@ -706,6 +715,17 @@ class RealtimeHub:
         msg_type = data.get("T")
         if msg_type is not None or action in (None, ""):
             self._bump_msg_type(str(msg_type) if msg_type is not None else None)
+
+        if msg_type is None and action:
+            # Chẩn đoán: đếm action + giữ mẫu ack/error (cắt ngắn)
+            with self._lock:
+                ac = self._stats.setdefault("actions", {})
+                ac[str(action)] = int(ac.get(str(action)) or 0) + 1
+                s_ = str(data)
+                if action in ("error", "subscribed") and (
+                    action == "error" or "market_index" in s_ or "session" in s_
+                ):
+                    self._stats.setdefault("action_samples", {})[str(action)] = s_[:300]
 
         # Ping/pong / subscribed — bỏ qua parse thị trường
         if action in ("ping", "pong", "subscribed", "auth", "error"):
@@ -1224,7 +1244,7 @@ class RealtimeHub:
                 "prev_close_source": prev_src,
                 "snapshot_asof": asof,
                 "sessions_behind": behind,
-                "index_channel": "ok" if self._index_ok else "chưa đo",
+                "index_channel": "ok" if (self._index_ok and int(self._stats.get("parsed_index") or 0) > 0) else ("chờ dữ liệu" if self._index_ok else "chưa đo"),
                 "session_channel": "ok" if self._session_channel_ok else "chưa đo",
                 "sec_def_channel": "ok" if self._sec_def_ok else "chưa đo",
                 "last_error": self._last_error,

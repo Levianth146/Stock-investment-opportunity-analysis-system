@@ -5,8 +5,8 @@ default_profile: long_term
 host: 127.0.0.1
 port: 8000
 cors_origins: []              # ví dụ: ["http://localhost:5173"]
-docs_enabled: true            # false → tắt /docs, /redoc, /openapi.json
-trust_proxy_headers: false    # true chỉ khi đứng sau proxy tin cậy (Cloudflare tunnel…)
+docs_enabled: false           # tắt /docs, /redoc, /openapi.json khi public
+trust_proxy_headers: true     # tunnel Cloudflare: lấy IP thật từ CF-Connecting-IP (nếu chạy KHÔNG qua tunnel thì đặt false)
 proxy_ip_header: CF-Connecting-IP
 debate_live_max_per_hour: 10
 debate_live_max_per_ip_per_hour: 3
@@ -25,3 +25,7 @@ realtime:
   sse_heartbeat_sec: 15
   sse_max_symbols: 20
   sse_max_per_ip: 5
+  market_sse_max_per_ip: 2        # /api/stream/market (trang chủ) — 1 tab = 1 kết nối
+  market_stream_interval_sec: 1.5
+  market_stream_idle_sec: 15       # ngoài giờ: kiểm tra thưa, chỉ heartbeat nếu không đổi
+  market_stream_lists_sec: 4

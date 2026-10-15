@@ -46,6 +46,9 @@ def init_app_state(app: Any, *, api_cfg: dict | None = None, store: ResultStore 
     app.state.debate_jobs = DebateJobManager(debate_svc, max_workers=max_workers)
     app.state.realtime_hub = hub
     app.state.sse_limiter = sse_lim
+    app.state.market_sse_limiter = ConnectionLimiter(
+        max_per_key=int((rt_cfg or {}).get("market_sse_max_per_ip") or 2),
+    )
     app.state.quote_provider = quote_provider
     # Không start hub trong test trừ khi cfg yêu cầu
     if not cfg.get("skip_realtime_start"):

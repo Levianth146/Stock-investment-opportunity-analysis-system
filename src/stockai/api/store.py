@@ -1017,11 +1017,42 @@ class ResultStore:
                     "link": src_n.get("url"),
                 }
             )
+        classified = {it["id"] for it in items}
+        raw: list[dict[str, Any]] = []
+        for n in snap.get("news") or []:
+            if not isinstance(n, dict) or not n.get("id") or str(n["id"]) in classified:
+                continue
+            url = n.get("url")
+            label = "chưa phân loại"
+            try:
+                from stockai.m5_sentiment.run import classify_title
+
+                pol, _m, _meta = classify_title(
+                    str(n.get("title") or ""), symbol, source=str(n.get("source") or "")
+                )
+                label = "tích cực" if pol >= 0.1 else ("tiêu cực" if pol <= -0.1 else "trung tính")
+            except Exception:  # noqa: BLE001
+                pass
+            raw.append(
+                {
+                    "id": str(n["id"]),
+                    "title": n.get("title"),
+                    "label": label,
+                    "source": n.get("source"),
+                    "url": url if isinstance(url, str) and url.startswith("http") else None,
+                    "published_at": n.get("published_at"),
+                }
+            )
+        raw.sort(key=lambda x: str(x.get("published_at") or ""), reverse=True)
+        dates = [str(n.get("published_at") or "")[:10] for n in (snap.get("news") or []) if isinstance(n, dict)]
         return {
             "asof": self.asof,
             "disclaimer": DISCLAIMER,
             "symbol": symbol,
             "items": items,
+            "other_items": raw[:30],
+            "latest_news_date": max(dates) if dates and max(dates) else None,
+            "total_news": len(snap.get("news") or []),
         }
 
 

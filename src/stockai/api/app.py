@@ -27,6 +27,9 @@ from stockai.api.deps import (
     init_app_state,
 )
 from stockai.api.insession import build_market_analysis
+from stockai.api.dividends import dividends_for
+from stockai.api.profiles import company_profile
+from stockai.api.market_stream import MarketDeltaState, shared_market
 from stockai.api.realtime import SSE_COALESCE_SEC
 from stockai.api.watchlist import build_watchlist_summary
 from stockai.api.spa import mount_spa, resolve_web_dist
@@ -378,6 +381,32 @@ def create_app(
             return store.income_flow(sym, period=period)
         except KeyError:
             return _err(404, "Không tìm thấy mã", store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/profile", response_model=None)
+    def ticker_profile(request: Request, symbol: str) -> Any:
+        """Hồ sơ công ty: giới thiệu, niêm yết, sở hữu (cache M1, không realtime)."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return _envelope(company_profile(store.root, sym), store)
+        except Exception:
+            return _err(500, "Lỗi nội bộ", store)
+
+    @app.get("/api/tickers/{symbol}/dividends", response_model=None)
+    def ticker_dividends(request: Request, symbol: str) -> Any:
+        """Lịch sử cổ tức (tiền mặt/cổ phiếu) từ file fetch; thiếu thì available=false."""
+        store = get_store(request)
+        sym = (symbol or "").strip().upper()
+        bad = _require_symbol(store, sym)
+        if bad:
+            return bad
+        try:
+            return _envelope(dividends_for(store.root, sym), store)
         except Exception:
             return _err(500, "Lỗi nội bộ", store)
 
@@ -746,6 +775,76 @@ def create_app(
             finally:
                 hub.release_view(clean)
                 sse_lim.release(ip)
+
+        return StreamingResponse(
+            event_gen(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
+
+    @app.get("/api/stream/market", response_model=None)
+    async def market_stream(request: Request) -> Any:
+        """SSE trang chủ: ``full`` khi kết nối, sau đó ``delta`` (seq tăng dần); heartbeat 15s."""
+        store = get_store(request)
+        cfg = get_api_cfg(request)
+        rt = cfg.get("realtime") if isinstance(cfg.get("realtime"), dict) else {}
+        hb_sec = float(rt.get("sse_heartbeat_sec") or 15)
+        tick_sec = float(rt.get("market_stream_interval_sec") or 1.5)
+        idle_sec = float(rt.get("market_stream_idle_sec") or 15)
+        lists_every = float(rt.get("market_stream_lists_sec") or 4)
+        lim = request.app.state.market_sse_limiter
+        ip = client_ip(request)
+        if not lim.try_acquire(ip):
+            return _err(429, "Quá nhiều kết nối stream từ IP này", store)
+        hub = get_realtime_hub(request)
+        max_events = int(cfg.get("_sse_max_events") or 0)
+
+        async def event_gen() -> AsyncIterator[str]:
+            state = MarketDeltaState(lists_every=lists_every)
+            last_hb = time.monotonic()
+            sent = 0
+            try:
+                payload = await asyncio.to_thread(shared_market, hub, store, min_age=0.0)
+                yield f"data: {json.dumps(state.full(payload), ensure_ascii=False)}\n\n"
+                sent += 1
+                loops = 0
+                while True:
+                    if max_events and sent >= max_events:
+                        break
+                    if await request.is_disconnected():
+                        break
+                    loops += 1
+                    if max_events and loops > 40:
+                        break
+                    open_now = hub.session_now().phase != "closed"
+                    wait = (0.05 if max_events else (tick_sec if open_now else idle_sec))
+                    await asyncio.sleep(wait)
+                    payload = await asyncio.to_thread(
+                        shared_market, hub, store, min_age=0.0 if max_events else 1.0
+                    )
+                    if max_events:
+                        ev = state.delta(payload, now=time.monotonic() + 100.0 * loops)
+                    else:
+                        ev = state.delta(payload)
+                    if ev is not None:
+                        last_hb = time.monotonic()
+                        yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+                        sent += 1
+                    elif time.monotonic() - last_hb >= (0.0 if max_events else hb_sec):
+                        last_hb = time.monotonic()
+                        yield ": heartbeat\n\n"
+                        yield (
+                            "data: "
+                            + json.dumps({"type": "heartbeat", "ts": time.time(), "seq": state.seq})
+                            + "\n\n"
+                        )
+                        sent += 1
+            finally:
+                lim.release(ip)
 
         return StreamingResponse(
             event_gen(),
