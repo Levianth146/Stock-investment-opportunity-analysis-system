@@ -19,7 +19,7 @@ Mã + as_of + profile
 
 **Nguyên tắc:** số liệu do code tính từ snapshot; LLM chỉ phân loại tin và diễn giải, không sinh số, không đặt giá mục tiêu.
 
-## Bắt đầu (cả nhóm)
+## Bắt đầu
 ```bash
 git clone https://github.com/Levianth146/Stock-investment-opportunity-analysis-system.git
 cd Stock-investment-opportunity-analysis-system
