@@ -36,6 +36,19 @@ def _cache_path(cfg: dict, kind: str, ticker: str, key: str) -> Path:
     return d / f"{safe}.pkl"
 
 
+def _find_raw_cache(cfg: dict, kind: str, ticker: str, key: str) -> Path | None:
+    """Tìm file .pkl mới nhất cùng kind/ticker/key (bỏ qua ngày trong tên).
+
+    Dùng với ``cfg['from_raw']=True`` để dựng lại snapshot offline từ data/raw*.
+    """
+    d = Path(cfg.get("cache_dir", "data/raw"))
+    if not d.is_dir():
+        return None
+    prefix = f"{kind}_{ticker}_{key}_".replace("/", "-").replace(" ", "")
+    cands = sorted(d.glob(f"{prefix}*.pkl"), key=lambda p: p.stat().st_mtime, reverse=True)
+    return cands[0] if cands else None
+
+
 def _export_csv(cfg: dict, kind: str, ticker: str, key: str, out) -> None:
     """Xuất dữ liệu THÔ ra CSV (đọc được bằng Excel, commit được) vào data/raw/<mã>/ + ghi nguồn vào _sources.json.
     File .pkl ở data/raw/ chỉ là cache, không commit. Lỗi xuất file không được làm hỏng luồng chính."""
@@ -57,8 +70,19 @@ def _export_csv(cfg: dict, kind: str, ticker: str, key: str, out) -> None:
 
 
 def _cached(cfg: dict, kind: str, ticker: str, key: str, producer):
-    """Gọi producer() qua cache. Đặt STOCKAI_NO_CACHE=1 để bỏ cache."""
+    """Gọi producer() qua cache. Đặt STOCKAI_NO_CACHE=1 để bỏ cache.
+
+    ``cfg['from_raw']=True``: chỉ đọc .pkl có sẵn (mọi ngày), không gọi mạng.
+    """
     p = _cache_path(cfg, kind, ticker, key)
+    from_raw = bool(cfg.get("from_raw"))
+    if from_raw:
+        hit = p if p.exists() else _find_raw_cache(cfg, kind, ticker, key)
+        if hit is not None and hit.exists():
+            out = pickle.loads(hit.read_bytes())
+            _export_csv(cfg, kind, ticker, key, out)
+            return out
+        raise RuntimeError(f"{kind}({ticker}/{key}): không có raw cache (from_raw)")
     if p.exists() and not os.environ.get("STOCKAI_NO_CACHE"):
         out = pickle.loads(p.read_bytes())
         _export_csv(cfg, kind, ticker, key, out)

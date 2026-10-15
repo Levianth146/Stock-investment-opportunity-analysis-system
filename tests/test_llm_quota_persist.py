@@ -129,7 +129,13 @@ def test_quota_429_writes_state_and_skips_next(keys, monkeypatch, tmp_path, caps
     assert gemini_n["n"] == 0
     assert out2["_meta"]["provider"] == "glm"
     captured = capsys.readouterr().out
-    assert "bỏ qua gemini-3.8-flash" in captured or "bỏ qua" in captured
+    # Log ASCII-safe trên Windows (tránh charmap); chấp nhận cả bản cũ tiếng Việt
+    assert (
+        "skip gemini-3.8-flash" in captured
+        or "bỏ qua gemini-3.8-flash" in captured
+        or "skip " in captured
+        or "bỏ qua" in captured
+    )
 
 
 def test_code_1113_blocks_six_hours(tmp_path):

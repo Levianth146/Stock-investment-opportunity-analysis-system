@@ -99,3 +99,14 @@ def test_module_polarity_matches_contributions():
         assert abs(pol[k] - round(comp["contributions"][k], 2)) < 1e-9
     # chưa clamp: score − 50 = Σ contributions
     assert abs(comp["score"] - 50.0 - sum(comp["contributions"].values())) < 1e-9
+
+
+def test_data_gate_caps_limited_and_implausible_upside():
+    from stockai.m7_scoring.scoring import apply_data_gate
+    cfg = {"data_gate": {"limited_max_rating": "Mua", "implausible_upside_pct": 100,
+                         "implausible_max_rating": "Nắm giữ"}}
+    assert apply_data_gate("Mua mạnh", "limited", 10, cfg) == ("Mua", ["rating_capped_limited_tier"])
+    assert apply_data_gate("Mua mạnh", "full", 255, cfg) == ("Nắm giữ", ["rating_capped_implausible_upside"])
+    assert apply_data_gate("Mua mạnh", "full", 30, cfg) == ("Mua mạnh", [])
+    assert apply_data_gate("Nắm giữ", "limited", 255, cfg) == ("Nắm giữ", [])
+    assert apply_data_gate("Mua mạnh", "limited", None, {}) == ("Mua mạnh", [])

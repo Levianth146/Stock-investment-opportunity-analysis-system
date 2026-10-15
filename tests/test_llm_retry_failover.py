@@ -97,8 +97,8 @@ def test_model_failover_after_retries(keys, monkeypatch):
         )
     assert "gemini-3.8-flash" in models_seen
     assert out["_meta"]["model"] == "gemini-3.6-flash"
-    # 3 retries trên model đầu
-    assert models_seen.count("gemini-3.8-flash") == 3
+    # 014j: 5xx tối đa 1 retry (2 lần) rồi failover model
+    assert models_seen.count("gemini-3.8-flash") == 2
 
 
 def test_provider_failover_gemini_to_glm(keys, monkeypatch):
