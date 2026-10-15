@@ -15,7 +15,7 @@ from stockai.llm.generate import generate_json, load_dotenv_keys, load_llm_cfg
 from stockai.llm.payload import build_debate_payload, payload_for_llm, payload_hash
 from stockai.m7_scoring.debate_template import build_template_debate
 from stockai.m7_scoring.debate_validate import repair_debate_sides, validate_debate_sides
-from stockai.m7_scoring.scoring import compute_score, to_rating
+from stockai.m7_scoring.scoring import apply_data_gate, compute_score, implied_upside_pct, to_rating
 
 # Hook test: thay generate_json
 _generate_fn: Callable[..., dict] | None = None
@@ -81,6 +81,8 @@ def _score_context(snapshot: dict, upstream: dict, cfg: dict) -> tuple[float | N
             cfg,
         )
         rating, _ = to_rating(comp["score"], comp["scores"]["R"], cfg)
+        from stockai.contracts.helpers import quality_tier
+        rating, _ = apply_data_gate(rating, quality_tier(snapshot), implied_upside_pct(upstream), cfg)
         return comp["score"], rating, comp["scores"]
     except Exception:
         return None, "N/A", {"F": None, "T": None, "V": None, "S": None, "R": None}

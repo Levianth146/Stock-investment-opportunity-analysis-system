@@ -557,6 +557,25 @@ def main(
         _update_api_asof(as_of)
         _log.info("re-score M3–M7 + build_api_cache as_of=%s", as_of)
 
+        # Đồng bộ số CP theo hồ sơ công ty (M1 suy từ NI/EPS → cũ sau đợt thưởng/phát hành) rồi
+        # dựng lại thống kê ngành M4. Không fail cả job nếu lỗi / chưa có profiles.json.
+        if (ROOT / "data" / "company_profiles" / "profiles.json").is_file():
+            rc_s = _run(
+                [sys.executable, str(ROOT / "scripts" / "sync_shares_from_profile.py"),
+                 "--asof", as_of, "--apply"],
+                retries=1, sleep_fn=sleep_fn,
+            )
+            if rc_s == 0:
+                _run(
+                    [sys.executable, str(ROOT / "scripts" / "build_m4_sector_stats.py"),
+                     "--as-of", as_of],
+                    retries=1, sleep_fn=sleep_fn,
+                )
+            else:
+                _log.warning("sync_shares_from_profile exit=%s (bỏ qua)", rc_s)
+        else:
+            _log.info("chưa có profiles.json — bỏ qua sync số CP")
+
         if not args.skip_cache:
             cmd = [
                 sys.executable,
