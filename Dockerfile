@@ -21,6 +21,9 @@ COPY data /app/data
 COPY frontend/dist /app/frontend/dist
 COPY deploy/api.render.yaml /app/config/api.yaml
 
+# Compute snapshot results during the build instead of on the small free CPU.
+RUN python -c "from stockai.api.store import PROFILES, ResultStore, load_api_cfg; store = ResultStore(load_api_cfg()); [store.iter_ranking_rows(profile, include_unranked=False) for profile in PROFILES]"
+
 RUN useradd --create-home --uid 10001 stockai \
     && mkdir -p /app/reports /app/data/api_cache /app/data/intraday \
     && chown -R stockai:stockai /app/data /app/reports

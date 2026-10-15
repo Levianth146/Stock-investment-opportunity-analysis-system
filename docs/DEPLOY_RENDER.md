@@ -40,6 +40,8 @@ script đó chỉ bind localhost; Docker tự bind `0.0.0.0` và biến `PORT` c
   vẫn dùng `requirements.txt` ở thư mục gốc trên máy phát triển.
 - `deploy/api.render.yaml` thay cấu hình API **trong image**; cấu hình local
   không đổi. Chạy một worker để tránh nhân đôi cache trong bộ nhớ.
+- Build tính sẵn cache xếp hạng cho hai hồ sơ từ snapshot, giúp giảm công việc
+  trên CPU nhỏ của gói Free. Bước này có thể kéo dài vài phút khi build.
 
 ## Giới hạn miễn phí
 
