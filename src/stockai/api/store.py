@@ -196,9 +196,14 @@ class ResultStore:
             if isinstance(cfg_asof, str) and cfg_asof.strip() and cfg_asof.strip().lower() != "auto":
                 self._asof = cfg_asof.strip()
         self._resolved_asof: str | None = None
+        self._asof_pinned = self._asof
+
+    # Chu kỳ quét lại thư mục snapshot để nhận dữ liệu mới mà không cần khởi động lại API.
+    RESCAN_SEC = 60.0
 
     @property
     def asof(self) -> str:
+        self._maybe_rescan()
         if self._asof:
             return self._asof
         if self._resolved_asof:
@@ -206,8 +211,50 @@ class ResultStore:
         self._resolved_asof = self._discover_newest_asof()
         return self._resolved_asof
 
+    def _maybe_rescan(self) -> None:
+        """Nhận snapshot mới (đổi ngày hoặc ghi đè trong ngày) sau tối đa RESCAN_SEC giây."""
+        import time
+
+        now = time.monotonic()
+        last = getattr(self, "_last_scan", None)
+        if last is not None and now - last < self.RESCAN_SEC:
+            return
+        self._last_scan = now
+        if last is None:
+            self._data_sig = self._scan_signature()
+            return
+        sig = self._scan_signature()
+        if sig == self._data_sig:
+            return
+        self._data_sig = sig
+        if self._asof_pinned is None:
+            self._resolved_asof = None
+        self._ticker_index = None
+        self._ticker_catalog = None
+        self._ranking_mem = {}
+        self._scored_tickers = None
+
+    def _scan_signature(self) -> tuple:
+        """(ngày mới nhất, số file của ngày đó, mtime lớn nhất) — rẻ, đủ để biết dữ liệu đã đổi."""
+        try:
+            newest = self._asof_pinned or self._discover_newest_asof()
+            count, mt = 0, 0
+            if self.snapshots_dir.is_dir():
+                for p in self.snapshots_dir.rglob(f"*_{newest}.json"):
+                    if p.name.startswith("_"):
+                        continue
+                    count += 1
+                    try:
+                        mt = max(mt, p.stat().st_mtime_ns)
+                    except OSError:
+                        pass
+            return (newest, count, mt)
+        except Exception:
+            return (None, 0, 0)
+
     def _discover_newest_asof(self) -> str:
-        dates: list[str] = []
+        """Ngày mới nhất có snapshot (quét đệ quy, không trộn ngày)."""
+        counts: dict[str, int] = {}
         if not self.snapshots_dir.is_dir():
             return datetime.utcnow().strftime("%Y-%m-%d")
         for p in self.snapshots_dir.rglob("*_????-??-??.json"):
@@ -219,8 +266,10 @@ class ResultStore:
             d = stem.rsplit("_", 1)[-1]
             ticker = stem.rsplit("_", 1)[0]
             if is_valid_symbol(ticker) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", d):
-                dates.append(d)
-        return max(dates) if dates else datetime.utcnow().strftime("%Y-%m-%d")
+                counts[d] = counts.get(d, 0) + 1
+        if not counts:
+            return datetime.utcnow().strftime("%Y-%m-%d")
+        return max(counts)
 
     def _build_index(self) -> dict[str, Path]:
         if self._ticker_index is not None:

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
+import { priceKind, priceKindWord } from "../live/staleness";
 import { dateVi, num } from "../fmt";
 import { useLiveQuotes } from "../live/LiveContext";
 
@@ -16,8 +17,8 @@ export function DividendHistory({ symbol, priceClose }: { symbol: string; priceC
     staleTime: 3_600_000,
   });
   const quote = useLiveQuotes([symbol])[symbol];
-  const live = quote?.state === "live" && quote.price != null;
-  const price = live ? quote!.price! : priceClose;
+  const kind = priceKind(quote);
+  const price = kind !== "eod" ? quote!.price! : priceClose;
   const d = q.data;
   if (q.isLoading) return <div className="skeleton" aria-busy="true" />;
   if (q.isError)
@@ -32,7 +33,7 @@ export function DividendHistory({ symbol, priceClose }: { symbol: string; priceC
         {d.dps_ttm_vnd
           ? `Cổ tức tiền mặt 12 tháng gần nhất ${num(d.dps_ttm_vnd, 0)} đ/cp`
           : "Không có đợt chi trả tiền mặt trong 12 tháng gần nhất"}
-        {yieldPct != null && ` → tỷ suất ${num(yieldPct, 2)}% theo giá ${live ? "trực tiếp" : "đóng cửa"}`}.
+        {yieldPct != null && ` → tỷ suất ${num(yieldPct, 2)}% theo ${priceKindWord(kind)}`}.
         Nguồn: {d.source}, lấy ngày {d.fetched_at ? dateVi(d.fetched_at) : "—"}.
       </p>
       <table className="ta-table">

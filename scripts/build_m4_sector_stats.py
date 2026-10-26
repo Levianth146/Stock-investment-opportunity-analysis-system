@@ -94,16 +94,34 @@ def build(
     payload["n_snapshots_seen"] = n_seen
     payload["n_universe"] = n_used
 
+    if n_used == 0 and out_path.exists():
+        # Không có snapshot dùng được (sai thư mục/ngày): không ghi đè thống kê đang tốt bằng bản rỗng.
+        payload["empty"] = True
+        return payload
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
     out_path.write_text(text, encoding="utf-8")
     return payload
 
 
+def _api_snapshots_dir() -> str:
+    try:
+        for line in (_ROOT / "config" / "api.yaml").read_text(encoding="utf-8").splitlines():
+            if line.startswith("snapshots_dir:"):
+                val = line.split(":", 1)[1].split("#", 1)[0].strip().strip("'\"")
+                if val:
+                    return val
+    except OSError:
+        pass
+    return "data/snapshots"
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Build M4 sector valuation stats JSON")
     ap.add_argument("--as-of", required=True, help="YYYY-MM-DD")
-    ap.add_argument("--snapshots-dir", default="data/snapshots_ext")
+    ap.add_argument("--snapshots-dir", default="",
+                    help="Mặc định: snapshots_dir trong config/api.yaml (nơi API đọc)")
     ap.add_argument("--out", default="data/valuation_sector_stats.json")
     ap.add_argument("--config", default="config/valuation.yaml")
     args = ap.parse_args(argv)
@@ -119,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
 
         m4_cfg = deep_merge(_DEFAULT_M4, dict(raw.get("m4") or {}))
 
-    snaps = Path(args.snapshots_dir)
+    snaps = Path(args.snapshots_dir or _api_snapshots_dir())
     if not snaps.is_absolute():
         snaps = _ROOT / snaps
     out_path = Path(args.out)
@@ -127,6 +145,9 @@ def main(argv: list[str] | None = None) -> int:
         out_path = _ROOT / out_path
 
     payload = build(as_of=args.as_of, snapshots_dir=snaps, out_path=out_path, cfg=m4_cfg)
+    if payload.get("empty"):
+        print(f"Không có snapshot dùng được as_of={args.as_of} trong {snaps}; giữ nguyên {out_path}")
+        return 1
     n_sec = len((payload.get("sectors") or {}))
     print(
         f"Wrote {out_path} sectors={n_sec} universe={payload.get('n_universe')} "

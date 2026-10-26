@@ -1,8 +1,8 @@
 """M9 - xuất báo cáo PDF A4 tiếng Việt kiểu báo cáo phân tích của công ty chứng khoán (feature 012).
 
-Bản đầy đủ: trang bìa (tùy chọn) + 4 trang: tóm tắt khuyến nghị, cơ bản và định giá, kỹ thuật và rủi ro,
-tin tức, lưu ý dữ liệu và phụ lục. Mã không xếp hạng (quality_gate.scored = false): 1 trang dữ liệu hiện có,
-không có điểm và khuyến nghị.
+Bản đầy đủ: trang bìa động (tùy chọn) + các trang tóm tắt, cơ bản, cấu trúc tài chính/dòng tiền,
+định giá, kỹ thuật, rủi ro, tin tức và kiểm chứng/phương pháp. Mã không xếp hạng
+(quality_gate.scored = false): chỉ trình bày dữ liệu hiện có, không có điểm và khuyến nghị.
 
 Mọi số lấy từ result M7, module_out M2-M6, validation M8 và snapshot. Không gọi LLM, không gọi mạng.
 cfg tùy chọn: out_dir, cover, export_date (YYYY-MM-DD), universe_scores [(mã, điểm)], api_cache_dir,
@@ -17,7 +17,8 @@ import yaml
 
 from stockai.m9_report.data import build_report_data
 from stockai.m9_report.fmt import parse_date
-from stockai.m9_report.layout import Doc, make_styles, render
+from stockai.m9_report.layout import make_styles
+from stockai.m9_report.professional_layout import ProDoc, render
 from stockai.m9_report.theme import ROOT, build_theme, load_flag_dict, load_report_cfg
 
 
@@ -38,7 +39,7 @@ def run(snapshot: dict, upstream: dict, cfg: dict) -> dict:
     data = build_report_data(snapshot, upstream, cfg, price_days=int(rc["charts"].get("price_days", 252)))
     export = parse_date(cfg.get("export_date")) or date.today()
     tech = bool(cfg.get("technical_appendix") or cfg.get("technical"))
-    doc = Doc(
+    doc = ProDoc(
         theme=theme,
         st=make_styles(theme),
         data=data,

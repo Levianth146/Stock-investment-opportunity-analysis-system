@@ -5,22 +5,23 @@
   "as_of": "2026-10-08",
   "window_start": "2021-10-09",
   "synthetic": false,
-  "fetched_at": "2026-10-11T15:27:06",
+  "fetched_at": "2026-10-15T18:03:15",
   "flags": [
-   "m1_prices_error: hist(MDD) lỗi sau 3 lần thử: giá MDD: VCI: API request failed: HTTPSConnectionPool(host='iq.vietcap.com.vn', port=443): Read timed out. (read timeout=30) | TCBS",
+   "m1_prices_error: hist(MDD) lỗi sau 3 lần thử: giá MDD: VCI: RetryError[<Future at 0x155b66883b0 state=finished raised ValueError>] | TCBS: Supported sources: KBS, VCI, MSN, FMP.",
    "company_exchange_missing",
    "icb_exchange_filled",
    "fin_income_year_error: fin-income(MDD) lỗi sau 3 lần thử: income/year MDD: VCI: rỗng | TCBS: Supported sources: KBS, VCI, MSN, FMP. Got: TCBS",
    "fin_balance_year_error: fin-balance(MDD) lỗi sau 3 lần thử: balance/year MDD: VCI: rỗng | TCBS: Supported sources: KBS, VCI, MSN, FMP. Got: TCBS",
    "fin_cashflow_year_error: fin-cashflow(MDD) lỗi sau 3 lần thử: cashflow/year MDD: VCI: rỗng | TCBS: Supported sources: KBS, VCI, MSN, FMP. Got: TC",
    "financials_empty",
-   "fast_mode",
-   "news_vnstock_error: news(MDD) lỗi sau 3 lần thử: tin MDD: VCI: rỗng | TCBS: Supported sources: KBS, VCI, MSN, FMP. Got: TCBS",
-   "universe_membership_current_not_point_in_time",
    "fin_income_quarter_error: fin-income(MDD) lỗi sau 3 lần thử: income/quarter MDD: VCI: rỗng | TCBS: Supported sources: KBS, VCI, MSN, FMP. Got: TCB",
    "fin_balance_quarter_error: fin-balance(MDD) lỗi sau 3 lần thử: balance/quarter MDD: VCI: rỗng | TCBS: Supported sources: KBS, VCI, MSN, FMP. Got: T",
    "fin_cashflow_quarter_error: fin-cashflow(MDD) lỗi sau 3 lần thử: cashflow/quarter MDD: VCI: rỗng | TCBS: Supported sources: KBS, VCI, MSN, FMP. Got:",
-   "quarterly_backfilled",
+   "financials_annual_history_short:0/5",
+   "news_vnstock_error: news(MDD) lỗi sau 3 lần thử: tin MDD: VCI: rỗng | TCBS: Supported sources: KBS, VCI, MSN, FMP. Got: TCBS",
+   "deep_fetch",
+   "sector_small_group",
+   "universe_membership_current_not_point_in_time",
    "quality_tier_insufficient",
    "quality_prices_lt_750",
    "quality_illiquid",
@@ -32,7 +33,7 @@
    "index": "ok",
    "financials": "missing",
    "company": "ok",
-   "peers": "ok",
+   "peers": "partial",
    "news": "missing"
   }
  },
@@ -5048,19 +5049,19 @@
  },
  "peers": [
   {
-   "ticker": "APH",
-   "pe": 10.8572,
-   "pb": 0.3063,
-   "roe": 0.0282,
-   "market_cap": 1775477471040.0,
+   "ticker": "DHA",
+   "pe": 7.5088,
+   "pb": 1.6863,
+   "roe": 0.2246,
+   "market_cap": 824037057000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "CAR",
-   "pe": 72.2314,
-   "pb": 3.1142,
-   "roe": 0.0431,
-   "market_cap": 181975630800.0,
+   "ticker": "DRC",
+   "pe": 12.7855,
+   "pb": 0.7776,
+   "roe": 0.0608,
+   "market_cap": 1514951266230.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -5072,27 +5073,11 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "GEE",
-   "pe": 13.4692,
-   "pb": 5.225,
-   "roe": 0.3879,
-   "market_cap": 43874195953500.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "GEX",
-   "pe": 19.3009,
-   "pb": 0.9454,
-   "roe": 0.049,
-   "market_cap": 28524675604400.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "GMD",
-   "pe": 13.3643,
-   "pb": 1.5728,
-   "roe": 0.1177,
-   "market_cap": 23462773987800.0,
+   "ticker": "DXS",
+   "pe": 8.0067,
+   "pb": 0.3186,
+   "roe": 0.0398,
+   "market_cap": 2814441182640.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -5104,6 +5089,22 @@
    "source_id": "src_universe_calc"
   },
   {
+   "ticker": "HAX",
+   "pe": 162.5156,
+   "pb": 0.6675,
+   "roe": 0.0041,
+   "market_cap": 913237288500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "L14",
+   "pe": 24.9594,
+   "pb": 1.2352,
+   "roe": 0.0495,
+   "market_cap": 552385318500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
    "ticker": "NCT",
    "pe": 5.6339,
    "pb": 3.0716,
@@ -5112,27 +5113,27 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "PAC",
-   "pe": 9.6431,
-   "pb": 1.1083,
-   "roe": 0.1149,
-   "market_cap": 1134828864800.0,
+   "ticker": "PCH",
+   "pe": 26.415,
+   "pb": 1.7875,
+   "roe": 0.0677,
+   "market_cap": 502986824500.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "PVP",
-   "pe": 13.0624,
-   "pb": 1.3424,
-   "roe": 0.1028,
-   "market_cap": 2592561300000.0,
+   "ticker": "SHI",
+   "pe": 47.3124,
+   "pb": 1.0956,
+   "roe": 0.0232,
+   "market_cap": 2383757726000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "PVT",
-   "pe": 12.7266,
-   "pb": 1.1494,
-   "roe": 0.0903,
-   "market_cap": 13207278865900.0,
+   "ticker": "TDM",
+   "pe": 30.9667,
+   "pb": 2.5144,
+   "roe": 0.0812,
+   "market_cap": 6499350000000.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -5144,27 +5145,19 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "TV2",
-   "pe": 18.2666,
-   "pb": 1.3549,
-   "roe": 0.0742,
-   "market_cap": 1728669824000.0,
+   "ticker": "TRC",
+   "pe": 2.9332,
+   "pb": 0.3461,
+   "roe": 0.118,
+   "market_cap": 735000000000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VOS",
-   "pe": 5.7885,
-   "pb": 0.8337,
-   "roe": 0.144,
-   "market_cap": 1764000000000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VSC",
-   "pe": 14.3828,
-   "pb": 0.7679,
-   "roe": 0.0534,
-   "market_cap": 4904251742200.0,
+   "ticker": "VC3",
+   "pe": 34.751,
+   "pb": 2.3314,
+   "roe": 0.0671,
+   "market_cap": 3466924292200.0,
    "source_id": "src_universe_calc"
   }
  ],
@@ -5174,28 +5167,28 @@
    "id": "src_index",
    "name": "vnstock (VCI) - quote.history VNINDEX",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T15:28:07",
+   "fetched_at": "2026-10-15T18:03:49",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_company",
    "name": "vnstock (VCI) - company.overview + tự tính PE/PB/ROE peers",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T15:28:48",
+   "fetched_at": "2026-10-15T18:03:51",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_news",
    "name": "vnstock (VCI) - company.news / RSS",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T15:30:16",
+   "fetched_at": "2026-10-15T18:06:34",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_universe_calc",
    "name": "PE/PB/ROE tự tính từ snapshot các mã cùng ngành trong universe",
    "url": "internal://universe",
-   "fetched_at": "2026-10-11T15:31:23",
+   "fetched_at": "2026-10-15T18:13:38",
    "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"
   }
  ]

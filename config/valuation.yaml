@@ -95,4 +95,19 @@ m4:
   target_bands:
     bull_mult: 1.15
     bear_mult: 0.85
-  enable_dcf: false
+  # DCF (FCFF hai giai đoạn) tính trong M4; không áp dụng cho ngân hàng/chứng khoán/bảo hiểm.
+  # Mọi tham số dưới đây là giả định minh họa, chưa hiệu chỉnh — đổi tại đây, không sửa code.
+  target_plausible:   # giá mục tiêu / giá ngoài khoảng này → cảnh báo kém tin cậy (vẫn hiển thị)
+    ratio_min: 0.4
+    ratio_max: 2.5
+  enable_dcf: true
+  dcf:
+    blend_weight: 0.3            # tỷ trọng DCF trong giá mục tiêu cơ sở (còn lại là P/E–P/B tương đối)
+    tax_rate: 0.20
+    risk_free: 0.035
+    equity_risk_premium: 0.085
+    terminal_growth: 0.03
+    stage_years: 5
+    growth_max: 0.12
+    plausible_ratio_min: 0.25    # DCF/giá ngoài [min, max] → hiển thị nhưng không đưa vào giá mục tiêu
+    plausible_ratio_max: 4.0

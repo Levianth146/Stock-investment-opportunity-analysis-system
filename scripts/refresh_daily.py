@@ -75,8 +75,8 @@ def _parse(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--profile", default="long_term")
     p.add_argument(
         "--snapshots-dir",
-        default="data/snapshots_ext",
-        help="Thư mục snapshot (wide)",
+        default="",
+        help="Thư mục snapshot (mặc định: snapshots_dir trong config/api.yaml, cùng nơi API đọc)",
     )
     p.add_argument(
         "--universe",
@@ -420,11 +420,43 @@ def _write_refreshed_at(as_of: str) -> None:
     _log.info("wrote %s", REFRESHED_PATH)
 
 
+def _default_as_of() -> str:
+    """Hôm nay (ICT); T7/CN lùi về thứ Sáu vì không có phiên giao dịch."""
+    from datetime import timedelta
+
+    d = datetime.now(ICT).date()
+    while d.weekday() >= 5:
+        d -= timedelta(days=1)
+    return d.isoformat()
+
+
+def _api_snapshots_dir() -> str:
+    """snapshots_dir trong config/api.yaml để refresh ghi đúng nơi API đọc."""
+    try:
+        for line in API_YAML.read_text(encoding="utf-8").splitlines():
+            if line.startswith("snapshots_dir:"):
+                val = line.split(":", 1)[1].split("#", 1)[0].strip().strip("'\"")
+                if val:
+                    return val
+    except OSError:
+        pass
+    return "data/snapshots"
+
+
 def _update_api_asof(as_of: str) -> None:
-    """Cập nhật dòng asof trong config/api.yaml (giữ nguyên phần còn lại)."""
+    """Cập nhật dòng asof trong config/api.yaml (giữ nguyên phần còn lại).
+
+    ``asof: auto`` được giữ nguyên: API tự nhận ngày mới nhất, không ghim ngày vào config dùng chung.
+    """
     if not API_YAML.is_file():
         return
     text = API_YAML.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        if line.lstrip().startswith("asof:"):
+            if line.split(":", 1)[1].split("#", 1)[0].strip().lower() == "auto":
+                _log.info("api.yaml asof=auto — giữ nguyên")
+                return
+            break
     lines = text.splitlines(keepends=True)
     out: list[str] = []
     done = False
@@ -459,7 +491,7 @@ def main(
         datefmt="%H:%M:%S",
     )
     args = _parse(argv)
-    as_of = (args.as_of or "").strip() or date.today().isoformat()
+    as_of = (args.as_of or "").strip() or _default_as_of()
     now = datetime.now(ICT)
     if now.hour < 15 or (now.hour == 15 and now.minute < 30):
         if not args.allow_before_close:
@@ -474,7 +506,7 @@ def main(
         return 2
 
     try:
-        snap_dir = Path(args.snapshots_dir)
+        snap_dir = Path(args.snapshots_dir or _api_snapshots_dir())
         if not snap_dir.is_absolute():
             snap_dir = ROOT / snap_dir
 

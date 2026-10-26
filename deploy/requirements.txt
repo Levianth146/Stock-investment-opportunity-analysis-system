@@ -1,0 +1,16 @@
+# API, snapshot analysis and current M9 PDF renderer only.
+# Fetching a new data universe / Streamlit CLI uses root requirements.txt.
+pandas==2.3.3
+numpy==2.2.6
+pyyaml==6.0.3
+jsonschema==4.26.0
+requests==2.34.2
+reportlab==5.0.1
+matplotlib==3.11.2
+fastapi==0.143.2
+uvicorn==0.54.0
+httpx==0.28.1
+dnse-sdk-openapi==2.4.1
+msgpack==1.2.3
+websockets==17.2
+tzdata>=2025.1

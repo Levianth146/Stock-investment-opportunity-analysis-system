@@ -349,7 +349,7 @@ def contributions_chart(
                                     boxstyle="round,pad=0,rounding_size=0.08", color=color, lw=0, zorder=3,
                                     mutation_aspect=1 / max(lim, 1) * 4))
         ha = "left" if v >= 0 else "right"
-        ax.text(50 + v + (lim * 0.03 if v >= 0 else -lim * 0.03), i, fmt_signed(v, 1), va="center", ha=ha,
+        ax.text(50 + v + (lim * 0.03 if v >= 0 else -lim * 0.03), i, fmt_signed(v, 1).replace("−", "-"), va="center", ha=ha,
                 fontsize=LABEL_PT, color=c["ink"], zorder=4)
     ax.axvline(50, color=c["ink_2"], lw=0.8, zorder=5)
     ax.set_yticks(range(n))

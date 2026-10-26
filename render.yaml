@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: stockai
+    runtime: docker
+    repo: https://github.com/Levianth146/Stock-investment-opportunity-analysis-system
+    branch: develop
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "10000"

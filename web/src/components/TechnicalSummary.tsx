@@ -1,3 +1,4 @@
+import { priceKind } from "../live/staleness";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
@@ -54,7 +55,8 @@ export function TechnicalSummary({ symbol }: { symbol: string }) {
     staleTime: 300_000,
   });
   const quote = useLiveQuotes([symbol])[symbol];
-  const liveOk = quote?.state === "live" && quote.price != null;
+  const kind = priceKind(quote);
+  const liveOk = kind !== "eod";
 
   const bars = useMemo<Bar[]>(() => {
     return (q.data?.ohlcv || [])
@@ -87,7 +89,9 @@ export function TechnicalSummary({ symbol }: { symbol: string }) {
     <section className="ta-summary" aria-label="Phân tích kỹ thuật">
       <p className="muted ta-basis">
         {liveOk
-          ? `Tính trên ${res.bars} phiên, nến hôm nay dùng giá trực tiếp ${res.last.toLocaleString("vi-VN")} (cập nhật theo luồng giá).`
+          ? kind === "close"
+            ? `Tính trên ${res.bars} phiên, nến hôm nay dùng giá chốt phiên ${res.last.toLocaleString("vi-VN")} (tạm tính, chưa có dữ liệu EOD).`
+            : `Tính trên ${res.bars} phiên, nến hôm nay dùng giá trực tiếp ${res.last.toLocaleString("vi-VN")} (cập nhật theo luồng giá).`
           : `Tính trên ${res.bars} phiên đến ${lastBarDate ?? "—"} (giá đóng cửa; chưa có giá trực tiếp).`}
       </p>
       <div className="ta-gauges">

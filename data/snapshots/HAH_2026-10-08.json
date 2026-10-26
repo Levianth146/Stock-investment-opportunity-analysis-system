@@ -5,17 +5,15 @@
   "as_of": "2026-10-08",
   "window_start": "2021-10-09",
   "synthetic": false,
-  "fetched_at": "2026-10-11T14:18:24",
+  "fetched_at": "2026-10-15T18:00:30",
   "flags": [
    "prices_scaled_x1000_to_VND",
-   "fin_cashflow_year_error: fin-cashflow(HAH) lỗi sau 3 lần thử: cashflow/year HAH: VCI: API request failed: HTTPSConnectionPool(host='iq.vietcap.co",
-   "fin_annual_unmatched:depreciation,cfo,cfi,cff,capex",
-   "fast_mode",
    "vnf_crosscheck_ok:2025",
-   "vnf_filled:admin_expense,capex,cff,cfi,cfo,depreciation,dividends_paid,ebitda,pretax_profit,receivables,selling_expense,trade_payables,trade_receivables",
+   "vnf_filled:admin_expense,ebitda,pretax_profit,receivables,selling_expense,trade_payables,trade_receivables",
    "news_urls_partly_google_redirect",
+   "deep_fetch",
+   "sector_small_group",
    "universe_membership_current_not_point_in_time",
-   "quarterly_backfilled",
    "quality_tier_full"
   ],
   "data_status": {
@@ -23,7 +21,7 @@
    "index": "ok",
    "financials": "ok",
    "company": "ok",
-   "peers": "ok",
+   "peers": "partial",
    "news": "ok"
   }
  },
@@ -15003,6 +15001,7 @@
      "net_income": 1400895156847.0,
      "net_income_parent": 1206512800982.0,
      "interest_expense": 131358274612.0,
+     "depreciation": 588365740770.0,
      "eps": 6830.0,
      "total_assets": 8713614967858.0,
      "total_equity": 5394802756510.0,
@@ -15013,19 +15012,18 @@
      "cash": 533594787447.0,
      "short_term_debt": 711044949828.0,
      "long_term_debt": 1489156595643.0,
+     "cfo": 1807438584441.0,
+     "cfi": -2105758903003.0,
+     "cff": -88789122580.0,
+     "capex": 1661682603493.0,
+     "dividends_paid": 156884093000.0,
      "ebitda": 2405844613183.0,
      "pretax_profit": 1723536488865.0,
      "selling_expense": 0.0,
      "admin_expense": 147242539101.0,
      "receivables": 718425401786.0,
      "trade_receivables": 403407805776.0,
-     "trade_payables": 274899036745.0,
-     "cfo": 1807438584441.0,
-     "cfi": -2105758903003.0,
-     "cff": -88789122580.0,
-     "capex": 1661682603493.0,
-     "depreciation": 588365740770.0,
-     "dividends_paid": 156884093000.0
+     "trade_payables": 274899036745.0
     }
    },
    {
@@ -15040,6 +15038,7 @@
      "net_income": 800226211464.0,
      "net_income_parent": 650499312067.0,
      "interest_expense": 101192550766.0,
+     "depreciation": 457172304973.0,
      "eps": 5055.0,
      "total_assets": 7289524568993.0,
      "total_equity": 3971692927731.0,
@@ -15050,19 +15049,18 @@
      "cash": 921889788422.0,
      "short_term_debt": 532321458647.0,
      "long_term_debt": 1797936851289.0,
+     "cfo": 1806620316886.0,
+     "cfi": -2060803185360.0,
+     "cff": 929209023646.0,
+     "capex": 2087945672607.0,
+     "dividends_paid": 15960000.0,
      "ebitda": 1513338594636.0,
      "pretax_profit": 977289020386.0,
      "selling_expense": 0.0,
      "admin_expense": 210539354371.0,
      "receivables": 504419818284.0,
      "trade_receivables": 332293995745.0,
-     "trade_payables": 205592705340.0,
-     "cfo": 1806620316886.0,
-     "cfi": -2060803185360.0,
-     "cff": 929209023646.0,
-     "capex": 2087945672607.0,
-     "depreciation": 457172304973.0,
-     "dividends_paid": 15960000.0
+     "trade_payables": 205592705340.0
     }
    },
    {
@@ -15077,6 +15075,7 @@
      "net_income": 357825466214.0,
      "net_income_parent": 384900627280.0,
      "interest_expense": 73375911674.0,
+     "depreciation": 364343848440.0,
      "eps": 3315.0,
      "total_assets": 5358949358065.0,
      "total_equity": 3170745801683.0,
@@ -15087,19 +15086,18 @@
      "cash": 245416444931.0,
      "short_term_debt": 394192141723.0,
      "long_term_debt": 992607614288.0,
+     "cfo": 536324547004.0,
+     "cfi": -776185776676.0,
+     "cff": 69444230038.0,
+     "capex": 866016761338.0,
+     "dividends_paid": 9762744200.0,
      "ebitda": 850032046902.0,
      "pretax_profit": 450043972861.0,
      "selling_expense": 0.0,
      "admin_expense": 125377657586.0,
      "receivables": 1005170941157.0,
      "trade_receivables": 228002690255.0,
-     "trade_payables": 155454367807.0,
-     "cfo": 536324547004.0,
-     "cfi": -776185776676.0,
-     "cff": 69444230038.0,
-     "capex": 866016761338.0,
-     "depreciation": 364343848440.0,
-     "dividends_paid": 9762744200.0
+     "trade_payables": 155454367807.0
     }
    },
    {
@@ -15114,6 +15112,7 @@
      "net_income": 1040793233703.0,
      "net_income_parent": 821937122836.0,
      "interest_expense": 57167219413.0,
+     "depreciation": 278066256436.0,
      "eps": 7347.0,
      "total_assets": 5049419497076.0,
      "total_equity": 2886920705454.0,
@@ -15124,19 +15123,18 @@
      "cash": 415481021778.0,
      "short_term_debt": 317706778434.0,
      "long_term_debt": 1004423377785.0,
+     "cfo": 1294718350122.0,
+     "cfi": -1661287878869.0,
+     "cff": 299228898426.0,
+     "capex": 1603780909743.0,
+     "dividends_paid": 68559959300.0,
      "ebitda": 1586046099862.0,
      "pretax_profit": 1272416253211.0,
      "selling_expense": 0.0,
      "admin_expense": 113764933866.0,
      "receivables": 978676238299.0,
      "trade_receivables": 238251488945.0,
-     "trade_payables": 148426643717.0,
-     "cfo": 1294718350122.0,
-     "cfi": -1661287878869.0,
-     "cff": 299228898426.0,
-     "capex": 1603780909743.0,
-     "depreciation": 278066256436.0,
-     "dividends_paid": 68559959300.0
+     "trade_payables": 148426643717.0
     }
    },
    {
@@ -15151,6 +15149,7 @@
      "net_income": 550615355463.0,
      "net_income_parent": 445513497100.0,
      "interest_expense": 32129730020.0,
+     "depreciation": 163541926969.0,
      "eps": 6207.0,
      "total_assets": 3232345373971.0,
      "total_equity": 1902029962417.0,
@@ -15161,19 +15160,18 @@
      "cash": 484732416770.0,
      "short_term_debt": 233809277118.0,
      "long_term_debt": 558711548655.0,
+     "cfo": 790084526976.0,
+     "cfi": -649538335559.0,
+     "cff": 123661168418.0,
+     "capex": 619848552489.0,
+     "dividends_paid": 67084355500.0,
      "ebitda": 792808206145.0,
      "pretax_profit": 662317363419.0,
      "selling_expense": 0.0,
      "admin_expense": 85027576435.0,
      "receivables": 633042082092.0,
      "trade_receivables": 233995316855.0,
-     "trade_payables": 78861911406.0,
-     "cfo": 790084526976.0,
-     "cfi": -649538335559.0,
-     "cff": 123661168418.0,
-     "capex": 619848552489.0,
-     "depreciation": 163541926969.0,
-     "dividends_paid": 67084355500.0
+     "trade_payables": 78861911406.0
     }
    },
    {
@@ -15188,6 +15186,7 @@
      "net_income": 146597749796.0,
      "net_income_parent": 138296287136.0,
      "interest_expense": 23451710381.0,
+     "depreciation": 137201480785.0,
      "eps": 2734.0,
      "total_assets": 2094551278545.0,
      "total_equity": 1335796613176.0,
@@ -15198,19 +15197,18 @@
      "cash": 221024298549.0,
      "short_term_debt": 111326082508.0,
      "long_term_debt": 348392350155.0,
+     "cfo": 276893705171.0,
+     "cfi": -383447373080.0,
+     "cff": 84502369199.0,
+     "capex": 348963627633.0,
+     "dividends_paid": 47275936600.0,
      "ebitda": 308696876259.0,
      "pretax_profit": 170159494702.0,
      "selling_expense": 0.0,
      "admin_expense": 67886331138.0,
      "receivables": 307576580013.0,
      "trade_receivables": 147333799623.0,
-     "trade_payables": 85352356262.0,
-     "cfo": 276893705171.0,
-     "cfi": -383447373080.0,
-     "cff": 84502369199.0,
-     "capex": 348963627633.0,
-     "depreciation": 137201480785.0,
-     "dividends_paid": 47275936600.0
+     "trade_payables": 85352356262.0
     }
    },
    {
@@ -15385,7 +15383,8 @@
      "cfo": 427839715413.0,
      "cfi": -936300245141.0,
      "cff": 752275545091.0,
-     "capex": 844238606943.0
+     "capex": 844238606943.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15414,7 +15413,8 @@
      "cfo": 559050263507.0,
      "cfi": -298014229476.0,
      "cff": 23067737483.0,
-     "capex": 56728022349.0
+     "capex": 56728022349.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15443,7 +15443,8 @@
      "cfo": 480857177835.0,
      "cfi": -791220701682.0,
      "cff": -11289034669.0,
-     "capex": 378685358875.0
+     "capex": 378685358875.0,
+     "dividends_paid": 129894418000.0
     }
    },
    {
@@ -15472,7 +15473,8 @@
      "cfo": 353048262259.0,
      "cfi": -311243108782.0,
      "cff": -112842886673.0,
-     "capex": 363302446144.0
+     "capex": 363302446144.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15501,7 +15503,8 @@
      "cfo": 483165532293.0,
      "cfi": -466669315027.0,
      "cff": -133201012560.0,
-     "capex": 374175909073.0
+     "capex": 374175909073.0,
+     "dividends_paid": 26989675000.0
     }
    },
    {
@@ -15530,7 +15533,8 @@
      "cfo": 490367612054.0,
      "cfi": -536625777512.0,
      "cff": 168543811322.0,
-     "capex": 545518889401.0
+     "capex": 545518889401.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15559,7 +15563,8 @@
      "cfo": 1059790336378.0,
      "cfi": -1133147839833.0,
      "cff": 216301915738.0,
-     "capex": 1098464544606.0
+     "capex": 1098464544606.0,
+     "dividends_paid": 0.0
     }
    },
    {
@@ -15588,7 +15593,8 @@
      "cfo": 364863918832.0,
      "cfi": -351178957204.0,
      "cff": 396030301348.0,
-     "capex": 364741102981.0
+     "capex": 364741102981.0,
+     "dividends_paid": 0.0
     }
    }
   ],
@@ -15600,6 +15606,7 @@
     "net_income": "Net profit/(loss) after tax",
     "net_income_parent": "Attributable to parent company",
     "interest_expense": "Interest expenses",
+    "depreciation": "Depreciation and amortization",
     "eps": "EPS basic (VND)",
     "total_assets": "Total Assets",
     "total_equity": "Owner's Equity",
@@ -15609,7 +15616,12 @@
     "inventory": "Inventories, Net",
     "cash": "Cash and cash equivalents",
     "short_term_debt": "Short-term borrowings",
-    "long_term_debt": "Long-term borrowings"
+    "long_term_debt": "Long-term borrowings",
+    "cfo": "Net cash inflows/(outflows) from operating activities",
+    "cfi": "Net cash inflows/(outflows) from investing activities",
+    "cff": "Net cash inflows/(outflows) from financing activities",
+    "capex": "Purchases of fixed assets and other long term assets",
+    "dividends_paid": "Dividends paid"
    },
    "quarterly": {
     "revenue": "Net sales",
@@ -15632,50 +15644,35 @@
     "cfo": "Net cash inflows/(outflows) from operating activities",
     "cfi": "Net cash inflows/(outflows) from investing activities",
     "cff": "Net cash inflows/(outflows) from financing activities",
-    "capex": "Purchases of fixed assets and other long term assets"
+    "capex": "Purchases of fixed assets and other long term assets",
+    "dividends_paid": "Dividends paid"
    }
   },
   "published_at_note": "ngày công bố được ước lượng (quý +45 ngày, năm +90 ngày) vì nguồn không cung cấp"
  },
  "peers": [
   {
-   "ticker": "VTP",
-   "pe": 23.9334,
-   "pb": 5.4804,
-   "roe": 0.229,
-   "market_cap": 9690488208000.0,
+   "ticker": "TDM",
+   "pe": 30.9667,
+   "pb": 2.5144,
+   "roe": 0.0812,
+   "market_cap": 6499350000000.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "PVT",
-   "pe": 12.7266,
-   "pb": 1.1494,
-   "roe": 0.0903,
-   "market_cap": 13207278865900.0,
+   "ticker": "VC3",
+   "pe": 34.751,
+   "pb": 2.3314,
+   "roe": 0.0671,
+   "market_cap": 3466924292200.0,
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "VSC",
-   "pe": 14.3828,
-   "pb": 0.7679,
-   "roe": 0.0534,
-   "market_cap": 4904251742200.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "GMD",
-   "pe": 13.3643,
-   "pb": 1.5728,
-   "roe": 0.1177,
-   "market_cap": 23462773987800.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "GEX",
-   "pe": 19.3009,
-   "pb": 0.9454,
-   "roe": 0.049,
-   "market_cap": 28524675604400.0,
+   "ticker": "DXS",
+   "pe": 8.0067,
+   "pb": 0.3186,
+   "roe": 0.0398,
+   "market_cap": 2814441182640.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15687,19 +15684,11 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "PVP",
-   "pe": 13.0624,
-   "pb": 1.3424,
-   "roe": 0.1028,
-   "market_cap": 2592561300000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "GEE",
-   "pe": 13.4692,
-   "pb": 5.225,
-   "roe": 0.3879,
-   "market_cap": 43874195953500.0,
+   "ticker": "SHI",
+   "pe": 47.3124,
+   "pb": 1.0956,
+   "roe": 0.0232,
+   "market_cap": 2383757726000.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15711,43 +15700,11 @@
    "source_id": "src_universe_calc"
   },
   {
-   "ticker": "APH",
-   "pe": 10.8572,
-   "pb": 0.3063,
-   "roe": 0.0282,
-   "market_cap": 1775477471040.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VOS",
-   "pe": 5.7885,
-   "pb": 0.8337,
-   "roe": 0.144,
-   "market_cap": 1764000000000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "TV2",
-   "pe": 18.2666,
-   "pb": 1.3549,
-   "roe": 0.0742,
-   "market_cap": 1728669824000.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "PAC",
-   "pe": 9.6431,
-   "pb": 1.1083,
-   "roe": 0.1149,
-   "market_cap": 1134828864800.0,
-   "source_id": "src_universe_calc"
-  },
-  {
-   "ticker": "VTO",
-   "pe": 7.7312,
-   "pb": 0.7924,
-   "roe": 0.1025,
-   "market_cap": 938433325500.0,
+   "ticker": "DRC",
+   "pe": 12.7855,
+   "pb": 0.7776,
+   "roe": 0.0608,
+   "market_cap": 1514951266230.0,
    "source_id": "src_universe_calc"
   },
   {
@@ -15756,6 +15713,46 @@
    "pb": 0.9748,
    "roe": 0.1279,
    "market_cap": 934598074800.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "HAX",
+   "pe": 162.5156,
+   "pb": 0.6675,
+   "roe": 0.0041,
+   "market_cap": 913237288500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "DHA",
+   "pe": 7.5088,
+   "pb": 1.6863,
+   "roe": 0.2246,
+   "market_cap": 824037057000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "TRC",
+   "pe": 2.9332,
+   "pb": 0.3461,
+   "roe": 0.118,
+   "market_cap": 735000000000.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "L14",
+   "pe": 24.9594,
+   "pb": 1.2352,
+   "roe": 0.0495,
+   "market_cap": 552385318500.0,
+   "source_id": "src_universe_calc"
+  },
+  {
+   "ticker": "PCH",
+   "pe": 26.415,
+   "pb": 1.7875,
+   "roe": 0.0677,
+   "market_cap": 502986824500.0,
    "source_id": "src_universe_calc"
   }
  ],
@@ -15767,14 +15764,6 @@
    "source": "Thuonghieucongluan.com.vn (qua Google News)",
    "published_at": "2026-10-08T06:10:00",
    "summary": "Cổ phiếu đáng chú ý ngày 8/10: HAH, BAF và nhóm công nghệ có gì đáng chú ý? &nbsp;&nbsp; Thuonghieucongluan.com.vn"
-  },
-  {
-   "id": "n8f1c5fdd67",
-   "title": "HAH, BAF, FPT đón những câu chuyện riêng",
-   "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxOME44NV9IRV9MVlBKWndDYjN0WERxelBNT0Z0a0J4WFlJaDBlM0ppREFybmNuVERqYXc2VTl1dV9XT05SLTlCMHR5ME5TNVZkMVgwTk1KOTl0ckM3dF9Qd2p0OTh1RHhkWmNENlZoSVJtOEcyRlB0MFA1WVpBQVNVVFNhSHgtZw?oc=5",
-   "source": "24HMoney (qua Google News)",
-   "published_at": "2026-10-07T18:06:00",
-   "summary": "HAH, BAF, FPT đón những câu chuyện riêng &nbsp;&nbsp; 24HMoney"
   },
   {
    "id": "n38732cb3c7",
@@ -15791,14 +15780,6 @@
    "source": "vnstock/VCI",
    "published_at": "2026-10-06T15:34:15",
    "summary": null
-  },
-  {
-   "id": "n1fd38ac23a",
-   "title": "Chuyển động quỹ đầu tư: VietinBank Capital giao dịch sôi động tại HAH và PET",
-   "url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxPQ2hMcDN2VUR1MGFZejlZWW8tMU90dk4yN3dmdWhYYWVpSTE0LVBwWl9SX2N3Q2lYTmJ2bUszbmpxckFyZGozbEI4NU5CcTI3cnBSZUZJNGg3MXRvSUNPWkh0VE9tQVJVZGV0UHd3eFhmZGl2VGFLRGhpVEhHUzlncXNzV0NfWGt6Sm5uRVhvczZlNmw3WVZMUndRTnRRb0hJQkJCUm9CSWVQbmNWRmtSRnlwdnlrVFp5S1VqWVBR?oc=5",
-   "source": "Vietstock (qua Google News)",
-   "published_at": "2026-10-04T08:30:00",
-   "summary": "Chuyển động quỹ đầu tư: VietinBank Capital giao dịch sôi động tại HAH và PET &nbsp;&nbsp; Vietstock"
   },
   {
    "id": "n3d2abae952",
@@ -15821,7 +15802,7 @@
    "title": "VietinBank Capital mua thêm 2 triệu cổ phiếu Hải An (HAH)",
    "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxONGp1ejdRdUFnNFZ2b2dIUWlhRVZGVVJNM0JZRy1VVEdjeXFfZlhpZldMOHU4dF9hUk1rRXlXV21uWW5saTd4elVBSDBlUmRHMVBtVTFzZy1IZXhDVkc5UllTRGR6clZrYWFOdTUyX0Jfb0NHSFJudktOMTN4c1ZOWk9SRy1paldIdzM2YThUTURHZzdXNEJwYWE3UTRGRlFYN3pydTVnUVHSAaQBQVVfeXFMTVB0MnRKNG0yQmhwQmxiM3o5THJKUnlSRnhoRnNXV3NtWHVsU1E2a1NEY2l0MTBXR0RPM2Z3V2JnaXRGamdaQ3R3TXBycmw0Mmg5bW84dnlmU3UxRk1ONlBGbHIxZ0NWSWhWOFZVV1pQSlRhX2F4NWRWck16SWtsTGNIdWhHTUJQd1JmMGdnMGhmZkh2cTNKZTk4UFdoVlZRNzBkUXg?oc=5",
    "source": "Tin nhanh chứng khoán (qua Google News)",
-   "published_at": "2026-10-03T07:45:40",
+   "published_at": "2026-10-02T14:00:00",
    "summary": "VietinBank Capital mua thêm 2 triệu cổ phiếu Hải An (HAH) &nbsp;&nbsp; Tin nhanh chứng khoán"
   },
   {
@@ -15829,8 +15810,16 @@
    "title": "Bán PET tại vùng giá đỉnh lịch sử, 'cá mập' chuyển hướng gom thêm 17 triệu cổ phiếu HAH",
    "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxOUnBIdmxuYjh2dzNNMTJtNVZDWHVxbmRzcVZTWE9SWmJRZ2dZQlRsaWMwelNDOVpQZDFjQTFxQWJoWGV3aEFSU2NDRHc4N3ZIaTZROUl1bEJPOVY3WmtZYzJkdkU3N3lKbGdTNFUwb0lNSnBEQ1FRV2VtSl9jSVowMG9rR2duQ2FxMkgzcWNLWkxueWcxOE5rWnVnMFVqNDJOQUFKd1pzRXJ3bF80MEZtQm8xZUFNamRnLTh6Uw?oc=5",
    "source": "nguoiquansat.vn (qua Google News)",
-   "published_at": "2026-10-02T16:46:01",
+   "published_at": "2026-10-02T14:00:00",
    "summary": "Bán PET tại vùng giá đỉnh lịch sử, 'cá mập' chuyển hướng gom thêm 17 triệu cổ phiếu HAH &nbsp;&nbsp; nguoiquansat.vn"
+  },
+  {
+   "id": "n1568f3d1dc",
+   "title": "VietinBank Capital mua thêm 2 triệu cổ phiếu HAH, nâng sở hữu lên 18,24%",
+   "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOUnhyWmNMUGJnalJXUGNvdXdWTEFtSmtDUVV2YV9nTk5ZRVFoY2NmSlhTb3dtU1BmSWxIU18ta0RoZFdTeHVRSUIyeVd1aHp1YnNId3pJbnY0bDhSQTNJS3R1VzJ1MkozQ192Z2ZTdHJlN040ckl5cE9jVHVhdkZQNTZzazlreDRQQmNvV0FwR2Z2eXc4REtuQ2tadWI?oc=5",
+   "source": "index.vn (qua Google News)",
+   "published_at": "2026-10-02T14:00:00",
+   "summary": "VietinBank Capital mua thêm 2 triệu cổ phiếu HAH, nâng sở hữu lên 18,24% &nbsp;&nbsp; index.vn"
   },
   {
    "id": "n12178547",
@@ -15839,14 +15828,6 @@
    "source": "vnstock/VCI",
    "published_at": "2026-10-02T11:22:00",
    "summary": null
-  },
-  {
-   "id": "n1568f3d1dc",
-   "title": "VietinBank Capital mua thêm 2 triệu cổ phiếu HAH, nâng sở hữu lên 18,24%",
-   "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOUnhyWmNMUGJnalJXUGNvdXdWTEFtSmtDUVV2YV9nTk5ZRVFoY2NmSlhTb3dtU1BmSWxIU18ta0RoZFdTeHVRSUIyeVd1aHp1YnNId3pJbnY0bDhSQTNJS3R1VzJ1MkozQ192Z2ZTdHJlN040ckl5cE9jVHVhdkZQNTZzazlreDRQQmNvV0FwR2Z2eXc4REtuQ2tadWI?oc=5",
-   "source": "index.vn (qua Google News)",
-   "published_at": "2026-10-02T11:08:00",
-   "summary": "VietinBank Capital mua thêm 2 triệu cổ phiếu HAH, nâng sở hữu lên 18,24% &nbsp;&nbsp; index.vn"
   },
   {
    "id": "n12178282",
@@ -15913,12 +15894,12 @@
    "summary": null
   },
   {
-   "id": "nca7a1a00ce",
+   "id": "n694c0e6e35",
    "title": "GELEX (GEX): Bán toàn bộ 9,7 triệu cổ phiếu HAH thu về gần 475 tỷ đồng",
-   "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQcnRtZGh4elM1UXhfbUdiMnI2bmFqemZHLUNoT2oyV3JSekRCLXk0bElKb2tqZGlfTmlVQXhVaWUxYzMxUHdQMVlPUTV4eDNxM3lneUVLVU05UElMRFowdWo2RmJVbVl1emZCSkxKYW5vX0lZR2dsWFQ3OS1rZDU4LVliaGFHdldhbE9NMlVCRlRqc3Nuc1pCYzBZcHd5cjZZZWZIUVVETHk?oc=5",
-   "source": "Báo Pháp Luật Việt Nam (qua Google News)",
+   "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNbkdYOGxsNkdRN09qdUNFVGtqd2RscENlX0JmeXc1MTlDdVRfNkVYVjY4QkV2ajdqVjluUV9mTFFpb1g5SGJ4U09JZENIZ2VuUkFJUkUyX0MyWjg5VlNESG44M2I0OVc3QmJmaXU5REVCU0VuRTdNMlgzWnJDajFPZ011dExFdHJlWk13RTdqV1poTDFl?oc=5",
+   "source": "Vietnam.vn (qua Google News)",
    "published_at": "2026-09-24T14:00:00",
-   "summary": "GELEX (GEX): Bán toàn bộ 9,7 triệu cổ phiếu HAH thu về gần 475 tỷ đồng &nbsp;&nbsp; Báo Pháp Luật Việt Nam"
+   "summary": "GELEX (GEX): Bán toàn bộ 9,7 triệu cổ phiếu HAH thu về gần 475 tỷ đồng &nbsp;&nbsp; Vietnam.vn"
   },
   {
    "id": "nb8f2565bcb",
@@ -15969,14 +15950,6 @@
    "summary": null
   },
   {
-   "id": "n3b930d60af",
-   "title": "DPM, HAH và HSG có gì hấp dẫn? Theo Vietstock",
-   "url": "https://news.google.com/rss/articles/CBMijAFBVV95cUxQYlJiODFkaFU5WGNjZW13QWtlTnlyb3ZtQUVYVXAydGhWaXZpSFE0SmkxYW85YXVsVmh1TThScjlFZU9pcEVfYWJGSkZnYWw3RXI5NXRtV05NeUZSSFpXX2NXTE1NeUJkdnZJb2t4TVFtaWh2RzZDV0JDTlhGaVFDQTRiME5qeVQtWUNzbA?oc=5",
-   "source": "Investing.com Việt Nam (qua Google News)",
-   "published_at": "2026-09-03T14:00:00",
-   "summary": "DPM, HAH và HSG có gì hấp dẫn? Theo Vietstock &nbsp;&nbsp; Investing.com Việt Nam"
-  },
-  {
    "id": "n1f3aba1fd5",
    "title": "HAH - NCT: Xung lực mới cho nhóm logistics?",
    "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxPTEpyX1IxQkg5Y2dyU0hOb3p1M2R4d05feUQ5b3FoOEd1TEg1WlBJYzNodDg0Snk4TDBQTFNYZHl4eTJGMzV3Rlo4UVNIOFpnT1BvbDRsSkJCYk1Tdm56T216S05OX1BrWUJQNmZFMTcwbjVabzdnb1VyM1BDQTdqdFBnZmZQVTA?oc=5",
@@ -15991,6 +15964,14 @@
    "source": "vnstock/VCI",
    "published_at": "2026-08-26T15:49:00",
    "summary": null
+  },
+  {
+   "id": "n77385ec703",
+   "title": "Hải An (HAH) liên tục tăng vốn cho liên doanh với Viconship, đầu tư thêm tàu container hơn 700 tỷ đồng",
+   "url": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxNQ2dhUkN6TFJKLTd5S081Q3RoZk9GQWp4UFRRZWd4SVdUbjhhUXNsNVRqNUZYMDVVY0dOMHE4M1NkWENXS2NnTlRFa21mM2tFTXlpbC1hMEhfY1REVjIxdGs0OHJub0hRcVhUeTh0dm5XXzQxNzVxTk50elltWERHTFNtVVV6YlllUnpWY2VYTlpzVFFzcVlqclptWWt5SnVLckQ2UkJrR1czVk01WGxYbFFEWlpCbjJXb21iV2txTFpNek5IMGd0c2I2TDYwZlVx?oc=5",
+   "source": "nguoiquansat.vn (qua Google News)",
+   "published_at": "2026-08-25T14:00:00",
+   "summary": "Hải An (HAH) liên tục tăng vốn cho liên doanh với Viconship, đầu tư thêm tàu container hơn 700 tỷ đồng &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
    "id": "n12131060",
@@ -16033,14 +16014,6 @@
    "summary": null
   },
   {
-   "id": "neefd3d4699",
-   "title": "[MoneyF Opinion] Giá cước tăng, nhiên liệu hạ nhiệt, HAH được kỳ vọng hưởng lợi",
-   "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOLUdzTXlGeEFmMFBNLVc0emV5LXpCdTZLSjQtSVFQY2xKTEhubmlMSG93WEZaYWlGODJMaVJGTjZ5TGlWODFqN3JJTDM0QlUxYU9URjIyYXpuQXJCSmxSSUhPUG0zaTNMX2VfcjlxczZ4c21oVm1aaXA4aXE3UFhtZG5TTQ?oc=5",
-   "source": "MoneyF (qua Google News)",
-   "published_at": "2026-08-12T14:00:00",
-   "summary": "[MoneyF Opinion] Giá cước tăng, nhiên liệu hạ nhiệt, HAH được kỳ vọng hưởng lợi &nbsp;&nbsp; MoneyF"
-  },
-  {
    "id": "n916a74a2c3",
    "title": "HAH - Nối tiếp đà tăng trưởng",
    "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTFBSRlBvd1N2SU5XeWZZajFBbjZaODZmVEt5WUw1X01rOXFMeEtGQUxOajlZSnlxWnpZTUFXY2pKejdaUExPR0R1RGF0akV4OHNFNkE5elNELUZXd1AwR25LMDJ1eGthZ29CY2JUbTUwTzAxM0wtaGVHVw?oc=5",
@@ -16081,14 +16054,6 @@
    "summary": "Tổng tài sản 440,8 tỷ đồng, Vietinbank Capital sở hữu danh mục 3 cổ phiếu PET, PC1 và HAH lên tới 2.640,5 tỷ đồng &nbsp;&nbsp; Tin nhanh chứng khoán"
   },
   {
-   "id": "n2fb705bfb4",
-   "title": "VietinBank Capital tích cực giải ngân cuối tháng 7, vào 'ghế' cổ đông lớn tại HAH",
-   "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQZDV0RWFucC1iN041YWl3bTR6SEwxRlZzVWR1NmZVUkNYUUVFeDg1R25SMWpmWm51UGlONkduTC1xeXFsSlRIajlJbndmQ3dESHU0WWJuZXJod2NRNHgzNjFiU1Znbnk5M3RpUWlFZGF4TDF4MFdJUWRXM1B1Mnh3emROeEJ0c3JLYmE2RWtySG41V0dDYTVGd1lqVHlxbHdtd0xMTWNnRlgxazh6a291OXI3YjM?oc=5",
-   "source": "nguoiquansat.vn (qua Google News)",
-   "published_at": "2026-08-04T14:00:00",
-   "summary": "VietinBank Capital tích cực giải ngân cuối tháng 7, vào 'ghế' cổ đông lớn tại HAH &nbsp;&nbsp; nguoiquansat.vn"
-  },
-  {
    "id": "n12104790",
    "title": "HAH: Báo cáo về ngày trở thành cổ đông lớn Công ty TNHH MTV Quản lý quỹ Ngân hàng TMCP Công Thương Việt Nam",
    "url": "n/a",
@@ -16119,14 +16084,6 @@
    "source": "vnstock/VCI",
    "published_at": "2026-08-03T13:49:20",
    "summary": null
-  },
-  {
-   "id": "n0a44b31898",
-   "title": "Viconship báo lãi tăng 64%, rót gần 2.500 tỷ đồng vào HAH",
-   "url": "https://news.google.com/rss/articles/CBMikgFBVV95cUxORGxyMXpNTFBDb2d5S0pMSWtIczhmOEx6aFo4VnpYeFVJQTBTME1HYmtsRmFZNFFoRlJJTndVZXowNVVtdTJvWmRDQnZqUnVHWncwSFpld2lZc2NmMjZZMUxHZ2JRYTBrQjdaanBpRFhWR0pQYjFPWmdILTZfRnZIWERPNkxpdDM3UUFsSHNHVndldw?oc=5",
-   "source": "Mekong ASEAN (qua Google News)",
-   "published_at": "2026-08-01T14:00:00",
-   "summary": "Viconship báo lãi tăng 64%, rót gần 2.500 tỷ đồng vào HAH &nbsp;&nbsp; Mekong ASEAN"
   },
   {
    "id": "n12101481",
@@ -16345,14 +16302,6 @@
    "summary": null
   },
   {
-   "id": "nd83ab07c7d",
-   "title": "Chiến lược gom cổ phiếu cảng biển: Leadvisors liên tục mua HAH, VIP Greenport và Viconship",
-   "url": "https://news.google.com/rss/articles/CBMixgFBVV95cUxOdHFHMWQzMEpLSmItenRVSjFwaDZkeXhaNVk1M0ZuZHY1MmwtMDFhbFpuNEc0ZUE0V1VGR3VDYUdsU3dDc3QxY25LNmVLdnJXVmVIaC0xVkZKOS1KUFplQjZsN3ZIQWRpUC1OWHJ2ODQyX2NubXRSRmZYSlJoSFdJZV9zWE5DSDhWSzVsX1VoMjFnb0hvZDNCNFlmZExUbi1pQmJZSG9OSzN6SWJyQU4xQS1sSG4wcWMyRVRWUngxVndzdEU0QkE?oc=5",
-   "source": "VietnamFinance (qua Google News)",
-   "published_at": "2026-06-08T14:00:00",
-   "summary": "Chiến lược gom cổ phiếu cảng biển: Leadvisors liên tục mua HAH, VIP Greenport và Viconship &nbsp;&nbsp; VietnamFinance"
-  },
-  {
    "id": "n8fa86d105d",
    "title": "Chủ tịch HAH: \"Kết quả 5 tháng đang đi đúng kế hoạch lãi 1.250 tỷ đồng\"",
    "url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxPdnl0S3ZrU05kOGdteWhQcTZScUM1Y1pZUUhsR1V5LVpFMkFpZHdzak9Venp4NW9Iak9nR0phNEZXbjlLOThYZTdUZTA1UWNRUE9mMFhZQUYzamhvZjNtVnVHYXBKMW5BaGtUblNMRHZmcWgwdjVlb0lvam54bzVkZU9taVVKcy1ta21wcHVhZmp2Vkd1V0dEMTFUSGpuMEZfV2M0?oc=5",
@@ -16369,28 +16318,12 @@
    "summary": null
   },
   {
-   "id": "n12035728",
-   "title": "HAH: Các Nghị quyết HĐQT và Quyết định HĐQT ngày 02/06/2026",
-   "url": "n/a",
-   "source": "vnstock/VCI",
-   "published_at": "2026-06-03T16:26:33",
-   "summary": null
-  },
-  {
    "id": "ne3c40cbf5e",
    "title": "Nhóm liên quan Container Việt Nam (VSC) đã mua thêm gần 1,49 triệu cổ phiếu Hải An (HAH)",
    "url": "https://news.google.com/rss/articles/CBMizgFBVV95cUxNU2JRS1pmQncwRi1mWkhIb0J0eUVnN1NFRXo4OXB3QVJ4WmpuRFhuVHdWZDlBN0ZFY3BoM0RxdktUSmotRExKMVVYZDR6ZWdFWkpTd3g3QnpRcV9vNk9SM0Y2bkhyLUYyRUZvN2QzMUxyOEFoZEw3VS1Ib3lQZFZXdmp2RDhtNXhfSGNyRTA5X2s5dTB2QmNpaUdmSUxvUGVldUM4ZU1wMGhkUWxkVTVkdkw3OTgyRWZYRUx6ZFdRVF9xM0c3enlTNFRSaVNXUdIBygFBVV95cUxPWVdtUzI0NW5wbGJrQ2pOT3E1bjNkSmZtM0IzbUZ6OXB2Q3NKcjRIenIzbmZBN3JiWWd4M3czM3A4eWNISUxqaEkxRncyOUhXWVFhVnRZSWJMNXF6a3AxZkxGaUtmWkV1c01SRmFXMFV6VUZtV1N3dUhpbTFmUHNCb2V0TlV0TFdJMmVCZm5nSjVpaERwTGJIVlFwdlU1UXVleEtvLUg4d0Itd24tTFZ1Uk9PUGZzU28wUVNzbFhsUHZxUVZrcjEybWJn?oc=5",
    "source": "Tin nhanh chứng khoán (qua Google News)",
    "published_at": "2026-05-20T14:00:00",
    "summary": "Nhóm liên quan Container Việt Nam (VSC) đã mua thêm gần 1,49 triệu cổ phiếu Hải An (HAH) &nbsp;&nbsp; Tin nhanh chứng khoán"
-  },
-  {
-   "id": "n786aab22c4",
-   "title": "Hải An (HAH) chuẩn bị 'bơm' vốn nghìn tỷ cho chiến lược mở rộng đội tàu container",
-   "url": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOdDdHTkFIY1hBUkNqTzFCZmhoel9pdnRfTk93MUZXUGY5QzBPbW52OFFIeGZxcXN3cDNZajNOX2RMdTBTUWdRdFZSQjJmYXpCLW9CSXdEU01Rbm9kOXlzcXdaZjI2Y0dRZTlyRzUtVV8wdlh1aER5OHFNM19sU0k3aVpKemxEREM4Q29zQnlONEFwZ0lTUnN6MmFMVkNDRnlXUHAwM2JzLWI0ZWE4TGhBWTlzSFh5S1ZoMGRYRUkzYw?oc=5",
-   "source": "Tạp chí điện tử Thương Trường (qua Google News)",
-   "published_at": "2026-05-19T14:00:00",
-   "summary": "Hải An (HAH) chuẩn bị 'bơm' vốn nghìn tỷ cho chiến lược mở rộng đội tàu container &nbsp;&nbsp; Tạp chí điện tử Thương Trường"
   },
   {
    "id": "nbd282b7cff",
@@ -16409,20 +16342,20 @@
    "summary": "Vận tải và Xếp dỡ Hải An (HAH): Lên kế hoạch huy động gần 1.900 tỷ đồng trái phiếu, tiếp tục mở rộng đội tàu và logistics &nbsp;&nbsp; Báo Pháp Luật Việt Nam"
   },
   {
+   "id": "n890e4b06c5",
+   "title": "Xếp dỡ Hải An (HAH) lên kế hoạch đầu tư tàu mới, muốn huy động gần 1.900 tỷ đồng",
+   "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOTHB6RzI5Ty1jYzR0dlQ0U2FENHcyT0tGTWlBRnVad1hVeWRFSDNFSzZHLVUwRXJGbVlKTjRYTm5Za0ZybWRoSFRPYWEtdmpIRy1sYnBDUWRsWk5Rb0w4U3F6dTBWaG8tZ09rd1lzMWxuVnRoRmh4MkI5enVHcGpmbFktZE5qaWFrSVZiUDllaGs3NEVwaFZuTlh2bDRZM0Z1N05ubXZwUVFzUTRSa1ducWJpNA?oc=5",
+   "source": "nguoiquansat.vn (qua Google News)",
+   "published_at": "2026-05-18T14:00:00",
+   "summary": "Xếp dỡ Hải An (HAH) lên kế hoạch đầu tư tàu mới, muốn huy động gần 1.900 tỷ đồng &nbsp;&nbsp; nguoiquansat.vn"
+  },
+  {
    "id": "n8e1e2108c1",
    "title": "Cổ phiếu đáng chú ý ngày 12/5: BSR, TAL, HAH",
    "url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxQSDFuN3EzM3o3Z1ZWcWF1bE5oQnFxTVFWMzJ3LTNrV2ZHc2dzOTQtd1pOc2xlNHRWYzdhdkRkM055R0FueW92VkJmbUc5X2JVSjREYURYZnkyMUllLTBkTjBSdVk0MDR1a0hWTW1kcE5oUXBYZUJSSUczWGFHT3oxb216NA?oc=5",
    "source": "nguoiquansat.vn (qua Google News)",
    "published_at": "2026-05-11T14:00:00",
    "summary": "Cổ phiếu đáng chú ý ngày 12/5: BSR, TAL, HAH &nbsp;&nbsp; nguoiquansat.vn"
-  },
-  {
-   "id": "n73496a29ea",
-   "title": "HAH tạo đòn bẩy mảng cốt lõi",
-   "url": "https://news.google.com/rss/articles/CBMifEFVX3lxTE81dU1JWmFRU1JhRFpUZmlRSlBBNlB2c0xxYl9tYkR3QzFaZXdmQ0ZyUVQwODVHWVgtQTE2MjdfQzRNdWVHTndYSm1raFY5T1hSTTJROVdkN1QyS19WZlNCcnd6RHZ1emR0V0JjTXFGdF9BX01NbUhhUEIzSzI?oc=5",
-   "source": "diendandoanhnghiep.vn (qua Google News)",
-   "published_at": "2026-05-09T14:00:00",
-   "summary": "HAH tạo đòn bẩy mảng cốt lõi &nbsp;&nbsp; diendandoanhnghiep.vn"
   },
   {
    "id": "n1baa7507c5",
@@ -16449,12 +16382,12 @@
    "summary": "Hải An (HAH) muốn huỷ kế hoạch phát hành ESOP năm 2025 để phát hành tối đa 2,5 triệu cổ phiếu ESOP năm 2026 &nbsp;&nbsp; Tin nhanh chứng khoán"
   },
   {
-   "id": "n8bf7541ae1",
-   "title": "Hải An (HAH) muốn đóng thêm tàu container",
-   "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQRFk4OGZqdnFicDBIUEVyTmtrSmVINkhmdVpxSmc3YUN4Q3dMYTFKN0F4d3BSeDBoeHJUSWNzRzA2MWJJUllxb3d5ZS1EMmI1ZTJaMXFjM2pnWlJlcmhwU0V2dExuT3hRQl84dDNBUHFLOUJmSkZaNFRfcWo3aFVQQlZmeC01MVItVFBMZDdnVWlxdG_SAY8BQVVfeXFMTUZXc29jY2hNeXY0Y0h6NjZ4VlpuSkdHTTVvV0tsRlBHd2tPZEVyUWM5ODdLWEVuT3hqT21UQ2pkZUl6TzNSYUlYazFvQno3UUw1NVRwYUZObkNaaktMN2YtQVVDaVI3UVRLQnZYZUhLNGNSZ2p0bG9fbndDNmxUSGFxS01vWVk1cVhGX0QxY2c?oc=5",
-   "source": "Tin nhanh chứng khoán (qua Google News)",
-   "published_at": "2026-01-27T15:00:00",
-   "summary": "Hải An (HAH) muốn đóng thêm tàu container &nbsp;&nbsp; Tin nhanh chứng khoán"
+   "id": "nd5acfd06c6",
+   "title": "Một cú hích bất ngờ kích hoạt đà tăng mạnh của nhóm cổ phiếu vận tải VSC, VOS, HAH...: Câu chuyện gì phía sau?",
+   "url": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxOSDZDMTFqWGNVZlc2SXNJWnU1X2puUHZUbmcwMTIxYVNkUTM4TzBoUGU0VWFSNk00aENPVHBzY1hfbXNtM1lyMEpzM3JFSVNZZ2NCNUtJeWZMZXJFa0k5T1ctMFRKOHNTcllyaWVWYTZWRlJreFZxYXItLU9maGk1YlZhSDVwRDNSM2lCUVdzUjg4eUFSWnZHQUwyaXhCRkM1NGpNd3NnSGRDdWY0cWVMdFU2ZzI1TzhYdDFRVVdHRXpyenZTYjNmeF8zMXVWT3FVSFJmUkJR?oc=5",
+   "source": "nguoiquansat.vn (qua Google News)",
+   "published_at": "2026-02-13T15:00:00",
+   "summary": "Một cú hích bất ngờ kích hoạt đà tăng mạnh của nhóm cổ phiếu vận tải VSC, VOS, HAH...: Câu chuyện gì phía sau? &nbsp;&nbsp; nguoiquansat.vn"
   },
   {
    "id": "ne27767e94e",
@@ -16505,6 +16438,14 @@
    "summary": "Lãnh đạo HAH: Việc tăng quy mô đội tàu là bắt buộc, tiếp tục mua tàu mới trong năm tới &nbsp;&nbsp; Chứng khoán DNSE"
   },
   {
+   "id": "n4981d67dd9",
+   "title": "VSC muốn tăng tỷ lệ sở hữu tại HAH lên gần 13%",
+   "url": "https://news.google.com/rss/articles/CBMiekFVX3lxTFB2S3Q2cE9yZFlfcE5kaDJpRGtMbXlKd3RzcUx6YlFZc1ZIXzN5bTM4UTNBNEkzWk1kQndMMkdGU3Jra0Fxc3dwNVc3TFllRW9jUDczcl82Vmo2S2FIRzNUQ2NLYzZ5bzJLbDJGbFRhaHVzNmtneGZmT1hn?oc=5",
+   "source": "VnEconomy (qua Google News)",
+   "published_at": "2025-12-10T15:00:00",
+   "summary": "VSC muốn tăng tỷ lệ sở hữu tại HAH lên gần 13% &nbsp;&nbsp; VnEconomy"
+  },
+  {
    "id": "na4be4bc3aa",
    "title": "Viconship muốn ‘gom’ 1 triệu cổ phiếu HAH của Xếp dỡ Hải An",
    "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxNaGUwUTJjdF9RaU9xdGlXQUpBSk5sU1J5TXNaYzBzSnQzdWQtY0NURzUtNGZCMEdrNFE2SFV0cHFoc0hYWm56aEwtZDlQdmtLTGZqVmN5X0FNdWxTd2xuNGxMTTZ6RWdfOXpNSV9HVERqMzBYVkE5RE5idTNSQUgwMElpaUQwYWFKbHhHQVcxaXJOZktwSy1XcnlBaW5VUQ?oc=5",
@@ -16526,57 +16467,57 @@
    "id": "src_price",
    "name": "vnstock (VCI) - quote.history (giá điều chỉnh)",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:19:00",
+   "fetched_at": "2026-10-15T18:00:31",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_index",
    "name": "vnstock (VCI) - quote.history VNINDEX",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:19:01",
+   "fetched_at": "2026-10-15T18:00:31",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_company",
    "name": "vnstock (VCI) - company.overview + tự tính PE/PB/ROE peers",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:19:04",
+   "fetched_at": "2026-10-15T18:00:35",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_fin_year",
    "name": "vnstock (VCI) - finance year (income/balance/cashflow)",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:21:03",
+   "fetched_at": "2026-10-15T18:00:54",
+   "note": "thư viện vnstock; xem docs/CONTRACTS.md"
+  },
+  {
+   "id": "src_fin_quarter",
+   "name": "vnstock (VCI) - finance quarter (income/balance/cashflow)",
+   "url": "https://trading.vietcap.com.vn",
+   "fetched_at": "2026-10-15T18:01:07",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_vnf",
    "name": "vnfinancialdata (Hugging Face thanhnp-uel/vietnam-listed-companies-financial-statements)",
    "url": "https://huggingface.co/datasets/thanhnp-uel/vietnam-listed-companies-financial-statements",
-   "fetched_at": "2026-10-11T14:21:05",
+   "fetched_at": "2026-10-15T18:01:09",
    "note": "BCTC năm hợp nhất, VND; không có ngày công bố (ước lượng năm+90 ngày); nguồn gốc: cổng sàn/website công ty"
   },
   {
    "id": "src_news",
    "name": "vnstock (VCI) - company.news / RSS",
    "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T14:21:09",
+   "fetched_at": "2026-10-15T18:01:28",
    "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   },
   {
    "id": "src_universe_calc",
    "name": "PE/PB/ROE tự tính từ snapshot các mã cùng ngành trong universe",
    "url": "internal://universe",
-   "fetched_at": "2026-10-11T15:11:31",
+   "fetched_at": "2026-10-15T18:13:38",
    "note": "PE=giá*CP/LNST công ty mẹ; PB=giá*CP/VCSH; ROE=LNST/VCSH cuối kỳ (xấp xỉ)"
-  },
-  {
-   "id": "src_fin_quarter",
-   "name": "vnstock (VCI) - finance quarter (income/balance/cashflow)",
-   "url": "https://trading.vietcap.com.vn",
-   "fetched_at": "2026-10-11T17:12:10",
-   "note": "thư viện vnstock; xem docs/CONTRACTS.md"
   }
  ]
 }

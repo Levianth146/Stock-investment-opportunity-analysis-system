@@ -55,7 +55,7 @@ export function structureOf(p: Period): StructureQ | null {
 }
 
 export interface Ratios {
-  priceBasis: "live" | "eod";
+  priceBasis: "live" | "close" | "eod";
   price: number | null;
   shares: number | null;
   marketCap: number | null;
@@ -103,7 +103,7 @@ function yoyQ(q: Period[], key: string): number | null {
 export function ratiosOf(
   q: Period[],
   price: number | null,
-  priceBasis: "live" | "eod",
+  priceBasis: "live" | "close" | "eod",
   shares: number | null,
 ): Ratios {
   const last = q.length ? q[q.length - 1]! : null;
@@ -163,7 +163,7 @@ export function narrateFundamental(opts: {
   const out: Block[] = [];
 
   const val: string[] = [];
-  if (r.marketCap != null) val.push(`Vốn hoá ${ty(r.marketCap)}${r.priceBasis === "live" ? " theo giá trực tiếp" : " theo giá đóng cửa"}.`);
+  if (r.marketCap != null) val.push(`Vốn hoá ${ty(r.marketCap)}${r.priceBasis === "live" ? " theo giá trực tiếp" : r.priceBasis === "close" ? " theo giá chốt phiên (tạm tính)" : " theo giá đóng cửa"}.`);
   if (r.pe != null) {
     val.push(
       `P/E ${t(r.pe)}` +

@@ -298,3 +298,17 @@ def test_analyze_ignores_invalid_latest_closes_and_preserves_snapshot_company():
     assert body["price_date"] == "2026-10-06"
     assert body["price_change"] == 350
     assert body["data_availability"]["price_sessions"] == 2
+
+
+def test_store_rescans_new_snapshots_without_restart(tmp_path, monkeypatch):
+    snaps = tmp_path / "s"
+    snaps.mkdir()
+    (snaps / "AAA_2026-10-08.json").write_text("{}", encoding="utf-8")
+    store = ResultStore({"snapshots_dir": str(snaps), "cache_dir": str(tmp_path / "c"), "asof": "auto"})
+    assert store.asof == "2026-10-08"
+    assert store.list_tickers() == ["AAA"]
+    (snaps / "AAA_2026-10-15.json").write_text("{}", encoding="utf-8")
+    (snaps / "BBB_2026-10-15.json").write_text("{}", encoding="utf-8")
+    store._last_scan -= ResultStore.RESCAN_SEC + 1  # giả lập hết chu kỳ quét
+    assert store.asof == "2026-10-15"
+    assert store.list_tickers() == ["AAA", "BBB"]

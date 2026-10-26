@@ -1,0 +1,368 @@
+[
+ {
+  "symbol": "ACC",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.29 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "AFX",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "11 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "AGG",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 2.8 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "APH",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.29 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "ASM",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.23 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "BAF",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 121.5 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "BCE",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "10 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "BVB",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2025-04-08', -15.8)]"
+ },
+ {
+  "symbol": "C69",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "12 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "CAR",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "26 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "CAR",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 107.7 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "CTF",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 163.3 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "CTR",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-02-16', 54.0), ('2022-02-23', -31.8)]"
+ },
+ {
+  "symbol": "DLG",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 1.4 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "DST",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "13 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "EVG",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.27 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "GEE",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-10-07', -15.5), ('2022-11-08', 15.1), ('2022-12-30', 16.5)]"
+ },
+ {
+  "symbol": "GIL",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.30 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "GKM",
+  "severity": "warn",
+  "code": "stale_last_date",
+  "msg": "phiên cuối 2026-08-28 ≠ as_of 2026-10-14"
+ },
+ {
+  "symbol": "GKM",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.12 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "HDA",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "12 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "HHS",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 170.1 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "HHS",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.23 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "HII",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 2.8 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "HPX",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "126 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "HPX",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2024-03-20', 20.0)]"
+ },
+ {
+  "symbol": "HQC",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.21 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "HUT",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "10 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "IDJ",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.26 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "KLB",
+  "severity": "warn",
+  "code": "bad_ohlc",
+  "msg": "1 phiên close ngoài [low, high]"
+ },
+ {
+  "symbol": "KLB",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-11-16', 16.8), ('2022-12-20', -23.9), ('2022-12-22', 15.1)]"
+ },
+ {
+  "symbol": "KSV",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-11-10', 24.3)]"
+ },
+ {
+  "symbol": "L40",
+  "severity": "info",
+  "code": "zero_volume",
+  "msg": "529/1245 phiên KL = 0 (thanh khoản thấp)"
+ },
+ {
+  "symbol": "L40",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "125 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "L40",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 1.4 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "NAB",
+  "severity": "warn",
+  "code": "bad_ohlc",
+  "msg": "2 phiên close ngoài [low, high]"
+ },
+ {
+  "symbol": "NDN",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "10 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "NRC",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "11 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "NTC",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-11-16', 16.1), ('2025-04-03', -15.1)]"
+ },
+ {
+  "symbol": "NVB",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 154.9 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "PVP",
+  "severity": "warn",
+  "code": "bad_ohlc",
+  "msg": "1 phiên close ngoài [low, high]"
+ },
+ {
+  "symbol": "PVP",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-12-28', 15.1), ('2022-12-30', 17.1)]"
+ },
+ {
+  "symbol": "SHI",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "17 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "SMC",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 2.2 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "SVN",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "11 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "SVN",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 305.5 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "SVN",
+  "severity": "review",
+  "code": "extreme_pb",
+  "msg": "P/B 0.27 — kiểm tra vốn CSH/số CP/giá"
+ },
+ {
+  "symbol": "TDM",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "10 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "THD",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 287.0 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "TRC",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 2.5 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "VAB",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-12-30', 16.3)]"
+ },
+ {
+  "symbol": "VBB",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "10 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "VBB",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2023-01-09', 18.9)]"
+ },
+ {
+  "symbol": "VCG",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 2.4 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "VRC",
+  "severity": "review",
+  "code": "extreme_pe",
+  "msg": "P/E TTM 1503.8 — kiểm tra lợi nhuận bất thường/số CP"
+ },
+ {
+  "symbol": "VTP",
+  "severity": "warn",
+  "code": "bad_ohlc",
+  "msg": "2 phiên close ngoài [low, high]"
+ },
+ {
+  "symbol": "VTP",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-11-16', 17.1)]"
+ },
+ {
+  "symbol": "VTZ",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "16 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "VVS",
+  "severity": "info",
+  "code": "zero_volume",
+  "msg": "361/993 phiên KL = 0 (thanh khoản thấp)"
+ },
+ {
+  "symbol": "VVS",
+  "severity": "info",
+  "code": "flat_close",
+  "msg": "21 phiên liên tiếp giá không đổi"
+ },
+ {
+  "symbol": "VVS",
+  "severity": "warn",
+  "code": "price_jump",
+  "msg": "nhảy giá vượt biên độ: [('2022-10-14', 16.6), ('2023-01-09', 17.0), ('2024-01-02', 18.2)]"
+ }
+]

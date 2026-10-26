@@ -70,3 +70,14 @@ describe("session metrics gate", () => {
     expect(b).toMatch(/90|tick|EOD/i);
   });
 });
+
+describe("priceKind", () => {
+  it("phân biệt trực tiếp / chốt phiên / EOD", async () => {
+    const { priceKind, priceKindWord } = await import("./staleness");
+    expect(priceKind({ state: "live", basis: "live", price: 10 })).toBe("live");
+    expect(priceKind({ state: "closed", basis: "close", price: 10 })).toBe("close");
+    expect(priceKind({ state: "closed", basis: "eod", price: 10 })).toBe("eod");
+    expect(priceKind({ state: "live", basis: "live", price: null })).toBe("eod");
+    expect(priceKindWord("close")).toContain("chốt phiên");
+  });
+});

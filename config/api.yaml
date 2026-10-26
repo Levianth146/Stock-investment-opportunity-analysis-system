@@ -19,6 +19,8 @@ web_dist_dir: null # giữ dashboard frontend/dist đã tùy chỉnh; web/src m�
 # Feature 017a — realtime (display + phân tích tạm tính; không vào M2–M7)
 realtime:
   enabled: true # false → luôn SnapshotQuoteProvider, state=no_realtime
+  persist_dir: data/intraday # lưu giá trong phiên để sống qua restart API (xoá dòng này để tắt)
+  persist_interval_sec: 15
   max_symbols: 250 # trần subscribe (liquid + đang xem)
   max_per_connection: 200 # giới hạn SDK DNSE
   price_scale: 1000 # số cố định hoặc "auto" (bình chọn ≥20 mã, đa số ≥90% rồi khoá)
