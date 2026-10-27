@@ -1,7 +1,7 @@
 <div align="center">
 
 # StockAI
-Link drive báo cáo: https://drive.google.com/drive/folders/1gDys0x1DvI82QYB5U3RV39-FCykMtuQ-?usp=sharing
+Link drive báo cáo ( nhóm xin nộp lại vì đã lỡ xóa folder cũ ): https://drive.google.com/drive/folders/1gDys0x1DvI82QYB5U3RV39-FCykMtuQ-?usp=sharing
 
 ### Hệ thống phân tích cơ hội đầu tư cổ phiếu Việt Nam
 
