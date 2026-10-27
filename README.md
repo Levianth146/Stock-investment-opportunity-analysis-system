@@ -19,7 +19,7 @@
 </div>
 
 > **Tuyên bố miễn trừ.** StockAI là sản phẩm phục vụ học tập và nghiên cứu. Điểm số và khuyến nghị mang tính minh họa, chưa được hiệu chỉnh hay backtest, **không phải lời khuyên đầu tư**. Mọi quyết định mua bán là của bạn.
-
+Link drive báo cáo: https://drive.google.com/drive/folders/1gDys0x1DvI82QYB5U3RV39-FCykMtuQ-?usp=sharing
 ---
 
 ## 1. StockAI là gì?
